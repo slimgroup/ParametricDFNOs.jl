@@ -1,0 +1,5 @@
+*.jld2
+*.mat
+*.png
+.vscode/
+.ipynb_checkpoints/
