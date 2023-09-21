@@ -536,8 +536,8 @@ uuid = "b9860ae5-e623-471e-878b-f6a53c775ea6"
 version = "0.1.1"
 
 [[deps.FNO4CO2]]
-deps = ["AzSessions", "AzStorage", "AzureClusterlessHPC", "BSON", "BenchmarkTools", "CUDA", "Distributions", "DrWatson", "FFTW", "Flux", "HDF5", "Images", "InvertibleNetworks", "JLD2", "JSON", "JUDI", "LineSearches", "LinearAlgebra", "MAT", "NNlib", "ParametricOperators", "Preferences", "ProgressMeter", "PyCall", "PyPlot", "Random", "Serialization", "SetIntersectionProjection", "Statistics", "Zygote"]
-path = "../../FNO4CO2"
+deps = ["AzSessions", "AzStorage", "AzureClusterlessHPC", "BSON", "BenchmarkTools", "CUDA", "Distributions", "DrWatson", "FFTW", "Flux", "HDF5", "Images", "InvertibleNetworks", "JLD2", "JSON", "JUDI", "LineSearches", "LinearAlgebra", "MAT", "NNlib", "ProgressMeter", "PyCall", "PyPlot", "Random", "Serialization", "SetIntersectionProjection", "Statistics", "Zygote"]
+path = "../FNO4CO2"
 uuid = "4f87af30-b322-4a0d-8c7c-fe8b2256665a"
 version = "1.1.3"
 
@@ -607,11 +607,6 @@ version = "0.4.5"
 [[deps.Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
-
-[[deps.GMP_jll]]
-deps = ["Artifacts", "Libdl"]
-uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
-version = "6.2.1+2"
 
 [[deps.GPUArrays]]
 deps = ["Adapt", "GPUArraysCore", "LLVM", "LinearAlgebra", "Printf", "Random", "Reexport", "Serialization", "Statistics"]
@@ -1160,17 +1155,6 @@ git-tree-sha1 = "3504cdb8c2bc05bde4d4b09a81b01df88fcbbba0"
 uuid = "f1d291b0-491e-4a28-83b9-f70985020b54"
 version = "0.4.3"
 
-[[deps.MPC_jll]]
-deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPFR_jll", "Pkg"]
-git-tree-sha1 = "9618bed470dcb869f944f4fe4a9e76c4c8bf9a11"
-uuid = "2ce0c516-f11f-5db3-98ad-e0e1048fbd70"
-version = "1.2.1+0"
-
-[[deps.MPFR_jll]]
-deps = ["Artifacts", "GMP_jll", "Libdl"]
-uuid = "3a97d323-0669-5f0c-9066-3539efd106a3"
-version = "4.1.1+1"
-
 [[deps.MPI]]
 deps = ["Distributed", "DocStringExtensions", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "PkgVersion", "PrecompileTools", "Requires", "Serialization", "Sockets"]
 git-tree-sha1 = "32cafbe56c7f0b7160a1a6c492773af66c0b722f"
@@ -1466,8 +1450,8 @@ uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 version = "0.12.3"
 
 [[deps.ParametricOperators]]
-deps = ["CUDA", "ChainRulesCore", "Combinatorics", "DataStructures", "FFTW", "GraphViz", "JSON", "LRUCache", "LaTeXStrings", "MPI", "Match", "OMEinsum", "Random", "SymEngine", "UUIDs"]
-path = "../../ParametricOperators.jl"
+deps = ["CUDA", "ChainRulesCore", "Combinatorics", "DataStructures", "FFTW", "GraphViz", "JSON", "LRUCache", "LaTeXStrings", "MPI", "Match", "OMEinsum", "Random", "UUIDs"]
+path = "../ParametricOperators.jl"
 uuid = "db9e0614-c73c-4112-a40c-114e5b366d0d"
 version = "0.1.0"
 
@@ -1840,18 +1824,6 @@ deps = ["Logging"]
 git-tree-sha1 = "37d1976ca8368f6adbe1d65a4deeeda6ee7faa31"
 uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 version = "0.2.4"
-
-[[deps.SymEngine]]
-deps = ["Compat", "Libdl", "LinearAlgebra", "RecipesBase", "Serialization", "SpecialFunctions", "SymEngine_jll"]
-git-tree-sha1 = "08c273c56c9cacf64500bf9b85aadf6692489de5"
-uuid = "123dc426-2d89-5057-bbad-38513e3affd8"
-version = "0.9.1"
-
-[[deps.SymEngine_jll]]
-deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPC_jll", "MPFR_jll", "Pkg"]
-git-tree-sha1 = "63dd14f9bbac36184162334627431165a13a2220"
-uuid = "3428059b-622b-5399-b16f-d347a77089a4"
-version = "0.9.0+1"
 
 [[deps.SyntaxTree]]
 deps = ["Test"]
