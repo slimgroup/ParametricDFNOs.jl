@@ -240,7 +240,7 @@ nvalid = 100
 batch_size = config.n_batch
 learning_rate = 1f-4
 
-epochs = 3
+epochs = 500
 
 modes = 4
 width = 20
@@ -279,7 +279,7 @@ opt = Flux.Optimise.ADAMW(learning_rate, (0.9f0, 0.999f0), 1f-4)
 nbatches = Int(ntrain/batch_size)
 
 Loss = zeros(Float32,epochs*nbatches)
-Loss_valid = zeros(Float32, epochs)
+Loss_valid = zeros(Float32, epochs + 1)
 prog = Progress(round(Int, ntrain * epochs / batch_size))
 
 # plot figure
@@ -294,6 +294,9 @@ exp_name = "2phaseflow"
 
 save_dict = @strdict exp_name
 plot_path = plotsdir(sim_name, savename(save_dict; digits=6))
+
+valid_idx = randperm(nvalid)[1:batch_size]
+Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
 
 ## training
 
@@ -336,6 +339,8 @@ for ep = 1:epochs
         global x_plot_dfno = x_plot_dfno |> gpu
     end
 
+    (ep % 50 > 0) && continue
+
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
 
     fig = figure(figsize=(20, 12))
@@ -366,10 +371,10 @@ for ep = 1:epochs
     θ_save = θ |> cpu
 
     valid_idx = randperm(nvalid)[1:batch_size]
-    Loss_valid[ep] = norm(relu01(forward(θ_save, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
+    Loss_valid[ep + 1] = norm(relu01(forward(θ_save, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
 
     loss_train = Loss[1:ep*nbatches]
-    loss_valid = Loss_valid[1:ep]
+    loss_valid = Loss_valid[1:ep+1]
     fig = figure(figsize=(20, 12))
     subplot(1,3,1)
     plot(loss_train)
@@ -377,13 +382,13 @@ for ep = 1:epochs
     ylabel("loss")
     title("training loss at epoch $ep")
     subplot(1,3,2)
-    plot(nbatches:nbatches:nbatches*(ep + 1), loss_valid);
+    plot(0:nbatches:nbatches*ep, loss_valid);
     xlabel("batch iterations")
     ylabel("loss")
     title("validation loss at epoch $ep")
     subplot(1,3,3)
     plot(loss_train);
-    plot(nbatches:nbatches:nbatches*(ep + 1), loss_valid); 
+    plot(0:nbatches:nbatches*ep, loss_valid); 
     xlabel("batch iterations")
     ylabel("loss")
     title("Objective function at epoch $ep")
