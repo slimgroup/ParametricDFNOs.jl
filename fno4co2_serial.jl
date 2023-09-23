@@ -25,7 +25,7 @@ using Random
 matplotlib.use("Agg")
 
 cpu = ParametricOperators.cpu
-gpu = ParametricOperators.gpu
+# gpu = ParametricOperators.gpu
 update = ParametricOperators.update!
 
 @with_kw struct ModelConfig
@@ -330,7 +330,6 @@ for ep = 1:epochs
 
         Loss[(ep-1)*nbatches+b] = loss
         ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
-        break
     end
 
     if gpu_flag
@@ -374,15 +373,19 @@ for ep = 1:epochs
     fig = figure(figsize=(20, 12))
     subplot(1,3,1)
     plot(loss_train)
+    xlabel("batch iterations")
+    ylabel("loss")
     title("training loss at epoch $ep")
     subplot(1,3,2)
-    plot(1:nbatches:nbatches*ep, loss_valid); 
+    plot(nbatches:nbatches:nbatches*(ep + 1), loss_valid);
+    xlabel("batch iterations")
+    ylabel("loss")
     title("validation loss at epoch $ep")
     subplot(1,3,3)
     plot(loss_train);
-    plot(1:nbatches:nbatches*ep, loss_valid); 
-    xlabel("iterations")
-    ylabel("value")
+    plot(nbatches:nbatches:nbatches*(ep + 1), loss_valid); 
+    xlabel("batch iterations")
+    ylabel("loss")
     title("Objective function at epoch $ep")
     legend(["training", "validation"])
     tight_layout();
@@ -395,7 +398,6 @@ for ep = 1:epochs
         param_dict;
         safe=true
     )
-    break
 end
 
 θ_save = θ |> cpu
