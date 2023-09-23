@@ -326,6 +326,7 @@ for ep = 1:epochs
 
         Loss[(ep-1)*nbatches+b] = loss
         ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
+        break
     end
 
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno) |> gpu), (64,64,51,1))) |> cpu
@@ -386,6 +387,7 @@ for ep = 1:epochs
         param_dict;
         safe=true
     )
+    break
 end
 
 θ_save = θ |> cpu
