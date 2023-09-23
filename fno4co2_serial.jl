@@ -25,7 +25,7 @@ using Random
 matplotlib.use("Agg")
 
 cpu = ParametricOperators.cpu
-# gpu = ParametricOperators.gpu
+gpu = ParametricOperators.gpu
 update = ParametricOperators.update!
 
 @with_kw struct ModelConfig
@@ -269,11 +269,11 @@ x_valid_dfno = xytcb_to_cxytb(x_valid)
 
 # value, x, y, t
 
-NN = Net3d(modes, width)
-gpu_flag && (global NN = NN |> gpu)
+# NN = Net3d(modes, width)
+# gpu_flag && (global NN = NN |> gpu)
 
-Flux.trainmode!(NN, true)
-w = Flux.params(NN)
+# Flux.trainmode!(NN, true)
+# w = Flux.params(NN)
 
 opt = Flux.Optimise.ADAMW(learning_rate, (0.9f0, 0.999f0), 1f-4)
 nbatches = Int(ntrain/batch_size)
@@ -314,8 +314,12 @@ for ep = 1:epochs
             y_dfno = y_dfno |> gpu
         end
         
-        grads_dfno = gradient(params -> norm(relu01(forward(params, x_dfno))-y_dfno)/norm(y_dfno), θ)[1] |> gpu
+        grads_dfno = gradient(params -> norm(relu01(forward(params, x_dfno))-y_dfno)/norm(y_dfno), θ)[1]
         global loss = norm(relu01(forward(θ, x_dfno))-y_dfno)/norm(y_dfno)
+
+        if gpu_flag
+            grads_dfno = grads_dfno |> gpu
+        end
 
         # scale!(1e-4, grads_dfno)
         # update(θ, grads_dfno)
