@@ -1,4 +1,5 @@
 # source $HOME/.bash_profile
+# source ~/.bashrc
 # mpiexecjl --project=./ -n 4 julia test_dist_kron.jl
 
 using Pkg
