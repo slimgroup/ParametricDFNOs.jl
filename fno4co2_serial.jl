@@ -334,7 +334,7 @@ for ep = 1:epochs
     end
 
     if gpu_flag
-        x_plot_dfno = x_plot_dfno |> gpu
+        global x_plot_dfno = x_plot_dfno |> gpu
     end
 
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
