@@ -177,10 +177,10 @@ function cxytb_to_xytcb(x)
 end
 
 function forward(θ, x::Any)
-    temp = ones(DDT(biases[1]), Domain(biases[1]), config.n_batch)
+    temp = ones(DDT(biases[1]), Domain(biases[1]), size(x, 2))
     x = lifts(θ) * x + biases[1](θ) * temp
 
-    temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), config.n_batch)
+    temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), size(x, 2))
 
     for i in 1:config.n_blocks
 
@@ -205,11 +205,11 @@ function forward(θ, x::Any)
         end
     end
 
-    temp = ones(DDT(biases[2]), Domain(biases[2]), config.n_batch)
+    temp = ones(DDT(biases[2]), Domain(biases[2]), size(x, 2))
     x = projects[1](θ) * x + biases[2](θ) * temp
     x = relu.(x)
 
-    temp = ones(DDT(biases[3]), Domain(biases[3]), config.n_batch)
+    temp = ones(DDT(biases[3]), Domain(biases[3]), size(x, 2))
     x = projects[2](θ) * x + biases[3](θ) * temp
     return x
 end
