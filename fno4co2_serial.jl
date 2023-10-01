@@ -25,7 +25,7 @@ using Random
 matplotlib.use("Agg")
 
 cpu = ParametricOperators.cpu
-# gpu = ParametricOperators.gpu
+gpu = ParametricOperators.gpu
 update = ParametricOperators.update!
 
 @with_kw struct ModelConfig
@@ -178,9 +178,11 @@ end
 
 function forward(θ, x::Any)
     temp = ones(DDT(biases[1]), Domain(biases[1]), size(x, 2))
+    gpu_flag && (global temp = gpu(temp))
     x = lifts(θ) * x + biases[1](θ) * temp
 
     temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), size(x, 2))
+    gpu_flag && (global temp = gpu(temp))
 
     for i in 1:config.n_blocks
 
@@ -206,10 +208,12 @@ function forward(θ, x::Any)
     end
 
     temp = ones(DDT(biases[2]), Domain(biases[2]), size(x, 2))
+    gpu_flag && (global temp = gpu(temp))
     x = projects[1](θ) * x + biases[2](θ) * temp
     x = relu.(x)
 
     temp = ones(DDT(biases[3]), Domain(biases[3]), size(x, 2))
+    gpu_flag && (global temp = gpu(temp))
     x = projects[2](θ) * x + biases[3](θ) * temp
     return x
 end
@@ -296,7 +300,16 @@ save_dict = @strdict exp_name
 plot_path = plotsdir(sim_name, savename(save_dict; digits=6))
 
 valid_idx = randperm(nvalid)[1:batch_size]
-Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
+
+x_valid_sample = x_valid_dfno[:, :, :, :, valid_idx]
+y_valid_sample = y_valid[:, :, :, valid_idx]
+
+if gpu_flag
+    global x_valid_sample = x_valid_sample |> gpu
+    global y_valid_sample = y_valid_sample |> gpu
+end
+
+Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
 
 ## training
 
@@ -316,12 +329,12 @@ for ep = 1:epochs
             x_dfno = x_dfno |> gpu
             y_dfno = y_dfno |> gpu
         end
-        
+
         grads_dfno = gradient(params -> norm(relu01(forward(params, x_dfno))-y_dfno)/norm(y_dfno), θ)[1]
         global loss = norm(relu01(forward(θ, x_dfno))-y_dfno)/norm(y_dfno)
 
         if gpu_flag
-            grads_dfno = grads_dfno |> gpu
+            global grads_dfno = Dict(k => gpu(v) for (k, v) in pairs(grads_dfno))
         end
 
         # scale!(1e-4, grads_dfno)
@@ -339,7 +352,7 @@ for ep = 1:epochs
         global x_plot_dfno = x_plot_dfno |> gpu
     end
 
-    (ep % 50 > 0) && continue
+    # (ep % 50 > 0) && continue
 
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
 
@@ -368,10 +381,7 @@ for ep = 1:epochs
     safesave(joinpath(plot_path, savename(fig_name; digits=6)*"_3Dfno_fitting.png"), fig);
     close(fig)
 
-    θ_save = θ |> cpu
-
-    valid_idx = randperm(nvalid)[1:batch_size]
-    Loss_valid[ep + 1] = norm(relu01(forward(θ_save, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
+    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
 
     loss_train = Loss[1:ep*nbatches]
     loss_valid = Loss_valid[1:ep+1]
@@ -397,19 +407,17 @@ for ep = 1:epochs
     safesave(joinpath(plot_path, savename(fig_name; digits=6)*"_3Dfno_loss.png"), fig);
     close(fig);
 
-    param_dict = @strdict ep lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid loss_train loss_valid
-    @tagsave(
-        datadir(sim_name, savename(param_dict, "jld2"; digits=6)),
-        param_dict;
-        safe=true
-    )
+    # param_dict = @strdict ep lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid loss_train loss_valid
+    # @tagsave(
+    #     datadir(sim_name, savename(param_dict, "jld2"; digits=6)),
+    #     param_dict;
+    #     safe=true
+    # )
 end
 
-θ_save = θ |> cpu
-
-final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
-@tagsave(
-    datadir(sim_name, savename(final_dict, "jld2"; digits=6)),
-    final_dict;
-    safe=true
-)
+# final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
+# @tagsave(
+#     datadir(sim_name, savename(final_dict, "jld2"; digits=6)),
+#     final_dict;
+#     safe=true
+# )

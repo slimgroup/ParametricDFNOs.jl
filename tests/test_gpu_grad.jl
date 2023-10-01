@@ -2,22 +2,14 @@ using Pkg
 Pkg.activate("./")
 
 using DrWatson
-using MPI
 using ParametricOperators
 using Parameters
 using Profile
-using Shuffle
 using Zygote
 using PyPlot
-using NNlib
-using NNlibCUDA
-using FNO4CO2
-using JLD2
 using Flux, Random, FFTW
 using MAT, Statistics, LinearAlgebra
 using CUDA
-using ProgressMeter
-using InvertibleNetworks:ActNorm
 using Random
 matplotlib.use("Agg")
 
@@ -85,16 +77,21 @@ target_order = (5, 2, 3, 4)
 weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, target_shape) 
 init!(weight_mix, θ_new)
 
-dft = (restrict_t * fourier_t) ⊗
-    (restrict_y * fourier_y) ⊗
-    (restrict_x * fourier_x) ⊗
+# dft = (restrict_t * fourier_t) ⊗
+#     (restrict_y * fourier_y) ⊗
+#     (restrict_x * fourier_x) ⊗
+#     ParIdentity(T, config.nc_lift)
+
+dft = (fourier_t) ⊗
+    (fourier_y) ⊗
+    (fourier_x) ⊗
     ParIdentity(T, config.nc_lift)
 
 rng = Random.seed!(1234)
 
 x_dfno = rand(rng, T, Domain(lifting)) |> gpu
-y_dfno = rand(rng, T, Range(lifting)) |> gpu
+y_dfno = rand(rng, T, Range(dft)) |> gpu
 θ_new = θ_new |> gpu
 
-grads_dfno = gradient(params -> norm(relu01(lifting(params) * x_dfno)-y_dfno)/norm(y_dfno), θ_new)[1]
+grads_dfno = gradient(params -> norm(dft * lifting(params) * x_dfno - y_dfno) / norm(y_dfno), θ_new)[1]
 # output = cxytb_to_xytcb(reshape(dft' * weight_mix(θ_new) * dft * lifting(θ_new) * x_dfno, (config.nc_lift, config.nx, config.ny, config.nt_out, config.n_batch)));
