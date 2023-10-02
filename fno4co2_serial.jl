@@ -52,27 +52,6 @@ function PO_FNO4CO2(config::ModelConfig)
 
     T = config.dtype
 
-    function lifting(in_shape, lift_dim, out_features, T=Float32)
-
-        net = ParIdentity(T, 1) 
-    
-        for dim in eachindex(in_shape)
-            if dim == lift_dim
-                layer = ParMatrix(T, out_features, in_shape[dim])
-            else 
-                layer = ParIdentity(T, in_shape[dim])
-            end
-            
-            if dim == 1
-                net = layer
-            else
-                net = layer ⊗ net
-            end
-        end
-    
-        return net
-    end
-
     function spectral_convolution()
 
         # Build 4D Fourier transform with real-valued FFT along time
@@ -86,9 +65,6 @@ function PO_FNO4CO2(config::ModelConfig)
         restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:config.my, config.ny-config.my+1:config.ny])
         # restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:config.mz, config.nz-config.mz+1:config.nz])
         restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:config.mt])
-
-        # weight_mix = ParIdentity(Complex{T}, Range(restrict_dft) ÷ config.nc_lift) ⊗
-        #             ParMatrix(Complex{T}, config.nc_lift, config.nc_lift)
 
         input_shape = (config.nc_lift, 2*config.mx, 2*config.my, config.mt)
         weight_shape = (config.nc_lift, config.nc_lift, 2*config.mx, 2*config.my, config.mt)
@@ -116,8 +92,8 @@ function PO_FNO4CO2(config::ModelConfig)
     biases = []
 
     # Lift Channel dimension
-    lifts = ParIdentity(Float32,round(Int, prod(shape)/config.nc_in)) ⊗ ParMatrix(Float32, config.nc_lift, config.nc_in) # lifting(shape, 1, config.nc_lift)
-    bias = ParIdentity(Float32,round(Int, prod(shape)/config.nc_in)) ⊗ ParDiagonal(Float32, config.nc_lift) # TODO: Rearrange code for all bias so it makes more sense mathematically
+    lifts = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParMatrix(T, config.nc_lift, config.nc_in) # lifting(shape, 1, config.nc_lift)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParDiagonal(T, config.nc_lift) # TODO: Rearrange code for all bias so it makes more sense mathematically
     push!(biases, bias)
 
     shape[1] = config.nc_lift
@@ -125,8 +101,8 @@ function PO_FNO4CO2(config::ModelConfig)
     for i in 1:config.n_blocks
 
         sconv_layer = spectral_convolution()
-        conv_layer = ParIdentity(Float32,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(Float32, config.nc_lift, config.nc_lift) # lifting(shape, 1, config.nc_lift)
-        bias = ParIdentity(Float32,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(Float32, config.nc_lift)
+        conv_layer = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift) # lifting(shape, 1, config.nc_lift)
+        bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_lift)
 
         push!(sconv_biases, bias)
         push!(sconvs, sconv_layer)
@@ -134,16 +110,16 @@ function PO_FNO4CO2(config::ModelConfig)
     end
 
     # Uplift channel dimension once more
-    uc = ParIdentity(Float32,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(Float32, config.nc_mid, config.nc_lift) # lifting(shape, 1, config.nc_mid)
-    bias = ParIdentity(Float32,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(Float32, config.nc_mid)
+    uc = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift) # lifting(shape, 1, config.nc_mid)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_mid)
     push!(biases, bias)
     push!(projects, uc)
 
     shape[1] = config.nc_mid
 
     # Project channel dimension
-    pc = ParIdentity(Float32,round(Int, prod(shape)/config.nc_mid)) ⊗ ParMatrix(Float32, config.nc_out, config.nc_mid) # lifting(shape, 1, config.nc_out)
-    bias = ParIdentity(Float32,round(Int, prod(shape)/config.nc_mid)) ⊗ ParDiagonal(Float32, config.nc_out)
+    pc = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParMatrix(T, config.nc_out, config.nc_mid) # lifting(shape, 1, config.nc_out)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParDiagonal(T, config.nc_out)
     push!(biases, bias)
     push!(projects, pc)
 
@@ -271,14 +247,6 @@ x_train = perm_to_tensor(perm[1:s:end,1:s:end,1:ntrain],grid,AN);
 x_valid = perm_to_tensor(perm[1:s:end,1:s:end,ntrain+1:ntrain+nvalid],grid,AN);
 x_valid_dfno = xytcb_to_cxytb(x_valid)
 
-# value, x, y, t
-
-# NN = Net3d(modes, width)
-# gpu_flag && (global NN = NN |> gpu)
-
-# Flux.trainmode!(NN, true)
-# w = Flux.params(NN)
-
 opt = Flux.Optimise.ADAMW(learning_rate, (0.9f0, 0.999f0), 1f-4)
 nbatches = Int(ntrain/batch_size)
 
@@ -336,9 +304,6 @@ for ep = 1:epochs
         if gpu_flag
             global grads_dfno = Dict(k => gpu(v) for (k, v) in pairs(grads_dfno))
         end
-
-        # scale!(1e-4, grads_dfno)
-        # update(θ, grads_dfno)
 
         for (k, v) in θ
             Flux.Optimise.update!(opt, v, grads_dfno[k])
