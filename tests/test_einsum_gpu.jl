@@ -2,12 +2,22 @@ using Pkg
 Pkg.activate("./")
 
 using OMEinsum
-using ParametricOperators
+using Flux
 
-gpu = ParametricOperators.gpu
+a = rand(2, 2, 3)
+b = rand(2, 3)
 
-a = rand(2, 2) |> gpu
-b = rand(2, 2) |> gpu
+out = ein"kij,ij->kj"(a,b); 
+println(typeof(out))
 
-out = einsum(EinCode(((1,2),(2,3)),(1,3)),(a,b))
+out = ein"kij,ij->kj"(a |> gpu, b |> gpu); 
+println(typeof(out))
+
+out = einsum(EinCode(((3,1,2),(1,2)),(3,2)),(a |> gpu,b |> gpu))
+println(typeof(out))
+
+a = rand(20, 20, 8, 8, 4) |> gpu
+b = rand(20, 8, 8, 4) |> gpu
+
+out = einsum(EinCode(((5, 1, 2, 3, 4),(1, 2, 3, 4)),(5, 2, 3, 4)),(a,b))
 println(typeof(out))

@@ -199,7 +199,7 @@ function forward(θ, x::Any)
 
     temp = ones(DDT(biases[2]), Domain(biases[2]), size(x, 2))
     gpu_flag && (global temp = gpu(temp))
-    x = projects[1](θ) * x # + biases[2](θ) * temp
+    x = projects[1](θ) * x + biases[2](θ) * temp
     x = relu.(x)
 
     temp = ones(DDT(biases[3]), Domain(biases[3]), size(x, 2))
@@ -240,7 +240,7 @@ nvalid = 100
 batch_size = config.n_batch
 learning_rate = 1f-4
 
-epochs = 500
+epochs = 250
 
 modes = 4
 width = 20
@@ -337,7 +337,8 @@ for ep = 1:epochs
         global x_plot_dfno = x_plot_dfno |> gpu
     end
 
-    # (ep % 50 > 0) && continue
+    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+    (ep % 5 > 0) && continue
 
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
 
@@ -366,8 +367,6 @@ for ep = 1:epochs
     safesave(joinpath(plot_path, savename(fig_name; digits=6)*"_3Dfno_fitting.png"), fig);
     close(fig)
 
-    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
-
     loss_train = Loss[1:ep*nbatches]
     loss_valid = Loss_valid[1:ep+1]
     fig = figure(figsize=(20, 12))
@@ -393,22 +392,24 @@ for ep = 1:epochs
     close(fig);
 
     # θ_save = θ |> cpu
+    θ_save = Dict(k => cpu(v) for (k, v) in pairs(θ))
 
-    # param_dict = @strdict ep lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid loss_train loss_valid
-    # @tagsave(
-    #     datadir(sim_name, savename(param_dict, "jld2"; digits=6)),
-    #     param_dict;
-    #     safe=true
-    # )
+    param_dict = @strdict ep lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid loss_train loss_valid
+    @tagsave(
+        datadir(sim_name, savename(param_dict, "jld2"; digits=6)),
+        param_dict;
+        safe=true
+    )
 end
 
 # θ_save = θ |> cpu
+θ_save = Dict(k => cpu(v) for (k, v) in pairs(θ))
 
-# final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
-# @tagsave(
-#     datadir(sim_name, savename(final_dict, "jld2"; digits=6)),
-#     final_dict;
-#     safe=true
-# )
+final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
+@tagsave(
+    datadir(sim_name, savename(final_dict, "jld2"; digits=6)),
+    final_dict;
+    safe=true
+)
 
 MPI.Finalize()
