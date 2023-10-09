@@ -1,5 +1,6 @@
 # Serial FNO that uses the framework built by thomas 
 # and has a different filter for all the points in the restriction space
+# GPU support for everything but Einsum
 
 using Pkg
 Pkg.activate("./")
@@ -372,6 +373,8 @@ for ep = 1:epochs
     safesave(joinpath(plot_path, savename(fig_name; digits=6)*"_3Dfno_loss.png"), fig);
     close(fig);
 
+    # θ_save = θ |> cpu
+
     # param_dict = @strdict ep lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid loss_train loss_valid
     # @tagsave(
     #     datadir(sim_name, savename(param_dict, "jld2"; digits=6)),
@@ -379,6 +382,8 @@ for ep = 1:epochs
     #     safe=true
     # )
 end
+
+# θ_save = θ |> cpu
 
 # final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
 # @tagsave(
