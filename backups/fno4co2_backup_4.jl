@@ -53,7 +53,7 @@ function PO_FNO4CO2(config::ModelConfig)
 
     T = config.dtype
 
-    function spectral_convolution()
+    function spectral_convolution(layer::Int)
 
         # Build 4D Fourier transform with real-valued FFT along time
         fourier_x = ParDFT(Complex{T}, config.nx)
@@ -74,7 +74,7 @@ function PO_FNO4CO2(config::ModelConfig)
         weight_order = (5, 1, 2, 3, 4)
         target_order = (5, 2, 3, 4)
 
-        weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape) 
+        weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))") 
 
         # Setup FFT-restrict pattern with Kroneckers
         restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
@@ -93,17 +93,17 @@ function PO_FNO4CO2(config::ModelConfig)
     biases = []
 
     # Lift Channel dimension
-    lifts = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParMatrix(T, config.nc_lift, config.nc_in) # lifting(shape, 1, config.nc_lift)
-    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParDiagonal(T, config.nc_lift) # TODO: Rearrange code for all bias so it makes more sense mathematically
+    lifts = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)") # lifting(shape, 1, config.nc_lift)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_in)) ⊗ ParDiagonal(T, config.nc_lift, "ParDiagonal_BIAS:(1)") # TODO: Rearrange code for all bias so it makes more sense mathematically
     push!(biases, bias)
 
     shape[1] = config.nc_lift
 
     for i in 1:config.n_blocks
 
-        sconv_layer = spectral_convolution()
-        conv_layer = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift) # lifting(shape, 1, config.nc_lift)
-        bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_lift)
+        sconv_layer = spectral_convolution(i)
+        conv_layer = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))") # lifting(shape, 1, config.nc_lift)
+        bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_lift, "ParDiagonal_SCONV:($(i))")
 
         push!(sconv_biases, bias)
         push!(sconvs, sconv_layer)
@@ -111,16 +111,16 @@ function PO_FNO4CO2(config::ModelConfig)
     end
 
     # Uplift channel dimension once more
-    uc = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift) # lifting(shape, 1, config.nc_mid)
-    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_mid)
+    uc = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)") # lifting(shape, 1, config.nc_mid)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParDiagonal(T, config.nc_mid, "ParDiagonal_BIAS:(2)")
     push!(biases, bias)
     push!(projects, uc)
 
     shape[1] = config.nc_mid
 
     # Project channel dimension
-    pc = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParMatrix(T, config.nc_out, config.nc_mid) # lifting(shape, 1, config.nc_out)
-    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParDiagonal(T, config.nc_out)
+    pc = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)") # lifting(shape, 1, config.nc_out)
+    bias = ParIdentity(T,round(Int, prod(shape)/config.nc_mid)) ⊗ ParDiagonal(T, config.nc_out, "ParDiagonal_BIAS:(3)")
     push!(biases, bias)
     push!(projects, pc)
 
@@ -128,22 +128,6 @@ function PO_FNO4CO2(config::ModelConfig)
 
     return lifts, sconvs, convs, projects, biases, sconv_biases
 end
-
-modes = 4
-width = 20
-
-config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=4, n_batch=2)
-lifts, sconvs, convs, projects, biases, sconv_biases = PO_FNO4CO2(config)
-
-# To Load Saved Dict: 
-# key = load("./data/3D_FNO/.jld2")["key"]
-
-θ = init(lifts)
-for operator in Iterators.flatten((sconvs, convs, biases, sconv_biases, projects))
-    init!(operator, θ)
-end
-
-gpu_flag && (global θ = gpu(θ))
 
 function xytcb_to_cxytb(x)
     return permutedims(x, [4,1,2,3,5])
@@ -194,6 +178,22 @@ function forward(θ, x::Any)
     x = projects[2](θ) * x + biases[3](θ) * temp
     return x
 end
+
+modes = 4
+width = 20
+
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=4, n_batch=2)
+lifts, sconvs, convs, projects, biases, sconv_biases = PO_FNO4CO2(config)
+
+# To Load Saved Dict: 
+# key = load("./data/3D_FNO/.jld2")["key"]
+
+θ = init(lifts)
+for operator in Iterators.flatten((sconvs, convs, biases, sconv_biases, projects))
+    init!(operator, θ)
+end
+
+gpu_flag && (global θ = gpu(θ))
 
 # Define raw data directory
 mkpath(datadir("training-data"))
