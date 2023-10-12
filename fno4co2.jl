@@ -173,11 +173,14 @@ function forward(θ, x::Any)
         scale = batch * config.nx * config.ny * config.nt_in
 
         s = sum(x; dims=reduce_dims)
-        μ = MPI.Allreduce(s, MPI.SUM, comm) ./ scale
+        reduce_mean = ParReduce(eltype(s))
+        μ = reduce_mean(s) ./ scale
 
         s = (x .- μ) .^ 2
+
         s = sum(s; dims=reduce_dims)
-        σ² = MPI.Allreduce(s, MPI.SUM, comm) ./ scale
+        reduce_var = ParReduce(eltype(s))
+        σ² = reduce_var(s) ./ scale
 
         input_size = (config.nc_lift * config.nx * config.ny * config.nt_in) ÷ prod(config.partition)
 
@@ -197,6 +200,8 @@ function forward(θ, x::Any)
     temp = ones(DDT(biases[3]), Domain(biases[3]), batch)
     gpu_flag && (global temp = gpu(temp))
     x = projects[2](θ) * x + biases[3](θ) * temp
+    x = relu.(x)
+
     return x
 end
 
@@ -256,6 +261,18 @@ function dist_value(value, partition, parent_comm)
     return dist_tensor(value, size(value), partition, parent_comm)
 end
 
+function loss(local_pred_y, local_true_y)
+    s = sum((vec(local_pred_y) - vec(local_true_y)) .^ 2)
+
+    reduce_norm = ParReduce(eltype(local_pred_y))
+    reduce_y = ParReduce(eltype(local_true_y))
+
+    norm_diff = √(reduce_norm([s])[1])
+    norm_y = √(reduce_y([sum(local_true_y .^ 2)])[1])
+
+    return norm_diff / norm_y
+end
+
 modes = 4
 width = 20
 
@@ -273,21 +290,21 @@ for operator in Iterators.flatten((sconvs, convs, biases, sconv_biases, projects
     init!(operator, θ)
 end
 
-# Test Code block to Load existing weights from serially trained FNO
-θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
-for (k, v) in θ_save
-    haskey(θ, k) && (θ[k] = v)
-    if !haskey(θ, k)
-        id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
+# # Test Code block to Load existing weights from serially trained FNO
+# θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
+# for (k, v) in θ_save
+#     haskey(θ, k) && (θ[k] = v)
+#     if !haskey(θ, k)
+#         id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
 
-        for (k1, v1) in θ
-            # Update if distributed key is in the weight dict
-            if k1.id == id
-                θ[k1] = dist_value(v, config.partition, comm)
-            end
-        end
-    end
-end
+#         for (k1, v1) in θ
+#             # Update if distributed key is in the weight dict
+#             if k1.id == id
+#                 θ[k1] = dist_value(v, config.partition, comm)
+#             end
+#         end
+#     end
+# end
 
 # MPI.Finalize()
 # exit()
@@ -306,12 +323,16 @@ gpu_flag && (global θ = gpu(θ))
 # forward(θ, x)
 # exit()
 
-# # Test Code block to check gradient with random input
-# Random.seed!(1234)
-# x = rand(DDT(lifts), Domain(lifts))
-# println(rank, ": ", norm(forward(θ, x)))
-# rank == 0 && (grads_dfno = gradient(params -> norm(forward(params, x)), θ)[1])
-# exit()
+# Test Code block to check gradient with random input
+rng = Random.seed!(rank)
+
+x = rand(rng, DDT(lifts), Domain(lifts))
+y = rand(rng, RDT(projects[2]), Range(projects[2]))
+
+grads_dfno = gradient(params -> loss(forward(params, x), y), θ)[1]
+
+MPI.Finalize()
+exit()
 
 # Define raw data directory
 mkpath(datadir("training-data"))
@@ -377,6 +398,7 @@ prog = Progress(round(Int, ntrain * epochs / batch_size))
 x_plot = x_valid[:, :, :, :, 1:1]
 y_plot = y_valid[:, :, :, 1:1]
 x_plot_dfno = vec(xytcb_to_cxytb(x_plot))
+y_plot_dfno = y_plot
 
 if gpu_flag
     global x_plot_dfno = x_plot_dfno |> gpu
@@ -404,17 +426,20 @@ shape_in = (config.nc_in, config.nx, config.ny, config.nt_in)
 shape_out = (config.nc_out, config.nx, config.ny, config.nt_out)
 
 local_x_plot_dfno = dist_tensor(x_plot_dfno, shape_in, config.partition, comm)
+local_y_plot_dfno = dist_tensor(y_plot_dfno, shape_out, config.partition, comm)
 
 y_local = reshape(forward(θ, vec(local_x_plot_dfno)), (config.nc_out ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_out ÷ config.partition[4])) |> cpu
-
 y_global = collect_dist_tensor(y_local, shape_out, config.partition, comm)
+
+# # Test code block to compute loss
+# l = loss(y_local, local_y_plot_dfno)
 
 if rank > 0
     MPI.Finalize()
     exit()
 end
 
-y_predict = relu01(reshape(y_global, (64,64,51,1)))
+y_predict = reshape(y_global, (64,64,51,1))
 
 fig = figure(figsize=(20, 12))
 
@@ -445,7 +470,7 @@ close(fig)
 MPI.Finalize()
 exit()
 
-Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+Loss_valid[1] = norm(forward(θ, reshape(x_valid_sample, (:, config.n_batch))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
 
 ## training
 
@@ -466,8 +491,8 @@ for ep = 1:epochs
             y_dfno = y_dfno |> gpu
         end
 
-        grads_dfno = gradient(params -> norm(relu01(forward(params, x_dfno))-y_dfno)/norm(y_dfno), θ)[1]
-        global loss = norm(relu01(forward(θ, x_dfno))-y_dfno)/norm(y_dfno)
+        grads_dfno = gradient(params -> norm(forward(params, x_dfno)-y_dfno)/norm(y_dfno), θ)[1]
+        global loss = norm(forward(θ, x_dfno)-y_dfno)/norm(y_dfno)
 
         if gpu_flag
             global grads_dfno = Dict(k => gpu(v) for (k, v) in pairs(grads_dfno))
@@ -481,10 +506,10 @@ for ep = 1:epochs
         ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
     end
 
-    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+    Loss_valid[ep + 1] = norm(forward(θ, reshape(x_valid_sample, (:, config.n_batch))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
     (ep % 5 > 0) && continue
 
-    y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
+    y_predict = reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1)) |> cpu
 
     fig = figure(figsize=(20, 12))
 
