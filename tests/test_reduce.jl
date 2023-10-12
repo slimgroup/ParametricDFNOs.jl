@@ -1,5 +1,8 @@
+# mpiexecjl --project=./ -n 4 julia tests/test_reduce.jl
+
 using Pkg
 Pkg.activate("./")
+
 using MPI
 
 function main()
@@ -10,11 +13,10 @@ function main()
     size = MPI.Comm_size(comm)
 
     # Let's assume each process has an array of length 5
-    local_array = fill(rank, 5)  # This will fill the array with the rank of the process
-    global_array = zeros(Int, 5)
+    local_array = [1, 2, 3, 4, 5]  # This will fill the array with the rank of the process
 
     # Reduce the arrays from all processes
-    MPI.Reduce(local_array, global_array, 0, comm)
+    global_array = MPI.Reduce(local_array, MPI.SUM, 0, comm)
 
     # Only the root process (rank 0) will have the reduced result
     if rank == 0

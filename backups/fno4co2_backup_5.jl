@@ -1,3 +1,7 @@
+# Distributed FNO on CPU that uses the framework built by thomas
+# Using MPI code for batch normalization
+# Only Forward pass, no training
+
 # source $HOME/.bash_profile
 # mpiexecjl --project=./ -n 4 julia fno4co2.jl
 using Pkg
@@ -273,21 +277,21 @@ for operator in Iterators.flatten((sconvs, convs, biases, sconv_biases, projects
     init!(operator, θ)
 end
 
-# Test Code block to Load existing weights from serially trained FNO
-θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
-for (k, v) in θ_save
-    haskey(θ, k) && (θ[k] = v)
-    if !haskey(θ, k)
-        id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
+# # Test Code block to Load existing weights from serially trained FNO
+# θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
+# for (k, v) in θ_save
+#     haskey(θ, k) && (θ[k] = v)
+#     if !haskey(θ, k)
+#         id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
 
-        for (k1, v1) in θ
-            # Update if distributed key is in the weight dict
-            if k1.id == id
-                θ[k1] = dist_value(v, config.partition, comm)
-            end
-        end
-    end
-end
+#         for (k1, v1) in θ
+#             # Update if distributed key is in the weight dict
+#             if k1.id == id
+#                 θ[k1] = dist_value(v, config.partition, comm)
+#             end
+#         end
+#     end
+# end
 
 # MPI.Finalize()
 # exit()
