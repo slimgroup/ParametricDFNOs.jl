@@ -383,6 +383,8 @@ y_valid = permutedims(conc[1:nt,1:s:end,1:s:end,ntrain+1:ntrain+nvalid],[2,3,1,4
 
 grid = gen_grid(n, d, nt, dt)
 
+# Following Errors on Machine @ CODA Out of memory SIGKILL 9
+
 x_train = perm_to_tensor(perm[1:s:end,1:s:end,1:ntrain],grid,AN);
 x_valid = perm_to_tensor(perm[1:s:end,1:s:end,ntrain+1:ntrain+nvalid],grid,AN);
 x_valid_dfno = xytcb_to_cxytb(x_valid)
