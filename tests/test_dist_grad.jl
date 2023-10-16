@@ -18,15 +18,38 @@ rank = MPI.Comm_rank(comm)
 
 T = Float64
 
-network = ParIdentity(T, 2) ⊗ ParIdentity(T, 2) ⊗ ParMatrix(T, 2, 2)
-network = distribute(network, [1, 2, 1])
+network1 = ParIdentity(T, 2) ⊗ ParIdentity(T, 2) ⊗ ParMatrix(T, 2, 2)
 
 x = reshape(float(1:8), 2, 2, 2)
-x = vec(x[:,rank+1,:])
 
-θ = init(network)
-y_out = network(θ) * x
+θ1 = init(network1)
+y_out = network1(θ1) * vec(x)
 
-rank == 0 & gradient(params -> norm(network(params) * x), θ)[1]
+grads1 = gradient(params -> norm(network1(params) * vec(x)), θ1)[1]
+# rank == 0 && println(grads1)
+
+network2 = ParIdentity(T, 2) ⊗ ParIdentity(T, 2) ⊗ ParMatrix(T, 2, 2)
+network2 = distribute(network2, [1, 2, 1])
+
+x = reshape(float(1:8), 2, 2, 2)
+x = x[:,rank+1,:]
+
+θ = init(network2)
+y_out = network2(θ) * vec(x)
+
+# println(y_out)
+
+function dist_norm(input)
+    s = sum(input .^ 2)
+
+    reduce_sum = ParReduce(eltype(input))
+    diff = √(reduce_sum([s])[1])
+
+    return diff
+end
+
+grads2 = gradient(params -> dist_norm(network2(params) * vec(x)), θ)[1]
+# rank == 0 && println(grads2)
+(rank == 0) && @assert norm(vec(collect(values(grads1))[1]) - vec(collect(values(grads2))[1])) <= 1e-10
 
 MPI.Finalize()

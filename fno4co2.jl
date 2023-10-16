@@ -158,39 +158,39 @@ function forward(θ, x::Any)
     gpu_flag && (global temp = gpu(temp))
     x = lifts(θ) * x + biases[1](θ) * temp
 
-    temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), batch)
-    gpu_flag && (global temp = gpu(temp))
+    # temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), batch)
+    # gpu_flag && (global temp = gpu(temp))
 
-    for i in 1:config.n_blocks
+    # for i in 1:config.n_blocks
 
-        x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
-        x = reshape(x, (config.nc_lift ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_in ÷ config.partition[4], :))
+    #     x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
+    #     x = reshape(x, (config.nc_lift ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_in ÷ config.partition[4], :))
 
-        N = ndims(x)
-        ϵ = 1f-5
+    #     N = ndims(x)
+    #     ϵ = 1f-5
 
-        reduce_dims = collect(2:N)
-        scale = batch * config.nx * config.ny * config.nt_in
+    #     reduce_dims = collect(2:N)
+    #     scale = batch * config.nx * config.ny * config.nt_in
 
-        s = sum(x; dims=reduce_dims)
-        reduce_mean = ParReduce(eltype(s))
-        μ = reduce_mean(s) ./ scale
+    #     s = sum(x; dims=reduce_dims)
+    #     reduce_mean = ParReduce(eltype(s))
+    #     μ = reduce_mean(s) ./ scale
 
-        s = (x .- μ) .^ 2
+    #     s = (x .- μ) .^ 2
 
-        s = sum(s; dims=reduce_dims)
-        reduce_var = ParReduce(eltype(s))
-        σ² = reduce_var(s) ./ scale
+    #     s = sum(s; dims=reduce_dims)
+    #     reduce_var = ParReduce(eltype(s))
+    #     σ² = reduce_var(s) ./ scale
 
-        input_size = (config.nc_lift * config.nx * config.ny * config.nt_in) ÷ prod(config.partition)
+    #     input_size = (config.nc_lift * config.nx * config.ny * config.nt_in) ÷ prod(config.partition)
 
-        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
-        x = reshape(x, (input_size, :))
+    #     x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+    #     x = reshape(x, (input_size, :))
         
-        if i < config.n_blocks
-            x = relu.(x)
-        end
-    end
+    #     if i < config.n_blocks
+    #         x = relu.(x)
+    #     end
+    # end
 
     temp = ones(DDT(biases[2]), Domain(biases[2]), batch)
     gpu_flag && (global temp = gpu(temp))
@@ -290,21 +290,21 @@ for operator in Iterators.flatten((sconvs, convs, biases, sconv_biases, projects
     init!(operator, θ)
 end
 
-# Test Code block to Load existing weights from serially trained FNO
-θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
-for (k, v) in θ_save
-    haskey(θ, k) && (θ[k] = v)
-    if !haskey(θ, k)
-        id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
+# # Test Code block to Load existing weights from serially trained FNO
+# θ_save = load("./data/3D_FNO/batch_size=2_dt=0.02_ep=85_epochs=250_learning_rate=0.0001_modes=4_nt=51_ntrain=1000_nvalid=100_s=1_width=20.jld2")["θ_save"]
+# for (k, v) in θ_save
+#     haskey(θ, k) && (θ[k] = v)
+#     if !haskey(θ, k)
+#         id = dist_key(k, config.partition, comm_cart) # TODO: do not send comm_cart, send parent comm instead
 
-        for (k1, v1) in θ
-            # Update if distributed key is in the weight dict
-            if k1.id == id
-                θ[k1] = dist_value(v, config.partition, comm)
-            end
-        end
-    end
-end
+#         for (k1, v1) in θ
+#             # Update if distributed key is in the weight dict
+#             if k1.id == id
+#                 θ[k1] = dist_value(v, config.partition, comm)
+#             end
+#         end
+#     end
+# end
 
 # MPI.Finalize()
 # exit()
@@ -318,21 +318,23 @@ end
 
 gpu_flag && (global θ = gpu(θ))
 
-# # Test Code block to do a foward pass:
+# # Test Code block to do a foward pass and loss:
 # x = rand(DDT(lifts), Domain(lifts))
+# y = rand(RDT(projects[2]), Range(projects[2]))
 # forward(θ, x)
+# println("Loss: ", loss(forward(θ, x), y))
 # exit()
 
-# # Test Code block to check gradient with random input
-# rng = Random.seed!(rank)
+# Test Code block to check gradient with random input
+rng = Random.seed!(rank)
 
-# x = rand(rng, DDT(lifts), Domain(lifts))
-# y = rand(rng, RDT(projects[2]), Range(projects[2]))
+x = rand(rng, DDT(lifts), Domain(lifts))
+y = rand(rng, RDT(projects[2]), Range(projects[2]))
 
-# grads_dfno = gradient(params -> loss(forward(params, x), y), θ)[1]
+grads_dfno = gradient(params -> loss(forward(params, x), y), θ)[1]
 
-# MPI.Finalize()
-# exit()
+MPI.Finalize()
+exit()
 
 # Define raw data directory
 mkpath(datadir("training-data"))
