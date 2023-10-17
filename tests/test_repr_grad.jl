@@ -34,10 +34,10 @@ end
 
 function get_dist_grad()
     network2 = ParIdentity(T, 2) ⊗ ParIdentity(T, 2) ⊗ ParMatrix(T, 2, 2, "TEST")
-    network2 = distribute(network2, [1, 2, 1])
+    network2 = distribute(network2, [2, 1, 1])
     
     x = reshape(float(1:8), 2, 2, 2)
-    x = x[:,rank+1,:]
+    x = x[rank+1,:,:]
     
     θ = init(network2)
 

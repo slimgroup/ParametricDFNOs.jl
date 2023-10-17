@@ -146,10 +146,6 @@ function xytcb_to_cxytb(x)
     return permutedims(x, [4,1,2,3,5])
 end
 
-function cxytb_to_xytcb(x)
-    return permutedims(x, [2,3,4,1,5])
-end
-
 function forward(θ, x::Any)
 
     batch = size(x, 2)
@@ -158,39 +154,39 @@ function forward(θ, x::Any)
     gpu_flag && (global temp = gpu(temp))
     x = lifts(θ) * x + biases[1](θ) * temp
 
-    # temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), batch)
-    # gpu_flag && (global temp = gpu(temp))
+    temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), batch)
+    gpu_flag && (global temp = gpu(temp))
 
-    # for i in 1:config.n_blocks
-
-    #     x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
-    #     x = reshape(x, (config.nc_lift ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_in ÷ config.partition[4], :))
-
-    #     N = ndims(x)
-    #     ϵ = 1f-5
-
-    #     reduce_dims = collect(2:N)
-    #     scale = batch * config.nx * config.ny * config.nt_in
-
-    #     s = sum(x; dims=reduce_dims)
-    #     reduce_mean = ParReduce(eltype(s))
-    #     μ = reduce_mean(s) ./ scale
-
-    #     s = (x .- μ) .^ 2
-
-    #     s = sum(s; dims=reduce_dims)
-    #     reduce_var = ParReduce(eltype(s))
-    #     σ² = reduce_var(s) ./ scale
-
-    #     input_size = (config.nc_lift * config.nx * config.ny * config.nt_in) ÷ prod(config.partition)
-
-    #     x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
-    #     x = reshape(x, (input_size, :))
+    for i in 1:config.n_blocks
         
-    #     if i < config.n_blocks
-    #         x = relu.(x)
-    #     end
-    # end
+        x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
+        x = reshape(x, (config.nc_lift ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_in ÷ config.partition[4], :))
+
+        N = ndims(x)
+        ϵ = 1f-5
+
+        reduce_dims = collect(2:N)
+        scale = batch * config.nx * config.ny * config.nt_in
+
+        s = sum(x; dims=reduce_dims)
+        reduce_mean = ParReduce(eltype(s))
+        μ = reduce_mean(s) ./ scale
+
+        s = (x .- μ) .^ 2
+
+        s = sum(s; dims=reduce_dims)
+        reduce_var = ParReduce(eltype(s))
+        σ² = reduce_var(s) ./ scale
+
+        input_size = (config.nc_lift * config.nx * config.ny * config.nt_in) ÷ prod(config.partition)
+
+        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+        x = reshape(x, (input_size, :))
+        
+        if i < config.n_blocks
+            x = relu.(x)
+        end
+    end
 
     temp = ones(DDT(biases[2]), Domain(biases[2]), batch)
     gpu_flag && (global temp = gpu(temp))
@@ -325,16 +321,16 @@ gpu_flag && (global θ = gpu(θ))
 # println("Loss: ", loss(forward(θ, x), y))
 # exit()
 
-# Test Code block to check gradient with random input
-rng = Random.seed!(rank)
+# # Test Code block to check gradient with random input
+# rng = Random.seed!(rank)
 
-x = rand(rng, DDT(lifts), Domain(lifts))
-y = rand(rng, RDT(projects[2]), Range(projects[2]))
+# x = rand(rng, DDT(lifts), Domain(lifts))
+# y = rand(rng, RDT(projects[2]), Range(projects[2]))
 
-grads_dfno = gradient(params -> loss(forward(params, x), y), θ)[1]
+# grads_dfno = gradient(params -> loss(forward(params, x), y), θ)[1]
 
-MPI.Finalize()
-exit()
+# MPI.Finalize()
+# exit()
 
 # Define raw data directory
 mkpath(datadir("training-data"))
@@ -382,21 +378,22 @@ AN.forward(reshape(perm[1:s:end,1:s:end,1:ntrain], n[1], n[2], 1, ntrain));
 
 y_train = permutedims(conc[1:nt,1:s:end,1:s:end,1:ntrain],[2,3,1,4]);
 y_valid = permutedims(conc[1:nt,1:s:end,1:s:end,ntrain+1:ntrain+nvalid],[2,3,1,4]);
-
+conc = nothing # Free the variable for now
 grid = gen_grid(n, d, nt, dt)
 
 # Following Errors on Machine @ CODA Out of memory SIGKILL 9
 
 x_train = perm_to_tensor(perm[1:s:end,1:s:end,1:ntrain],grid,AN);
 x_valid = perm_to_tensor(perm[1:s:end,1:s:end,ntrain+1:ntrain+nvalid],grid,AN);
+perm = nothing # Free the variable for now
 x_valid_dfno = xytcb_to_cxytb(x_valid)
 
 opt = Flux.Optimise.ADAMW(learning_rate, (0.9f0, 0.999f0), 1f-4)
 nbatches = Int(ntrain/batch_size)
 
-Loss = zeros(Float32,epochs*nbatches)
-Loss_valid = zeros(Float32, epochs + 1)
-prog = Progress(round(Int, ntrain * epochs / batch_size))
+Loss = rank == 0 ? zeros(Float32,epochs*nbatches) : nothing
+Loss_valid = rank == 0 ? zeros(Float32, epochs + 1) : nothing
+prog = rank == 0 ? Progress(round(Int, ntrain * epochs / batch_size)) : nothing
 
 # plot figure
 x_plot = x_valid[:, :, :, :, 1:1]
@@ -425,6 +422,8 @@ if gpu_flag
     global x_valid_sample = x_valid_sample |> gpu
     global y_valid_sample = y_valid_sample |> gpu
 end
+
+# Test block to plot a forward pass
 
 shape_in = (config.nc_in, config.nx, config.ny, config.nt_in)
 shape_out = (config.nc_out, config.nx, config.ny, config.nt_out)
