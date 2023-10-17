@@ -43,8 +43,8 @@ update = ParametricOperators.update!
     my::Int = 4
     mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
+    nbatch::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1]
 end
@@ -99,7 +99,7 @@ function PO_FNO4CO2(config::ModelConfig)
 
     shape[1] = config.nc_lift
 
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
 
         sconv_layer = spectral_convolution(i)
         conv_layer = ParIdentity(T,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))") # lifting(shape, 1, config.nc_lift)
@@ -145,7 +145,7 @@ function forward(θ, x::Any)
     temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), size(x, 2))
     gpu_flag && (global temp = gpu(temp))
 
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
 
         x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
         x = cxytb_to_xytcb(reshape(x, (config.nc_lift, config.nx, config.ny, config.nt_in, :)))
@@ -163,7 +163,7 @@ function forward(θ, x::Any)
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
         x = reshape(xytcb_to_cxytb(x), (prod, :))
         
-        if i < config.n_blocks
+        if i < config.nblocks
             x = relu.(x)
         end
     end
@@ -182,7 +182,7 @@ end
 modes = 4
 width = 20
 
-config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=4, n_batch=2)
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=4, nbatch=2)
 lifts, sconvs, convs, projects, biases, sconv_biases = PO_FNO4CO2(config)
 
 # To Load Saved Dict: 
@@ -218,7 +218,7 @@ nsamples = size(perm, 3)
 ntrain = 1000
 nvalid = 100
 
-batch_size = config.n_batch
+batch_size = config.nbatch
 learning_rate = 1f-4
 
 epochs = 250
@@ -278,7 +278,7 @@ if gpu_flag
     global y_valid_sample = y_valid_sample |> gpu
 end
 
-Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.nbatch)))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
 
 ## training
 
@@ -291,8 +291,8 @@ for ep = 1:epochs
         x = x_train[:, :, :, :, idx_e[:,b]]
         y = y_train[:, :, :, idx_e[:,b]]
 
-        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.n_batch))
-        y_dfno = reshape(y, (:, config.n_batch))
+        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.nbatch))
+        y_dfno = reshape(y, (:, config.nbatch))
 
         if gpu_flag
             x_dfno = x_dfno |> gpu
@@ -318,7 +318,7 @@ for ep = 1:epochs
         global x_plot_dfno = x_plot_dfno |> gpu
     end
 
-    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.n_batch)))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+    Loss_valid[ep + 1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.nbatch)))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
     (ep % 5 > 0) && continue
 
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu

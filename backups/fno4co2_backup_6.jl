@@ -46,8 +46,8 @@ update = ParametricOperators.update!
     my::Int = 4
     mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
+    nbatch::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 2, 2, 1]
 end
@@ -105,7 +105,7 @@ function PO_FNO4CO2(config::ModelConfig)
 
     push!(biases, bias)
 
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
 
         sconv_layer = spectral_convolution(i)
         conv_layer = ParIdentity(T,config.nt_in) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
@@ -157,7 +157,7 @@ function forward(θ, x::Any)
     temp = ones(DDT(sconv_biases[1]), Domain(sconv_biases[1]), batch)
     gpu_flag && (global temp = gpu(temp))
 
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
         
         x = (sconvs[i](θ) * x) + (convs[i](θ) * x) + (sconv_biases[i](θ) * temp)
         x = reshape(x, (config.nc_lift ÷ config.partition[1], config.nx ÷ config.partition[2], config.ny ÷ config.partition[3], config.nt_in ÷ config.partition[4], :))
@@ -183,7 +183,7 @@ function forward(θ, x::Any)
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
         x = reshape(x, (input_size, :))
         
-        if i < config.n_blocks
+        if i < config.nblocks
             x = relu.(x)
         end
     end
@@ -272,7 +272,7 @@ end
 modes = 4
 width = 20
 
-config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=4, n_batch=2)
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=4, nbatch=2)
 lifts, sconvs, convs, projects, biases, sconv_biases = PO_FNO4CO2(config)
 
 comm_cart = MPI.Cart_create(comm, config.partition)
@@ -355,7 +355,7 @@ nsamples = size(perm, 3)
 ntrain = 1000
 nvalid = 100
 
-batch_size = config.n_batch
+batch_size = config.nbatch
 learning_rate = 1f-4
 
 epochs = 250
@@ -396,8 +396,8 @@ Loss_valid = rank == 0 ? zeros(Float32, epochs + 1) : nothing
 prog = rank == 0 ? Progress(round(Int, ntrain * epochs / batch_size)) : nothing
 
 # plot figure
-x_plot = x_valid[:, :, :, :, 1:1]
-y_plot = y_valid[:, :, :, 1:1]
+x_plot = x_valid[:, :, :, :, 10:10]
+y_plot = y_valid[:, :, :, 10:10]
 x_plot_dfno = vec(xytcb_to_cxytb(x_plot))
 y_plot_dfno = y_plot
 
@@ -473,7 +473,7 @@ close(fig)
 MPI.Finalize()
 exit()
 
-Loss_valid[1] = norm(forward(θ, reshape(x_valid_sample, (:, config.n_batch))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+Loss_valid[1] = norm(forward(θ, reshape(x_valid_sample, (:, config.nbatch))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
 
 ## training
 
@@ -486,8 +486,8 @@ for ep = 1:epochs
         x = x_train[:, :, :, :, idx_e[:,b]]
         y = y_train[:, :, :, idx_e[:,b]]
 
-        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.n_batch))
-        y_dfno = reshape(y, (:, config.n_batch))
+        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.nbatch))
+        y_dfno = reshape(y, (:, config.nbatch))
 
         if gpu_flag
             x_dfno = x_dfno |> gpu
@@ -509,7 +509,7 @@ for ep = 1:epochs
         ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
     end
 
-    Loss_valid[ep + 1] = norm(forward(θ, reshape(x_valid_sample, (:, config.n_batch))) - reshape(y_valid_sample, (:, config.n_batch)))/norm(y_valid_sample)
+    Loss_valid[ep + 1] = norm(forward(θ, reshape(x_valid_sample, (:, config.nbatch))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
     (ep % 5 > 0) && continue
 
     y_predict = reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1)) |> cpu

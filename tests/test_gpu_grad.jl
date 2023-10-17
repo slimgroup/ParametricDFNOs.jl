@@ -31,8 +31,8 @@ update = ParametricOperators.update!
     my::Int = 4
     mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
+    nbatch::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1]
 end
@@ -40,7 +40,7 @@ end
 modes = 4
 width = 20
 
-config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=4, n_batch=1)
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=4, nbatch=1)
 
 T = config.dtype
 
@@ -94,4 +94,4 @@ y_dfno = rand(rng, T, Range(dft)) |> gpu
 θ_new = θ_new |> gpu
 
 grads_dfno = gradient(params -> norm(dft * lifting(params) * x_dfno - y_dfno) / norm(y_dfno), θ_new)[1]
-# output = cxytb_to_xytcb(reshape(dft' * weight_mix(θ_new) * dft * lifting(θ_new) * x_dfno, (config.nc_lift, config.nx, config.ny, config.nt_out, config.n_batch)));
+# output = cxytb_to_xytcb(reshape(dft' * weight_mix(θ_new) * dft * lifting(θ_new) * x_dfno, (config.nc_lift, config.nx, config.ny, config.nt_out, config.nbatch)));

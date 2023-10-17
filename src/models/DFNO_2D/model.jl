@@ -5,14 +5,12 @@
     nt_out::Int = 51
     nc_in::Int = 4
     nc_mid::Int = 128
-    nc_out::Int = 1
     nc_lift::Int = 20
+    nc_out::Int = 1
     mx::Int = 4
     my::Int = 4
-    mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 2, 2, 1]
 end
@@ -76,7 +74,7 @@ mutable struct Model
     
         push!(biases, bias)
     
-        for i in 1:config.n_blocks
+        for i in 1:config.nblocks
     
             sconv_layer = spectral_convolution(i)
             conv_layer = ParIdentity(T,config.nt_in) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")

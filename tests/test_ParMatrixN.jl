@@ -18,8 +18,8 @@ using Parameters
     my::Int = 4
     mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
+    nbatch::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 2, 2, 1]
 end

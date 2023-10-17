@@ -17,7 +17,7 @@ MPI.Init()
     my::Int
     mz::Int
     mt::Int
-    n_blocks::Int = 4
+    nblocks::Int = 4
     dtype::DataType = Float32
     partition::Vector{Int}
 end

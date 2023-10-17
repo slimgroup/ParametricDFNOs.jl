@@ -42,8 +42,8 @@ update = ParametricOperators.update!
     my::Int = 4
     mz::Int = 4
     mt::Int = 4
-    n_blocks::Int = 1
-    n_batch::Int = 1
+    nblocks::Int = 1
+    nbatch::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1]
 end
@@ -117,7 +117,7 @@ function PO_FNO4CO2(config::ModelConfig)
     convs = []
     projects = []
 
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
 
         sconv_layer = spectral_convolution()
         conv_layer = ParIdentity(Float32,round(Int, prod(shape)/config.nc_lift)) ⊗ ParMatrix(Float32, config.nc_lift, config.nc_lift) # lifting(shape, 1, config.nc_lift)
@@ -142,7 +142,7 @@ end
 modes = 4
 width = 20
 
-config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, n_blocks=1, n_batch=2)
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=1, nbatch=2)
 lifts, sconvs, convs, projects = PO_FNO4CO2(config)
 
 # To Load Saved Dict: 
@@ -170,7 +170,7 @@ end
 
 function forward(θ, x::Any)
     x = lifts(θ) * x
-    for i in 1:config.n_blocks
+    for i in 1:config.nblocks
 
         x = (sconvs[i](θ) * x) + (convs[i](θ) * x)
         x = cxytb_to_xytcb(reshape(x, (config.nc_lift, config.nx, config.ny, config.nt_in, :)))
@@ -188,7 +188,7 @@ function forward(θ, x::Any)
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
         x = reshape(xytcb_to_cxytb(x), (prod, :))
         
-        if i < config.n_blocks
+        if i < config.nblocks
             x = relu.(x)
         end
     end
@@ -222,7 +222,7 @@ nsamples = size(perm, 3)
 ntrain = 1000
 nvalid = 100
 
-batch_size = config.n_batch
+batch_size = config.nbatch
 learning_rate = 1f-4
 
 epochs = 3
@@ -291,8 +291,8 @@ for ep = 1:epochs
         x = x_train[:, :, :, :, idx_e[:,b]]
         y = y_train[:, :, :, idx_e[:,b]]
 
-        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.n_batch))
-        y_dfno = reshape(y, (:, config.n_batch))
+        x_dfno = reshape(xytcb_to_cxytb(x), (:, config.nbatch))
+        y_dfno = reshape(y, (:, config.nbatch))
 
         if gpu_flag
             x_dfno = x_dfno |> gpu
@@ -343,7 +343,7 @@ for ep = 1:epochs
     θ_save = θ |> cpu
 
     valid_idx = randperm(nvalid)[1:batch_size]
-    Loss_valid[ep] = norm(relu01(forward(θ_save, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.n_batch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.n_batch)))/norm(y_valid[:, :, :, valid_idx])
+    Loss_valid[ep] = norm(relu01(forward(θ_save, reshape(x_valid_dfno[:, :, :, :, valid_idx], (:, config.nbatch)))) - reshape(y_valid[:, :, :, valid_idx], (:, config.nbatch)))/norm(y_valid[:, :, :, valid_idx])
 
     loss_train = Loss[1:ep*nbatches]
     loss_valid = Loss_valid[1:ep]
