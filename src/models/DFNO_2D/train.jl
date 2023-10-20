@@ -23,7 +23,7 @@ function _collect_dist_tensor(local_tensor, global_shape, partition, parent_comm
     return MPI.Reduce(vec(sparse), MPI.SUM, 0, parent_comm)
 end
 
-function _loss(local_pred_y, local_true_y)
+function loss(local_pred_y, local_true_y)
     s = sum((vec(local_pred_y) - vec(local_true_y)) .^ 2)
 
     reduce_norm = ParReduce(eltype(local_pred_y))
@@ -67,8 +67,8 @@ function train(config::TrainConfig, model::Model, θ::Dict)
             
             ## TODO: Move x, y to GPU ? 
 
-            grads = gradient(params -> _loss(forward(model, params, x), y), θ)[1]
-            global loss = _loss(forward(model, θ, x), y)
+            grads = gradient(params -> loss(forward(model, params, x), y), θ)[1]
+            global loss = loss(forward(model, θ, x), y)
             
             for (k, v) in θ
                 Flux.Optimise.update!(opt, v, grads[k])
@@ -81,7 +81,7 @@ function train(config::TrainConfig, model::Model, θ::Dict)
         end
 
         y = forward(model, θ, x_sample)
-        loss_valid = _loss(y, y_sample)
+        loss_valid = loss(y, y_sample)
 
         # TODO: Re-evaluate validation
         rank == 0 && (Loss_valid[ep] = loss_valid)

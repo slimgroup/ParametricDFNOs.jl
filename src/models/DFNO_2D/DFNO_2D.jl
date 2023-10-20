@@ -23,6 +23,6 @@ include("data.jl")
 include("train.jl")
 include("plot.jl")
 
-export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation
+export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, dist_tensor
 
 end

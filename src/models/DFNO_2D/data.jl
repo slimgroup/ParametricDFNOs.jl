@@ -45,7 +45,7 @@ function _get_local_indices(global_shape, partition, coords)
     return indexes
 end
 
-function _dist_tensor(tensor, global_shape, partition; parent_comm=MPI.COMM_WORLD)
+function dist_tensor(tensor, global_shape, partition; parent_comm=MPI.COMM_WORLD)
     comm_cart = MPI.Cart_create(parent_comm, partition)
     coords = MPI.Cart_coords(comm_cart)
 
