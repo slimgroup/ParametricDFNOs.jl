@@ -25,7 +25,7 @@ partition = [1,1,1,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_2D.ModelConfig(partition=partition)
+modelConfig = DFNO_2D.ModelConfig(dtype=Float64, partition=partition)
 model = DFNO_2D.Model(modelConfig)
 
 θ_save = DFNO_2D.initModel(model)

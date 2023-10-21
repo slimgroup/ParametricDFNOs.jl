@@ -28,8 +28,6 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     Loss = rank == 0 ? zeros(Float32,config.epochs*nbatches) : nothing
     Loss_valid = rank == 0 ? zeros(Float32, config.epochs) : nothing
     prog = rank == 0 ? Progress(round(Int, config.ntrain * config.epochs / config.nbatch)) : nothing
-    
-    rank == 0 && (Loss_valid[1] = 0)
 
     for ep = 1:config.epochs
         rng2 = Random.seed!(config.seed)
@@ -73,8 +71,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         x_sample_global = UTILS.collect_dist_tensor(x_sample, x_global_shape, model.config.partition, comm)
         y_sample_global = UTILS.collect_dist_tensor(y_sample, y_global_shape, model.config.partition, comm)
 
-        ## Plot every some epochs and save weights, images. TODO: Better way for name dict? and move weights to cpu before saving
-        labels = @strdict ep
+        # TODO: Better way for name dict? and move weights to cpu before saving and handle rank conditionals better
+        labels = @strdict ep Loss_valid Loss
         saveWeights(θ, model, additional=labels, comm=comm)
 
         rank > 0 && continue

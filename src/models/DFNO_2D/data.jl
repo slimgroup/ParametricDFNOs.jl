@@ -102,6 +102,7 @@ function _dist_value(value, partition)
 end
 
 function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
+    # TODO: Address this when rethinking ParMatrixN
     
     comm_cart = MPI.Cart_create(comm, partition)
     coords = MPI.Cart_coords(comm_cart)
@@ -123,6 +124,7 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
 end
 
 function collectWeights(θ, model; comm=MPI.COMM_WORLD)
+    # TODO: Address this when rethinking ParMatrixN
     comm_cart = MPI.Cart_create(comm, model.config.partition)
     coords = MPI.Cart_coords(comm_cart)
 

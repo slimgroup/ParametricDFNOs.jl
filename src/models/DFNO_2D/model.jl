@@ -11,7 +11,7 @@
     my::Int = 4
     mt::Int = 4
     nblocks::Int = 1
-    dtype::DataType = Float64
+    dtype::DataType = Float32
     partition::Vector{Int} = [1, 2, 2, 1]
 end
 
