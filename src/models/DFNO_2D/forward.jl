@@ -49,7 +49,7 @@ function forward(model::Model, θ, x::Any)
     temp = ones(DDT(model.biases[3]), Domain(model.biases[3]), batch)
     gpu_flag && (global temp = gpu(temp))
     x = model.projects[2](θ) * x + model.biases[3](θ) * temp
-    x = relu.(x)
+    x = 1f0.-relu.(1f0.-relu.(x))
 
     x = reshape(x, (model.config.nc_out ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nt_out ÷ model.config.partition[4], batch))
     return x

@@ -80,5 +80,6 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
     end
-    saveWeights(θ, model, comm=comm)
+    labels = @strdict Loss_valid Loss
+    saveWeights(θ, model, additional=labels, comm=comm)
 end

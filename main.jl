@@ -21,7 +21,7 @@ partition = [1,1,1,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_2D.ModelConfig(nblocks=1, partition=partition)
+modelConfig = DFNO_2D.ModelConfig(dtype=Float64,nblocks=1, partition=partition)
 model = DFNO_2D.Model(modelConfig)
 
 θ = DFNO_2D.initModel(model)
@@ -36,6 +36,11 @@ model = DFNO_2D.Model(modelConfig)
 # DFNO_2D.loadWeights!(θ, filename, "θ_save", partition)
 
 x_train, y_train, x_valid, y_valid = DFNO_2D.loadData(partition)
+
+x_train = Float64.(x_train)
+y_train = Float64.(y_train)
+x_valid = Float64.(x_valid)
+y_valid = Float64.(y_valid)
 
 trainConfig = DFNO_2D.TrainConfig(
     epochs=1,

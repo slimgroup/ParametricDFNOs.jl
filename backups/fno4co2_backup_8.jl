@@ -2,8 +2,7 @@
 # and has a different filter for all the points in the restriction space
 # GPU support for everything but Einsum
 # Modified backup 4 to train for 1 epoch to make comparison to dfno
-# Modified to train no Float 64 precision
-
+# Modified backup 7 to test forward pass
 using Pkg
 Pkg.activate("./")
 
@@ -47,7 +46,7 @@ update = ParametricOperators.update!
     mt::Int = 4
     nblocks::Int = 1
     nbatch::Int = 1
-    dtype::DataType = Float32
+    dtype::DataType = Float64
     partition::Vector{Int} = [1]
 end
 
@@ -161,7 +160,7 @@ function forward(θ, x::Any)
         σ² = var(x; mean=μ, dims=reduce_dims, corrected=false)
 
         prod = config.nc_lift * config.nx * config.ny * config.nt_in
-
+        println(norm(μ), " ", norm(x), " ", norm(σ²))
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
         x = reshape(xytcb_to_cxytb(x), (prod, :))
         
@@ -184,7 +183,7 @@ end
 modes = 4
 width = 20
 
-config = ModelConfig(dtype=Float64, mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=1, nbatch=2)
+config = ModelConfig(mx=modes, my=modes, mt=modes, nc_lift=width, nblocks=1, nbatch=2)
 lifts, sconvs, convs, projects, biases, sconv_biases = PO_FNO4CO2(config)
 
 # To Load Saved Dict: 
@@ -292,6 +291,9 @@ end
 # Loss_valid[1] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.nbatch)))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
 
 ## training
+x_true = nothing
+y_true = nothing
+y_pred = nothing
 
 for ep = 1:epochs
 
@@ -305,6 +307,10 @@ for ep = 1:epochs
 
         x_dfno = reshape(xytcb_to_cxytb(x), (:, config.nbatch))
         y_dfno = reshape(y, (:, config.nbatch))
+
+        global x_true = vec(x_dfno)
+        global y_true = vec(y_dfno)
+        global y_pred = vec(relu01(forward(θ, x_dfno)))
 
         if gpu_flag
             x_dfno = x_dfno |> gpu
@@ -324,6 +330,7 @@ for ep = 1:epochs
 
         Loss[(ep-1)*nbatches+b] = loss
         ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
+        break
     end
 
     if gpu_flag
@@ -332,7 +339,7 @@ for ep = 1:epochs
 
     Loss_valid[ep] = norm(relu01(forward(θ, reshape(x_valid_sample, (:, config.nbatch)))) - reshape(y_valid_sample, (:, config.nbatch)))/norm(y_valid_sample)
     # (ep % 5 > 0) && continue
-
+    break
     y_predict = relu01(reshape(forward(θ, vec(x_plot_dfno)), (64,64,51,1))) |> cpu
 
     fig = figure(figsize=(20, 12))
@@ -398,7 +405,7 @@ end
 # θ_save = θ |> cpu
 θ_save = Dict(k => cpu(v) for (k, v) in pairs(θ))
 
-final_dict = @strdict Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
+final_dict = @strdict x_true y_true y_pred Loss Loss_valid epochs lifts sconvs convs projects θ_save batch_size Loss modes width learning_rate epochs s n d nt dt AN ntrain nvalid
 @tagsave(
     datadir(sim_name, savename(final_dict, "jld2"; digits=6)),
     final_dict;
