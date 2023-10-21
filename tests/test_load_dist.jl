@@ -1,5 +1,5 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 4 julia tests/test_save_dist.jl
+# mpiexecjl --project=./ -n 4 julia tests/test_load_dist.jl
 
 using Pkg
 Pkg.activate("./")
@@ -32,7 +32,7 @@ model = DFNO_2D.Model(modelConfig)
 grads_true = DFNO_2D.initModel(model)
 
 # Load existing stuff from serially trained FNO
-weights_file = "exp=serial_test_mt=4_mx=4_my=4_nblocks=1_nc_in=4_nc_lift=20_nc_mid=128_nc_out=1_nt_in=51_nt_out=51_nx=64_ny=64.jld2"
+weights_file = "exp=dist_save_test_mt=4_mx=4_my=4_nblocks=1_nc_in=4_nc_lift=20_nc_mid=128_nc_out=1_nt_in=51_nt_out=51_nx=64_ny=64.jld2"
 
 DFNO_2D.loadWeights!(θ, weights_file, "θ_save", partition)
 DFNO_2D.loadWeights!(grads_true, weights_file, "grads", partition)
@@ -62,14 +62,5 @@ for (k, v) in grads
 end
 
 @assert y_norm <= 1e-10
-
-# Save Weights and grads on 1 PE
-
-grads = DFNO_2D.collectWeights(grads, model)
-y_out = UTILS.collect_dist_tensor(y_out, shape_out, partition, comm)
-
-exp = "dist_save_test"
-serial_test = @strdict exp y_out grads
-DFNO_2D.saveWeights(θ, model, additional=serial_test)
 
 MPI.Finalize()

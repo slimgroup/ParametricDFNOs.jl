@@ -22,7 +22,10 @@ include("forward.jl")
 include("data.jl")
 include("train.jl")
 include("plot.jl")
+include("../../utils.jl")
 
-export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, dist_tensor
+using .UTILS
+
+export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, collectWeights
 
 end

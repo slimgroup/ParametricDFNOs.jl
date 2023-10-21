@@ -25,35 +25,6 @@ end
 perm_to_tensor(x_perm::AbstractArray{Float32,3},grid::Array{Float32,4},AN::ActNorm) = cat([perm_to_tensor(x_perm[:,:,i],grid,AN) for i = 1:size(x_perm,3)]..., dims=5)
 ## End Francis Code
 
-function _get_local_indices(global_shape, partition, coords)
-    indexes = []
-    for (dim, value) in enumerate(global_shape)
-        local_size = value ÷ partition[dim]
-        start = 1 + coords[dim] * local_size
-
-        r = value % partition[dim]
-
-        if coords[dim] < r
-            local_size += 1
-            start += coords[dim]
-        else
-            start += r
-        end
-
-        push!(indexes, start:start+local_size-1)
-    end
-    return indexes
-end
-
-function dist_tensor(tensor, global_shape, partition; parent_comm=MPI.COMM_WORLD)
-    comm_cart = MPI.Cart_create(parent_comm, partition)
-    coords = MPI.Cart_coords(comm_cart)
-
-    indexes = _get_local_indices(global_shape, partition, coords)
-    tensor = reshape(tensor, global_shape)
-    return tensor[indexes...]
-end
-
 # Returns training and validation data in format cxytn distributed according to partition. TODO: Make this distributed
 function loadData(partition)
     
@@ -112,17 +83,78 @@ function loadData(partition)
     y_valid = reshape(y_valid, 1, (size(y_valid)...))
 
     # TODO: Introduce a new operator for future use
-    x_train = _dist_tensor(x_train, size(x_train), [partition..., 1])
-    y_train = _dist_tensor(y_train, size(y_train), [partition..., 1])
-    x_valid = _dist_tensor(x_valid, size(x_valid), [partition..., 1])
-    y_valid = _dist_tensor(y_valid, size(y_valid), [partition..., 1])
+    x_train = UTILS.dist_tensor(x_train, size(x_train), [partition..., 1])
+    y_train = UTILS.dist_tensor(y_train, size(y_train), [partition..., 1])
+    x_valid = UTILS.dist_tensor(x_valid, size(x_valid), [partition..., 1])
+    y_valid = UTILS.dist_tensor(y_valid, size(y_valid), [partition..., 1])
 
     return x_train, y_train, x_valid, y_valid
 end
 
-function _saveWeights(θ, model::Model; additional=Dict{String,Any}())
+function _dist_key(key, coords)
+    return "$(key.id):($(join(coords, ',')))"
+end
 
-    # TODO: Make this simpler and add more info
+function _dist_value(value, partition)
+    # This is only for ParMatrixN where the first is the channel dim
+    new_partition = [1, partition...]
+    return UTILS.dist_tensor(value, size(value), new_partition)
+end
+
+function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
+    
+    comm_cart = MPI.Cart_create(comm, partition)
+    coords = MPI.Cart_coords(comm_cart)
+    
+    file = projectdir("weights", model_name, filename)
+
+    saved = load(file)[key]
+    for (k, v) in saved
+        haskey(θ, k) && (θ[k] = v)
+        if !haskey(θ, k)
+            id = _dist_key(k, coords)
+            for (k1, v1) in θ
+                if k1.id == id
+                    θ[k1] = _dist_value(v, partition)
+                end
+            end
+        end
+    end
+end
+
+function collectWeights(θ, model; comm=MPI.COMM_WORLD)
+    comm_cart = MPI.Cart_create(comm, model.config.partition)
+    coords = MPI.Cart_coords(comm_cart)
+
+    θ_save = Dict()
+    keys_to_remove = []
+
+    w_partition = [1, model.config.partition...] # works only when the w is oixyt 
+    for weight_mix in model.weight_mixes
+        id = _dist_key(weight_mix, coords)
+        for (k, v) in θ
+            if k.id == id
+                push!(keys_to_remove, k)
+                θ_save[weight_mix] = UTILS.collect_dist_tensor(v, weight_mix.weight_shape, w_partition, comm)
+            end
+        end
+    end
+
+    merge!(θ_save, θ)
+    for key in keys_to_remove
+        delete!(θ_save, key)
+    end
+
+    return θ_save
+end
+
+function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.COMM_WORLD)
+
+    # TODO: Make this simpler and add more info and remove dependence from model and move to utils
+    rank = MPI.Comm_rank(comm)
+    θ_save = collectWeights(θ, model, comm=comm)
+    
+    rank > 0 && return
 
     lifts = model.lifts
     sconvs = model.sconvs
@@ -143,11 +175,10 @@ function _saveWeights(θ, model::Model; additional=Dict{String,Any}())
     partition = model.config.partition
     dtype = model.config.dtype
 
-    final_dict = @strdict lifts sconvs convs projects θ nblocks nx ny nt_in nt_out nc_in nc_mid nc_lift nc_out mx my mt partition dtype
+    final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nt_in nt_out nc_in nc_mid nc_lift nc_out mx my mt partition dtype
     final_dict = merge(final_dict, additional)
     
     mkpath(projectdir("weights", model_name))
-
     @tagsave(
         projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
         final_dict;

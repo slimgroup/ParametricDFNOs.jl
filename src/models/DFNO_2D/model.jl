@@ -23,10 +23,18 @@ mutable struct Model
     biases::Vector
     sconv_biases::Vector
     projects::Vector
+    weight_mixes::Vector
 
     function Model(config::ModelConfig)
 
         T = config.dtype
+        
+        sconvs = []
+        convs = []
+        projects = []
+        sconv_biases = []
+        biases = []
+        weight_mixes = []
     
         function spectral_convolution(layer::Int)
     
@@ -50,7 +58,9 @@ mutable struct Model
             # Setup FFT-restrict pattern and weightage with Kroneckers
             weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
             restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
-    
+            
+            push!(weight_mixes, weight_mix)
+
             weight_mix = distribute(weight_mix, config.partition)
             restrict_dft = distribute(restrict_dft, config.partition)
     
@@ -58,12 +68,6 @@ mutable struct Model
     
             return sconv
         end
-    
-        sconvs = []
-        convs = []
-        projects = []
-        sconv_biases = []
-        biases = []
     
         # Lift Channel dimension
         lifts = ParIdentity(T,config.nt_in) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
@@ -108,7 +112,7 @@ mutable struct Model
         push!(biases, bias)
         push!(projects, pc)
     
-        new(config, lifts, convs, sconvs, biases, sconv_biases, projects)
+        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes)
     end
 end
 

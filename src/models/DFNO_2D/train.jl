@@ -12,33 +12,8 @@
     y_valid::Any
 end
 
-function _collect_dist_tensor(local_tensor, global_shape, partition, parent_comm)
-    comm_cart = MPI.Cart_create(parent_comm, partition)
-    coords = MPI.Cart_coords(comm_cart)
+function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD)
 
-    sparse = zeros(eltype(local_tensor), global_shape...)
-    indexes = _get_local_indices(global_shape, partition, coords)
-
-    sparse[indexes...] = local_tensor
-    return MPI.Reduce(vec(sparse), MPI.SUM, 0, parent_comm)
-end
-
-function loss(local_pred_y, local_true_y)
-    s = sum((vec(local_pred_y) - vec(local_true_y)) .^ 2)
-
-    reduce_norm = ParReduce(eltype(local_pred_y))
-    reduce_y = ParReduce(eltype(local_true_y))
-
-    norm_diff = √(reduce_norm([s])[1])
-    norm_y = √(reduce_y([sum(local_true_y .^ 2)])[1])
-
-    return norm_diff / norm_y
-end
-
-function train(config::TrainConfig, model::Model, θ::Dict)
-
-    # TODO: Figure out how to handle comm for the module while making it safe for perlmutter since it has reorder capabilites
-    comm = MPI.COMM_WORLD
     rank = MPI.Comm_rank(comm)
 
     opt = Flux.Optimise.ADAMW(config.learning_rate, (0.9f0, 0.999f0), 1f-4)
@@ -67,8 +42,8 @@ function train(config::TrainConfig, model::Model, θ::Dict)
             
             ## TODO: Move x, y to GPU ? 
 
-            grads = gradient(params -> loss(forward(model, params, x), y), θ)[1]
-            global loss = loss(forward(model, θ, x), y)
+            grads = gradient(params -> UTILS.dist_loss(forward(model, params, x), y), θ)[1]
+            global loss = UTILS.dist_loss(forward(model, θ, x), y)
             
             for (k, v) in θ
                 Flux.Optimise.update!(opt, v, grads[k])
@@ -81,7 +56,7 @@ function train(config::TrainConfig, model::Model, θ::Dict)
         end
 
         y = forward(model, θ, x_sample)
-        loss_valid = loss(y, y_sample)
+        loss_valid = UTILS.dist_loss(y, y_sample)
 
         # TODO: Re-evaluate validation
         rank == 0 && (Loss_valid[ep] = loss_valid)
@@ -94,17 +69,18 @@ function train(config::TrainConfig, model::Model, θ::Dict)
         x_sample = x_sample[:, :, :, :, 1:1]
         y_sample = y_sample[:, :, :, :, 1:1]
 
-        y_global = _collect_dist_tensor(y, y_global_shape, model.config.partition, comm)
-        x_sample_global = _collect_dist_tensor(x_sample, x_global_shape, model.config.partition, comm)
-        y_sample_global = _collect_dist_tensor(y_sample, y_global_shape, model.config.partition, comm)
-
-        rank > 0 && continue
+        y_global = UTILS.collect_dist_tensor(y, y_global_shape, model.config.partition, comm)
+        x_sample_global = UTILS.collect_dist_tensor(x_sample, x_global_shape, model.config.partition, comm)
+        y_sample_global = UTILS.collect_dist_tensor(y_sample, y_global_shape, model.config.partition, comm)
 
         ## Plot every some epochs and save weights, images. TODO: Better way for name dict? and move weights to cpu before saving
         labels = @strdict ep
+        saveWeights(θ, model, additional=labels, comm=comm)
+
+        rank > 0 && continue
+        
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
-        # _saveWeights(θ, model, additional=labels)
     end
-    # _saveWeights(θ, model)
+    saveWeights(θ, model, comm=comm)
 end
