@@ -15,6 +15,7 @@ end
 function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD)
 
     rank = MPI.Comm_rank(comm)
+    p = MPI.Comm_size(comm)
 
     opt = Flux.Optimise.ADAMW(config.learning_rate, (0.9f0, 0.999f0), 1f-4)
     nbatches = Int(config.ntrain/config.nbatch)
@@ -72,7 +73,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         y_sample_global = UTILS.collect_dist_tensor(y_sample, y_global_shape, model.config.partition, comm)
 
         # TODO: Better way for name dict? and move weights to cpu before saving and handle rank conditionals better
-        labels = @strdict ep Loss_valid Loss
+        labels = @strdict p ep Loss_valid Loss
         saveWeights(θ, model, additional=labels, comm=comm)
 
         rank > 0 && continue
