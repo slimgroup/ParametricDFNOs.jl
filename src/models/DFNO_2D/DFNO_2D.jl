@@ -4,6 +4,7 @@ using MAT
 using MPI
 using Flux
 using PyPlot
+using Printf
 using Random
 using DrWatson
 using Parameters
@@ -26,6 +27,6 @@ include("../../utils.jl")
 
 using .UTILS
 
-export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, collectWeights
+export Model, ModelConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, collectWeights, print_storage_complexity
 
 end
