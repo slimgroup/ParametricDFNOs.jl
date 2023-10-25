@@ -6,6 +6,7 @@ using Flux
 using PyPlot
 using Printf
 using Random
+using Zygote
 using DrWatson
 using Parameters
 using ProgressMeter
@@ -23,6 +24,7 @@ include("forward.jl")
 include("data.jl")
 include("train.jl")
 include("plot.jl")
+include("weights.jl")
 include("../../utils.jl")
 
 using .UTILS

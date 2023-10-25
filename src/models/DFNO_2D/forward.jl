@@ -3,23 +3,19 @@ function forward(model::Model, θ, x::Any)
     x = reshape(x, (Domain(model.lifts), :))
     batch = size(x, 2)
 
-    temp = ones(DDT(model.biases[1]), Domain(model.biases[1]), batch)
-    gpu_flag && (global temp = gpu(temp))
-    x = model.lifts(θ) * x + model.biases[1](θ) * temp
-
-    temp = ones(DDT(model.sconv_biases[1]), Domain(model.sconv_biases[1]), batch)
-    gpu_flag && (global temp = gpu(temp))
+    x = reshape(model.lifts(θ) * x, (model.config.nc_lift, :))
+    x = reshape(x + model.biases[1](θ), (:, batch))
 
     for i in 1:model.config.nblocks
         
-        x = (model.sconvs[i](θ) * x) + (model.convs[i](θ) * x) + (model.sconv_biases[i](θ) * temp)
-        x = reshape(x, (model.config.nc_lift ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nt_in ÷ model.config.partition[4], :))
+        x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
+        x = reshape(x, (model.config.nc_lift ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nt ÷ model.config.partition[4], :))
 
         N = ndims(x)
         ϵ = 1f-5
 
         reduce_dims = collect(2:N)
-        scale = batch * model.config.nx * model.config.ny * model.config.nt_in
+        scale = batch * model.config.nx * model.config.ny * model.config.nt
 
         s = sum(x; dims=reduce_dims)
         reduce_mean = ParReduce(eltype(s))
@@ -31,7 +27,7 @@ function forward(model::Model, θ, x::Any)
         reduce_var = ParReduce(eltype(s))
         σ² = reduce_var(s) ./ scale
 
-        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nt_in) ÷ prod(model.config.partition)
+        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nt) ÷ prod(model.config.partition)
 
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
         x = reshape(x, (input_size, :))
@@ -41,16 +37,13 @@ function forward(model::Model, θ, x::Any)
         end
     end
 
-    temp = ones(DDT(model.biases[2]), Domain(model.biases[2]), batch)
-    gpu_flag && (global temp = gpu(temp))
-    x = model.projects[1](θ) * x + model.biases[2](θ) * temp
+    x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
+    x = reshape(x + model.biases[2](θ), (:, batch))
     x = relu.(x)
 
-    temp = ones(DDT(model.biases[3]), Domain(model.biases[3]), batch)
-    gpu_flag && (global temp = gpu(temp))
-    x = model.projects[2](θ) * x + model.biases[3](θ) * temp
+    x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
+    x = reshape(x, (model.config.nc_out ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nt ÷ model.config.partition[4], batch))
     x = 1f0.-relu.(1f0.-relu.(x))
 
-    x = reshape(x, (model.config.nc_out ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nt_out ÷ model.config.partition[4], batch))
     return x
 end

@@ -70,10 +70,9 @@ mutable struct Model
     
         # Lift Channel dimension
         lifts = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
-        bias = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParDiagonal(T, config.nc_lift, "ParDiagonal_BIAS:(1)") # TODO: Rearrange code for all bias so it makes more sense mathematically
+        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_BIAS:(1)"))
     
         lifts = distribute(lifts, config.partition)
-        bias = distribute(bias, config.partition)
     
         push!(biases, bias)
     
@@ -81,10 +80,9 @@ mutable struct Model
     
             sconv_layer = spectral_convolution(i)
             conv_layer = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
-            bias = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParDiagonal(T, config.nc_lift, "ParDiagonal_SCONV:($(i))")
+            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_SCONV:($(i))"))
     
             conv_layer = distribute(conv_layer, config.partition)
-            bias = distribute(bias, config.partition)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
@@ -93,20 +91,18 @@ mutable struct Model
     
         # Uplift channel dimension once more
         uc = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)")
-        bias = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParDiagonal(T, config.nc_mid, "ParDiagonal_BIAS:(2)")
+        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParDiagonal_BIAS:(2)"))
     
         uc = distribute(uc, config.partition)
-        bias = distribute(bias, config.partition)
     
         push!(biases, bias)
         push!(projects, uc)
     
         # Project channel dimension
         pc = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)")
-        bias = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParDiagonal(T, config.nc_out, "ParDiagonal_BIAS:(3)")
+        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParDiagonal_BIAS:(3)"))
     
         pc = distribute(pc, config.partition)
-        bias = distribute(bias, config.partition)
     
         push!(biases, bias)
         push!(projects, pc)

@@ -8,6 +8,7 @@ include("src/models/DFNO_2D/DFNO_2D.jl")
 
 using .DFNO_2D
 using MPI
+using Random
 using DrWatson
 using LinearAlgebra
 using ParametricOperators
@@ -34,16 +35,22 @@ model = DFNO_2D.Model(modelConfig)
 # filename = "dtype=Float32_exp=serial_start_mt=4_mx=4_my=4_nblocks=1_nc_in=4_nc_lift=20_nc_mid=128_nc_out=1_nt_in=51_nt_out=51_nx=64_ny=64.jld2"
 # DFNO_2D.loadWeights!(θ, filename, "θ_save", partition)
 
-x_train, y_train, x_valid, y_valid = DFNO_2D.loadData(partition)
+# x_train, y_train, x_valid, y_valid = DFNO_2D.loadData(partition)
 
-trainConfig = DFNO_2D.TrainConfig(
-    epochs=1,
-    x_train=x_train,
-    y_train=y_train,
-    x_valid=x_valid,
-    y_valid=y_valid,
-)
+# trainConfig = DFNO_2D.TrainConfig(
+#     epochs=1,
+#     x_train=x_train,
+#     y_train=y_train,
+#     x_valid=x_valid,
+#     y_valid=y_valid,
+# )
 
-DFNO_2D.train!(trainConfig, model, θ)
+# DFNO_2D.train!(trainConfig, model, θ)
+
+rng = Random.seed!(1234)
+x = rand(rng, DDT(model.lifts), Domain(model.lifts), 1)
+y = DFNO_2D.forward(model, θ, x)
+
+println(sum(y))
 
 MPI.Finalize()
