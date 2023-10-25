@@ -137,17 +137,17 @@ function print_storage_complexity(config::ModelConfig; batch=1)
     data_count = 0.0
 
     # Storage costs for x and y
-    data_count = (prod(x_shape) + prod(y_shape))/ prod(config.partition)
+    data_count = (prod(x_shape) + prod(y_shape))
 
-    # Lift costs for 2 sums + 1 target + 1 temp input
-    lift_count = 4 * config.nc_lift * prod(x_shape) / config.nc_in 
+    # Lift costs for 2 sums + 1 target
+    lift_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
 
-    # Sconv costs for 3 sums + 1 target + 1 temp input
-    sconv_count = 5 * config.nc_lift * prod(x_shape) / config.nc_in 
+    # Sconv costs for 2 sums + 1 target
+    sconv_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
     
-    # Projects costs for 2 sums + 1 target + 1 temp input
-    projects_count1 = 4 * config.nc_mid * prod(x_shape) / config.nc_in 
-    projects_count2 = 4 * config.nc_out * prod(x_shape) / config.nc_in 
+    # Projects costs for 2 sums + 1 target
+    projects_count1 = 3 * config.nc_mid * prod(x_shape) / config.nc_in 
+    projects_count2 = 3 * config.nc_out * prod(x_shape) / config.nc_in 
 
     # Most # of Kronecker stores (2x Range) in PO * max(input)
     data_count += max(lift_count, sconv_count, projects_count1, projects_count2)
@@ -164,7 +164,7 @@ function print_storage_complexity(config::ModelConfig; batch=1)
     for i in 1:config.nblocks
 
         # Par Matrix N in restriction space,
-        weights_count += prod(weight_shape) / prod(config.partition)
+        weights_count += prod(weight_shape)
         
         # Convolution and bias
         weights_count += (config.nc_lift * config.nc_lift) + config.nc_lift
@@ -176,9 +176,12 @@ function print_storage_complexity(config::ModelConfig; batch=1)
     # Projects 2 weights and bias
     weights_count += (config.nc_mid * config.nc_out) + config.nc_out
 
+    # For Francis b=8 passes b=9 fails with F32, Richard b=5 passes b=6 fails after couple batches (forward and backward)
+    # For Francis & Richard b=25 passes b=26 fails with F32
+
     w_scale = 1.88 # Empirically chosen (Due to Dict ?)
-    c_scale = batch * 1.2 # Empirically chosen (Extra allocation by PO ?)
-    g_scale = 4 # Empirically chosen
+    c_scale = batch * 0.97 # Empirically chosen
+    g_scale = 4.5 # Empirically chosen, for 3.0 for Francis, 4.5 for Richard. Gradient is only ~67% as memory efficient as Francis 
 
     w_mb = w_scale * weights_count * multiplier[config.dtype] / 8e+6
     c_gb = c_scale * data_count * multiplier[config.dtype] / 8e+9
