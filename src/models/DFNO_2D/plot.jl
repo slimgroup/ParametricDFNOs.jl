@@ -1,8 +1,8 @@
 function _getFigname(config::TrainConfig, additional::Dict)
     nbatch = config.nbatch
     epochs = config.epochs
-    ntrain = config.ntrain
-    nvalid = config.nvalid
+    ntrain = size(config.x_train, 5)
+    nvalid = size(config.x_valid, 5)
     
     figname = @strdict nbatch epochs ntrain nvalid
     return merge(additional,figname)
@@ -10,7 +10,8 @@ end
 
 function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dict())
 
-    nbatches = Int(trainConfig.ntrain/trainConfig.nbatch)
+    ntrain = size(trainConfig.x_train, 5)
+    nbatches = Int(ntrain/trainConfig.nbatch)
 
     loss_train = Loss[1:ep*nbatches]
     loss_valid = Loss_valid[1:ep]
@@ -42,9 +43,9 @@ end
 
 function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
 
-    x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nx, modelConfig.ny, modelConfig.nt_in))
-    y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nt_out))
-    y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nt_out))
+    x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nx, modelConfig.ny, modelConfig.nt))
+    y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nt))
+    y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nt))
 
     fig = figure(figsize=(20, 12))
 

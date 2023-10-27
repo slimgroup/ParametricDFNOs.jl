@@ -11,7 +11,7 @@
     mt::Int = 4
     nblocks::Int = 1
     dtype::DataType = Float32
-    partition::Vector{Int} = [1, 1, 1, 1]
+    partition::Vector{Int} = [1, 2, 2, 1]
 end
 
 mutable struct Model
@@ -116,6 +116,7 @@ function initModel(model::Model)
     for operator in Iterators.flatten((model.sconvs, model.convs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end
+    gpu_flag && (θ = gpu(θ))
     return θ
 end
 

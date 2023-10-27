@@ -10,7 +10,8 @@ end
 
 function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
     # TODO: Address this when rethinking ParMatrixN
-    
+    # TODO: Make GPU aware using flag
+
     comm_cart = MPI.Cart_create(comm, partition)
     coords = MPI.Cart_coords(comm_cart)
     
@@ -34,6 +35,8 @@ function collectWeights(θ, model; comm=MPI.COMM_WORLD)
     # TODO: Address this when rethinking ParMatrixN
     comm_cart = MPI.Cart_create(comm, model.config.partition)
     coords = MPI.Cart_coords(comm_cart)
+
+    gpu_flag && !isnothing(θ) && (θ = Dict(k => cpu(v) for (k, v) in pairs(θ)))
 
     θ_save = Dict()
     keys_to_remove = []
@@ -72,8 +75,7 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     nblocks = model.config.nblocks
     nx = model.config.nx
     ny = model.config.ny
-    nt_in = model.config.nt_in
-    nt_out = model.config.nt_out
+    nt = model.config.nt
     nc_in = model.config.nc_in
     nc_mid = model.config.nc_mid
     nc_lift = model.config.nc_lift
@@ -84,7 +86,7 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     partition = model.config.partition
     dtype = model.config.dtype
 
-    final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nt_in nt_out nc_in nc_mid nc_lift nc_out mx my mt partition dtype
+    final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nt nc_in nc_mid nc_lift nc_out mx my mt partition dtype
     final_dict = merge(final_dict, additional)
     
     mkpath(projectdir("weights", model_name))

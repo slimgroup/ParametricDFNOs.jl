@@ -3,6 +3,8 @@ module UTILS
 using MPI
 using ParametricOperators
 
+cpu = ParametricOperators.cpu
+
 function collect_dist_tensor(local_tensor, global_shape, partition, parent_comm)
     comm_cart = MPI.Cart_create(parent_comm, partition)
     coords = MPI.Cart_coords(comm_cart)
