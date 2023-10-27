@@ -8,7 +8,6 @@ include("src/models/DFNO_2D/DFNO_2D.jl")
 
 using .DFNO_2D
 using MPI
-using Random
 using DrWatson
 using LinearAlgebra
 using ParametricOperators
@@ -22,7 +21,7 @@ partition = [1,2,2,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_2D.ModelConfig(nblocks=1, partition=partition)
+modelConfig = DFNO_2D.ModelConfig(nblocks=4, partition=partition)
 dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig)
 
 model = DFNO_2D.Model(modelConfig)

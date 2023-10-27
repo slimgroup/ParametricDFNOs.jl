@@ -44,7 +44,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
 
     for ep = 1:config.epochs
-        rng2 = Random.seed!(config.seed)
+        rng2 = Random.seed!(config.seed + ep)
         Base.flush(Base.stdout)
         idx_e = reshape(randperm(rng2, ntrain), config.nbatch, nbatches)
 

@@ -29,6 +29,12 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
             end
         end
     end
+
+    if gpu_flag
+        for (k, v) in θ
+            θ[k] = v |> gpu
+        end
+    end
 end
 
 function collectWeights(θ, model; comm=MPI.COMM_WORLD)

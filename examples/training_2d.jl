@@ -4,7 +4,7 @@
 using Pkg
 Pkg.activate("./")
 
-include("../src/models/DFNO_2D/DFNO_2D.jl")
+include("src/models/DFNO_2D/DFNO_2D.jl")
 
 using .DFNO_2D
 using MPI
@@ -21,23 +21,20 @@ partition = [1,2,2,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_2D.ModelConfig(nblocks=1, partition=partition)
-model = DFNO_2D.Model(modelConfig)
+modelConfig = DFNO_2D.ModelConfig(nblocks=4, partition=partition)
+dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig)
 
+model = DFNO_2D.Model(modelConfig)
 θ = DFNO_2D.initModel(model)
 
-# # To save starting weights
-# labels = Dict{String, Any}("dtype" => "Float32", "exp" => "serial_start")
-# DFNO_2D.saveWeights(θ, model, additional=labels)
-
 # # To train from a checkpoint
-# filename = "dtype=Float32_exp=serial_start_mt=4_mx=4_my=4_nblocks=1_nc_in=4_nc_lift=20_nc_mid=128_nc_out=1_nt_in=51_nt_out=51_nx=64_ny=64.jld2"
+# filename = "/path/to/checkpoint.jld2"
 # DFNO_2D.loadWeights!(θ, filename, "θ_save", partition)
 
-x_train, y_train, x_valid, y_valid = DFNO_2D.loadData(partition)
+x_train, y_train, x_valid, y_valid = DFNO_2D.loadDistData(dataConfig)
 
 trainConfig = DFNO_2D.TrainConfig(
-    epochs=1,
+    epochs=200,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
