@@ -22,13 +22,13 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     ylabel("loss")
     title("training loss at epoch $ep")
     subplot(1,3,2)
-    plot(1:nbatches:nbatches*(ep-1), loss_valid);
+    plot(1:nbatches:nbatches*ep, loss_valid);
     xlabel("batch iterations")
     ylabel("loss")
     title("validation loss at epoch $ep")
     subplot(1,3,3)
     plot(loss_train);
-    plot(1:nbatches:nbatches*(ep-1), loss_valid); 
+    plot(1:nbatches:nbatches*ep, loss_valid); 
     xlabel("batch iterations")
     ylabel("loss")
     title("Objective function at epoch $ep")
