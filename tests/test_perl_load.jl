@@ -40,7 +40,11 @@ end
     modelConfig::ModelConfig
 end
 
-function loadDistData(config::DataConfig; comm=nothing)
+function loadDistData(config::DataConfig;
+                        dist_read_x_tensor=nothing,
+                        dist_read_y_tensor=nothing,
+                        # comm=MPI.COMM_WORLD
+                        )
     # TODO: maybe move seperating train and valid to trainconfig ? 
     # TODO: Abstract this for 2D and 3D (dimension agnostic ?) and support uneven partition
     @assert config.modelConfig.partition[1] == 1 # Creating channel dimension here
@@ -77,24 +81,6 @@ function loadDistData(config::DataConfig; comm=nothing)
         return start_index, end_index
     end
 
-    # function get_dist_tensor(file_name, key, indices)
-    #     data = nothing
-    #     h5open(file_name, "r") do file
-    #         dataset = file[key]
-    #         data = dataset[indices...]
-    #     end
-    #     return reshape(data, 1, (size(data)...))
-    # end
-
-    function get_dist_tensor(file_name, key, indices)
-        data = nothing
-        h5open(file_name, "r") do file
-            dataset = file[key]
-            data = dataset[indices...]
-        end
-        return reshape(data, 1, (size(data)...))
-    end
-
     nx_start, nx_end = get_dist_indices(config.modelConfig.nx, config.modelConfig.partition[2], coords[2])
     ny_start, ny_end = get_dist_indices(config.modelConfig.ny, config.modelConfig.partition[3], coords[3])
     nz_start, nz_end = get_dist_indices(config.modelConfig.nz, config.modelConfig.partition[4], coords[4])
@@ -103,10 +89,10 @@ function loadDistData(config::DataConfig; comm=nothing)
     x_indices = (nx_start:nx_end, ny_start:ny_end, nz_start:nz_end, 1:config.ntrain+config.nvalid)
     y_indices = (nx_start:nx_end, ny_start:ny_end, nz_start:nz_end, nt_start:nt_end, 1:config.ntrain+config.nvalid)
 
-    x_data = get_dist_tensor(config.perm_file, config.perm_key, x_indices)
-    y_data = get_dist_tensor(config.conc_file, config.conc_key, y_indices)
+    x_data = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
+    y_data = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
 
-    # x is (1, nx, ny, nz, n) make this (c, nx, ny, nz, nt, n)
+    # x is (c, nx, ny, nz, n) make this (c, nx, ny, nz, nt, n)
     x_data = reshape(x_data, size(x_data, 1), size(x_data, 2), size(x_data, 3), size(x_data, 4), 1, size(x_data, 5))
     target_zeros = zeros(config.modelConfig.dtype, 1, nx_end-nx_start+1, ny_end-ny_start+1, nz_end-nz_start+1, nt_end-nt_start+1, config.ntrain+config.nvalid)
 
@@ -125,7 +111,34 @@ function loadDistData(config::DataConfig; comm=nothing)
 end
 
 partition = [1,1,1,1,1]
-modelConfig = ModelConfig(nx=20, ny=20, nz=20, nt=20, nblocks=4, partition=partition)
+
+modelConfig = ModelConfig(nx=20, ny=20, nz=20, nt=55, nblocks=4, partition=partition)
+
+#### PERLMUTTER Data Loading Hack ####
+
+function read_x_tensor(file_name, key, indices)
+    # indices for xyzn -> cxyzn where c=n=1 (t gets introduced and broadcasted later)
+    data = nothing
+    h5open(file_name, "r") do file
+        dataset = file[key]
+        data = dataset[reverse(indices[1:3])...]
+    end
+    data = permutedims(data, [3,2,1])
+    return reshape(data, 1, (size(data)...), 1)
+end
+
+function read_y_tensor(file_name, key, indices)
+    # indices for xyztn -> cxyztn where c=n=1
+    data = zeros(modelConfig.dtype, map(range -> length(range), reverse(indices[1:4])))
+    h5open(file_name, "r") do file
+        times = file[key]
+        for t in indices[4]
+            data[t - indices[4][1] + 1, :, :, :] = times[t][reverse(indices[1:3])...]
+        end
+    end
+    data = permutedims(data, [4,3,2,1])
+    return reshape(data, 1, (size(data)...), 1)
+end
 
 function read_perlmutter_data(path::String)
     for entry in readdir(path; join=true)
@@ -133,15 +146,16 @@ function read_perlmutter_data(path::String)
         perm_file = entry * "/inputs.jld2"
         conc_file = entry * "/outputs.jld2"
 
-        dataConfig = DataConfig(modelConfig=modelConfig,
-                                ntrain=1,
-                                nvalid-0,
-                                perm_file=perm_file,
-                                conc_file=conc_file,
-                                perm_key="K",
-                                conc_key="saturations")
+        dataConfig = DataConfig(modelConfig=modelConfig, 
+                                        ntrain=1, 
+                                        nvalid=0, 
+                                        perm_file=perm_file,
+                                        conc_file=conc_file,
+                                        perm_key="K",
+                                        conc_key="saturations")
 
-        x_train, y_train, x_valid, y_valid = loadDistData(dataConfig, ignore_split=false)
+        x_train, y_train, x_valid, y_valid = loadDistData(dataConfig, 
+        dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
 
         println(size(x_train), size(y_train), size(x_valid), size(y_valid))
         break

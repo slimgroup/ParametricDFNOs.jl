@@ -1,6 +1,7 @@
 module UTILS
 
 using MPI
+using HDF5
 using ParametricOperators
 
 cpu = ParametricOperators.cpu
@@ -57,6 +58,15 @@ function dist_tensor(tensor, global_shape, partition; parent_comm=MPI.COMM_WORLD
     return tensor[indexes...]
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor
+function dist_read_tensor(file_name, key, indices)
+    data = nothing
+    h5open(file_name, "r") do file
+        dataset = file[key]
+        data = dataset[indices...]
+    end
+    return reshape(data, 1, (size(data)...))
+end
+
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor
 
 end

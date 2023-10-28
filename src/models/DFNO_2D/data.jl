@@ -8,7 +8,10 @@
     modelConfig::ModelConfig
 end
 
-function loadDistData(config::DataConfig; comm=MPI.COMM_WORLD)
+function loadDistData(config::DataConfig;
+    dist_read_x_tensor=UTILS.dist_read_tensor,
+    dist_read_y_tensor=UTILS.dist_read_tensor,
+    comm=MPI.COMM_WORLD)
     # TODO: maybe move seperating train and valid to trainconfig ? 
     # TODO: Abstract this for 2D and 3D (dimension agnostic ?) and support uneven partition
     @assert config.modelConfig.partition[1] == 1 # Creating channel dimension here
@@ -43,15 +46,6 @@ function loadDistData(config::DataConfig; comm=MPI.COMM_WORLD)
         return start_index, end_index
     end
 
-    function get_dist_tensor(file_name, key, indices)
-        data = nothing
-        h5open(file_name, "r") do file
-            dataset = file[key]
-            data = dataset[indices...]
-        end
-        return reshape(data, 1, (size(data)...))
-    end
-
     nx_start, nx_end = get_dist_indices(config.modelConfig.nx, config.modelConfig.partition[2], coords[2])
     ny_start, ny_end = get_dist_indices(config.modelConfig.ny, config.modelConfig.partition[3], coords[3])
     nt_start, nt_end = get_dist_indices(config.modelConfig.nt, config.modelConfig.partition[4], coords[4])
@@ -59,8 +53,8 @@ function loadDistData(config::DataConfig; comm=MPI.COMM_WORLD)
     x_indices = (nx_start:nx_end, ny_start:ny_end, 1:config.ntrain+config.nvalid)
     y_indices = (nx_start:nx_end, ny_start:ny_end, nt_start:nt_end, 1:config.ntrain+config.nvalid)
 
-    x_data = get_dist_tensor(config.perm_file, config.perm_key, x_indices)
-    y_data = get_dist_tensor(config.conc_file, config.conc_key, y_indices)
+    x_data = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
+    y_data = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
 
     # x is (1, nx, ny, n) make this (c, nx, ny, nt, n)
     x_data = reshape(x_data, size(x_data, 1), size(x_data, 2), size(x_data, 3), 1, size(x_data, 4))
