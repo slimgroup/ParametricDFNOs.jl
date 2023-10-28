@@ -1,4 +1,4 @@
-module DFNO_2D
+module DFNO_3D
 
 using MAT
 using MPI
@@ -13,14 +13,15 @@ using DrWatson
 using Parameters
 using ProgressMeter
 using ParametricOperators
+using InvertibleNetworks:ActNorm
 
-global model_name = "DFNO_2D"
-global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))
+global model_name = "DFNO_3D"
+global gpu_flag = parse(Bool, get(ENV, "DFNO_3D_GPU", "0"))
 global plot_path = plotsdir(model_name)
 gpu_flag && (global gpu = ParametricOperators.gpu)
 global cpu = ParametricOperators.cpu
 
-@info "DFNO_2D is using " * (gpu_flag ? "GPU" : "CPU")
+@info "DFNO_3D is using " * (gpu_flag ? "GPU" : "CPU")
 
 include("model.jl")
 include("forward.jl")

@@ -8,9 +8,6 @@ include("src/models/DFNO_2D/DFNO_2D.jl")
 
 using .DFNO_2D
 using MPI
-using DrWatson
-using LinearAlgebra
-using ParametricOperators
 
 MPI.Init()
 

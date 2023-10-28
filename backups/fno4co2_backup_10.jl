@@ -6,7 +6,7 @@
 # Modified backup 9 to train on new bias
 
 using Pkg
-Pkg.activate("./")
+Pkg.activate("./backups/")
 
 using DrWatson
 using MPI
@@ -234,9 +234,9 @@ end
 #     haskey(θ, operator) && (θ[operator] = reshape_conv_channel(θ[operator]))
 # end
 
-gpu_stat("Before loading weights")
+# gpu_stat("Before loading weights")
 gpu_flag && (global θ = gpu(θ))
-gpu_stat("After loading weights")
+# gpu_stat("After loading weights")
 # Define raw data directory
 mkpath(datadir("training-data"))
 perm_path = datadir("training-data", "perm_gridspacing15.0.mat")
