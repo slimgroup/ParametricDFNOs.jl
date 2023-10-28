@@ -13,7 +13,6 @@ using DrWatson
 using Parameters
 using ProgressMeter
 using ParametricOperators
-using InvertibleNetworks:ActNorm
 
 global model_name = "DFNO_3D"
 global gpu_flag = parse(Bool, get(ENV, "DFNO_3D_GPU", "0"))
