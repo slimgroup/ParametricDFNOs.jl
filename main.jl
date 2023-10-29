@@ -25,8 +25,8 @@ modelConfig = DFNO_3D.ModelConfig(nx=80, ny=80, nz=80, nt=55, nblocks=4, partiti
 
 function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=10)
 
-    ntrain = n ÷ 1.25
-    nvalid = n ÷ 5
+    ntrain = Int64(n ÷ 1.25)
+    nvalid = Int64(n ÷ 5)
 
     function read_x_tensor(file_name, key, indices)
         # indices for xyzn -> cxyzn where c=n=1 (t gets introduced and broadcasted later)
