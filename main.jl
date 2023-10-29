@@ -7,7 +7,7 @@ Pkg.activate("./")
 include("src/models/DFNO_3D/DFNO_3D.jl")
 
 using .DFNO_3D
-using HLD5
+using HDF5
 using MPI
 
 MPI.Init()
