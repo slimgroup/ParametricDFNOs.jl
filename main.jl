@@ -75,9 +75,11 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=10)
         dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
 
         if idx <= ntrain
+            println("Train", idx, size(x), size(x_train))
             x_train[:,:,:,:,:,idx] = x[:,:,:,:,:,1]
             y_train[:,:,:,:,:,idx] = y[:,:,:,:,:,1]
         else
+            println("Valid", idx, size(x), size(x_valid))
             x_valid[:,:,:,:,:,idx-ntrain] = x[:,:,:,:,:,1]
             y_valid[:,:,:,:,:,idx-ntrain] = y[:,:,:,:,:,1]
         end
