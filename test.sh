@@ -7,6 +7,6 @@
 export SALLOC_ACCOUNT=m3863
 export SBATCH_ACCOUNT=m3863
 
-export DFNO_3d_GPU=0
+export DFNO_3D_GPU=0
 
 srun -n 1 julia-1.8 main.jl
