@@ -20,37 +20,13 @@ function loadDistData(config::DataConfig;
     @assert config.modelConfig.nz % config.modelConfig.partition[4] == 0
     @assert config.modelConfig.nt % config.modelConfig.partition[5] == 0
 
-    x_train = nothing
-    y_train = nothing
-    x_valid = nothing
-    y_valid = nothing
-
     comm_cart = MPI.Cart_create(comm, config.modelConfig.partition)
     coords = MPI.Cart_coords(comm_cart)
 
-    function get_dist_indices(total_size, total_workers, coord)
-        # Calculate the base size each worker will handle
-        base_size = div(total_size, total_workers)
-        
-        # Calculate the number of workers that will handle an extra element
-        extras = total_size % total_workers
-        
-        # Determine the start and end indices for the worker
-        if coord < extras
-            start_index = coord * (base_size + 1) + 1
-            end_index = start_index + base_size
-        else
-            start_index = coord * base_size + extras + 1
-            end_index = start_index + base_size - 1
-        end
-    
-        return start_index, end_index
-    end
-
-    nx_start, nx_end = get_dist_indices(config.modelConfig.nx, config.modelConfig.partition[2], coords[2])
-    ny_start, ny_end = get_dist_indices(config.modelConfig.ny, config.modelConfig.partition[3], coords[3])
-    nz_start, nz_end = get_dist_indices(config.modelConfig.nz, config.modelConfig.partition[4], coords[4])
-    nt_start, nt_end = get_dist_indices(config.modelConfig.nt, config.modelConfig.partition[5], coords[5])
+    nx_start, nx_end = UTILS.get_dist_indices(config.modelConfig.nx, config.modelConfig.partition[2], coords[2])
+    ny_start, ny_end = UTILS.get_dist_indices(config.modelConfig.ny, config.modelConfig.partition[3], coords[3])
+    nz_start, nz_end = UTILS.get_dist_indices(config.modelConfig.nz, config.modelConfig.partition[4], coords[4])
+    nt_start, nt_end = UTILS.get_dist_indices(config.modelConfig.nt, config.modelConfig.partition[5], coords[5])
     
     x_indices = (nx_start:nx_end, ny_start:ny_end, nz_start:nz_end, 1:config.ntrain+config.nvalid)
     y_indices = (nx_start:nx_end, ny_start:ny_end, nz_start:nz_end, nt_start:nt_end, 1:config.ntrain+config.nvalid)

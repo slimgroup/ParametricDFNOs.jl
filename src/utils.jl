@@ -67,6 +67,25 @@ function dist_read_tensor(file_name, key, indices)
     return reshape(data, 1, (size(data)...))
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor
+function get_dist_indices(total_size, total_workers, coord)
+    # Calculate the base size each worker will handle
+    base_size = div(total_size, total_workers)
+    
+    # Calculate the number of workers that will handle an extra element
+    extras = total_size % total_workers
+    
+    # Determine the start and end indices for the worker
+    if coord < extras
+        start_index = coord * (base_size + 1) + 1
+        end_index = start_index + base_size
+    else
+        start_index = coord * base_size + extras + 1
+        end_index = start_index + base_size - 1
+    end
+
+    return start_index, end_index
+end
+
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices
 
 end

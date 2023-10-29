@@ -4,7 +4,7 @@
 using Pkg
 Pkg.activate("./")
 
-include("src/models/DFNO_2D/DFNO_2D.jl")
+include("../src/models/DFNO_2D/DFNO_2D.jl")
 
 using .DFNO_2D
 using MPI
