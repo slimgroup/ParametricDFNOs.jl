@@ -12,12 +12,14 @@ using DrWatson
 using Parameters
 using ProgressMeter
 
+plot_path = plotsdir("DFNO_3D")
+
 @with_kw struct ModelConfig
     nx::Int = 64
     ny::Int = 64
     nz::Int = 64
     nt::Int = 51
-    nc_in::Int = 4
+    nc_in::Int = 5
     nc_mid::Int = 128
     nc_lift::Int = 20
     nc_out::Int = 1
@@ -112,7 +114,70 @@ end
 
 partition = [1,1,1,1,1]
 
-modelConfig = ModelConfig(nx=20, ny=20, nz=20, nt=55, nblocks=4, partition=partition)
+modelConfig = ModelConfig(nx=80, ny=80, nz=80, nt=55, nblocks=4, partition=partition)
+
+function plotEvaluation(modelConfig::ModelConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
+
+    x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
+    y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
+    y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
+
+    fig = figure(figsize=(20, 12))
+    fixed_z = modelConfig.nz ÷ 2
+    for i = 1:5
+        subplot(4,5,i)
+        imshow(x_plot[1,:,:,fixed_z,10*i+1]')
+        title("input permeability")
+
+        subplot(4,5,i+5)
+        imshow(y_plot[1,:,:,fixed_z,10*i+1]', vmin=0, vmax=1)
+        title("true saturation")
+
+        subplot(4,5,i+10)
+        imshow(y_predict[1,:,:,fixed_z,10*i+1]', vmin=0, vmax=1)
+        title("predicted saturation")
+
+        subplot(4,5,i+15)
+        imshow(5f0 .* abs.(y_plot[1,:,:,fixed_z,10*i+1]'-y_predict[1,:,:,fixed_z,10*i+1]'), vmin=0, vmax=1)
+        title("5X abs difference")
+
+    end
+
+    tight_layout()
+    figname = @strdict fixed_z # _getFigname(trainConfig, additional)
+
+    safesave(joinpath(plot_path, savename(figname; digits=6)*"_DFNO_3D_horizontal_fitting.png"), fig);
+    close(fig)
+
+    fig = figure(figsize=(20, 12))
+    fixed_y = modelConfig.ny ÷ 2
+
+    for i = 1:5
+        subplot(4,5,i)
+        imshow(x_plot[1,:,fixed_y,:,10*i+1]')
+        title("input permeability")
+
+        subplot(4,5,i+5)
+        imshow(y_plot[1,:,fixed_y,:,10*i+1]', vmin=0, vmax=1)
+        title("true saturation")
+
+        subplot(4,5,i+10)
+        imshow(y_predict[1,:,fixed_y,:,10*i+1]', vmin=0, vmax=1)
+        title("predicted saturation")
+
+        subplot(4,5,i+15)
+        imshow(5f0 .* abs.(y_plot[1,:,fixed_y,:,10*i+1]'-y_predict[1,:,fixed_y,:,10*i+1]'), vmin=0, vmax=1)
+        title("5X abs difference")
+
+    end
+
+    tight_layout()
+    figname = @strdict fixed_y # _getFigname(trainConfig, additional)
+
+    safesave(joinpath(plot_path, savename(figname; digits=6)*"_DFNO_3D_vertical_fitting.png"), fig);
+    close(fig)
+end
+
 
 #### PERLMUTTER Data Loading Hack ####
 
@@ -121,26 +186,28 @@ function read_x_tensor(file_name, key, indices)
     data = nothing
     h5open(file_name, "r") do file
         dataset = file[key]
-        data = dataset[reverse(indices[1:3])...]
+        data = dataset[indices[1:3]...]
     end
-    data = permutedims(data, [3,2,1])
+    # data = permutedims(data, [3,2,1])
     return reshape(data, 1, (size(data)...), 1)
 end
 
 function read_y_tensor(file_name, key, indices)
     # indices for xyztn -> cxyztn where c=n=1
-    data = zeros(modelConfig.dtype, map(range -> length(range), reverse(indices[1:4])))
+    data = zeros(modelConfig.dtype, map(range -> length(range), indices[1:4]))
     h5open(file_name, "r") do file
         times = file[key]
+        println(length(times))
         for t in indices[4]
-            data[t - indices[4][1] + 1, :, :, :] = times[t][reverse(indices[1:3])...]
+            data[:, :, :, t - indices[4][1] + 1] = file[times[t]][indices[1:3]...]
         end
     end
-    data = permutedims(data, [4,3,2,1])
+    # data = permutedims(data, [4,3,2,1])
     return reshape(data, 1, (size(data)...), 1)
 end
 
 function read_perlmutter_data(path::String)
+    idx = 0
     for entry in readdir(path; join=true)
 
         perm_file = entry * "/inputs.jld2"
@@ -156,11 +223,14 @@ function read_perlmutter_data(path::String)
 
         x_train, y_train, x_valid, y_valid = loadDistData(dataConfig, 
         dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
+        
+        idx += 1
 
-        println(size(x_train), size(y_train), size(x_valid), size(y_valid))
+        plotEvaluation(modelConfig, x_train, y_train, y_train)
         break
     end
+    println(idx)
 end
 
-dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/20³"
+dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/80³"
 read_perlmutter_data(dataset_path)

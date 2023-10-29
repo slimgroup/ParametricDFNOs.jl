@@ -3,7 +3,7 @@
     ny::Int = 64
     nz::Int = 64
     nt::Int = 51
-    nc_in::Int = 4
+    nc_in::Int = 5
     nc_mid::Int = 128
     nc_lift::Int = 20
     nc_out::Int = 1
