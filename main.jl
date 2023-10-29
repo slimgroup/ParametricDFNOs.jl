@@ -19,7 +19,7 @@ partition = [1,1,1,1,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_3D.ModelConfig(nx=80, ny=80, nz=80, nt=55, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=20, ny=20, nz=20, nt=55, nblocks=4, partition=partition)
 
 #### PERLMUTTER Data Loading Hack ####
 
@@ -87,7 +87,7 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=10)
     return x_train, y_train, x_valid, y_valid
 end
 
-dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/80³"
+dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/20³"
 x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig)
 
 #################################
