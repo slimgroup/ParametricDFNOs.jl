@@ -10,7 +10,7 @@ end
 
 function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dict())
 
-    ntrain = size(trainConfig.x_train, 5)
+    ntrain = size(trainConfig.x_train, 6)
     nbatches = Int(ntrain/trainConfig.nbatch)
 
     loss_train = Loss[1:ep*nbatches]
