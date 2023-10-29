@@ -8,3 +8,12 @@
 6. ssh richardr@dtn01.nersc.gov tar cz /global/homes/r/richardr/code/dfno/plots/DFNO_3D | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/plots/DFNO_3D
 7. ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov
 8. 6. ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov tar cz /global/homes/r/richardr/code/dfno/plots/DFNO_3D | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/plots/DFNO_3D
+
+## Creating 1 day keys
+
+1. `./sshproxy.sh -u richardr`
+2. `ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov`
+
+## Move plot folder of DFNO_3D
+
+1. ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov "cd /global/homes/r/richardr/code/dfno/plots/ && tar cz DFNO_3D" | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/plots/

@@ -39,8 +39,12 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     gpu_flag && (x_sample = x_sample |> gpu)
     gpu_flag && (y_sample = y_sample |> gpu)
 
-    Loss = rank == 0 ? zeros(Float32,config.epochs*nbatches) : nothing
+    Loss = rank == 0 ? zeros(Float32, config.epochs*nbatches) : nothing
     Loss_valid = rank == 0 ? zeros(Float32, config.epochs) : nothing
+
+    Time_train = rank == 0 ? zeros(Float32, config.epochs*nbatches) : nothing
+    Time_overhead = rank == 0 ? zeros(Float32, config.epochs) : nothing
+
     prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
 
     for ep = 1:config.epochs
@@ -49,39 +53,46 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         idx_e = reshape(randperm(rng2, ntrain), config.nbatch, nbatches)
 
         for b = 1:nbatches
-            x = config.x_train[:, :, :, :, :, idx_e[:,b]]
-            y = config.y_train[:, :, :, :, :, idx_e[:,b]]
-            
-            gpu_flag && (y = y |> gpu)
+            time_train = @elapsed begin
+                x = config.x_train[:, :, :, :, :, idx_e[:,b]]
+                y = config.y_train[:, :, :, :, :, idx_e[:,b]]
+                
+                gpu_flag && (y = y |> gpu)
 
-            function loss_helper(params)
-                global loss = UTILS.dist_loss(forward(model, params, x), y)
-                return loss
+                function loss_helper(params)
+                    global loss = UTILS.dist_loss(forward(model, params, x), y)
+                    return loss
+                end
+
+                grads = gradient(params -> loss_helper(params), θ)[1]
+                
+                for (k, v) in θ
+                    Flux.Optimise.update!(opt, v, grads[k])
+                end
+
+                rank == 0 && (Loss[(ep-1)*nbatches+b] = loss)
+                rank == 0 && ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
             end
-
-            grads = gradient(params -> loss_helper(params), θ)[1]
-            
-            for (k, v) in θ
-                Flux.Optimise.update!(opt, v, grads[k])
-            end
-
-            rank == 0 && (Loss[(ep-1)*nbatches+b] = loss)
-            rank == 0 && ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
+            rank == 0 && (Time_train[(ep-1)*nbatches+b] = time_train)
         end
 
-        y = forward(model, θ, x_sample)
-        loss_valid = UTILS.dist_loss(y, y_sample)
+        time_overhead = @elapsed begin
+            y = forward(model, θ, x_sample)
+            loss_valid = UTILS.dist_loss(y, y_sample)
 
-        # TODO: Re-evaluate validation
-        rank == 0 && (Loss_valid[ep] = loss_valid)
-        ep % config.plot_every > 0 && continue
+            # TODO: Re-evaluate validation
+            rank == 0 && (Loss_valid[ep] = loss_valid)
+            ep % config.plot_every > 0 && continue
 
-        y_cpu = y[:, :, :, :, :, 1:1]
-        gpu_flag && (y_cpu = y_cpu |> cpu)
-        y_global = UTILS.collect_dist_tensor(y_cpu, y_global_shape, model.config.partition, comm)
+            y_cpu = y[:, :, :, :, :, 1:1]
+            gpu_flag && (y_cpu = y_cpu |> cpu)
+            y_global = UTILS.collect_dist_tensor(y_cpu, y_global_shape, model.config.partition, comm)
+        end
+
+        rank == 0 && (Time_overhead[ep] = time_overhead)
 
         # TODO: Better way for name dict? and move weights to cpu before saving and handle rank conditionals better
-        labels = @strdict p ep Loss_valid Loss
+        labels = @strdict p ep Loss_valid Loss Time_train Time_overhead
 
         # TODO: control frequency of storage
         saveWeights(θ, model, additional=labels, comm=comm)
@@ -91,6 +102,6 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
     end
-    labels = @strdict p Loss_valid Loss
+    labels = @strdict p Loss_valid Loss Time_train Time_overhead
     saveWeights(θ, model, additional=labels, comm=comm)
 end

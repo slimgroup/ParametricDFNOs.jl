@@ -15,16 +15,15 @@ MPI.Init()
 comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 
-partition = [1,4,4,4,1]
+partition = [1,2,2,1,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_3D.ModelConfig(nx=20, ny=20, nz=20, nt=55, nblocks=4, partition=partition)
-rank == 0 && DFNO_3D.print_storage_complexity(modelConfig, batch=2)
+modelConfig = DFNO_3D.ModelConfig(nx=8, ny=8, nz=8, nt=55, nblocks=4, partition=partition)
 
 #### PERLMUTTER Data Loading Hack ####
 
-function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=1000)
+function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=5)
 
     ntrain = Int64(n ÷ 1.25)
     nvalid = Int64(n ÷ 5)
@@ -58,7 +57,9 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
 
     idx = 1
 
-    for entry in readdir(path; join=true)
+    for i in 1:20
+        entry="test"
+    # for entry in readdir(path; join=true)
 
         perm_file = entry * "/inputs.jld2"
         conc_file = entry * "/outputs.jld2"
@@ -71,8 +72,11 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
                                         perm_key="K",
                                         conc_key="saturations")
 
-        x, y, _, _ = DFNO_3D.loadDistData(dataConfig, 
-        dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
+        # x, y, _, _ = DFNO_3D.loadDistData(dataConfig, 
+        # dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
+
+        x = rand(modelConfig.dtype, modelConfig.nc_in ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], 1)
+        y = rand(modelConfig.dtype, modelConfig.nc_out ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], 1)
 
         if idx <= ntrain
             x_train[:,:,:,:,:,idx] = x[:,:,:,:,:,1]
@@ -88,7 +92,7 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
     return x_train, y_train, x_valid, y_valid
 end
 
-dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/20³"
+dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/8³"
 x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig)
 
 #################################
@@ -97,7 +101,8 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 trainConfig = DFNO_3D.TrainConfig(
-    epochs=10,
+    epochs=2,
+    nbatch=1,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
