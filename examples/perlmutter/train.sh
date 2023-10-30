@@ -1,19 +1,20 @@
 #!/bin/bash
-#SBATCH -N 1
-#SBATCH -C gpu
-#SBATCH -G 1
-#SBATCH -q shared
+#SBATCH --nodes=1
+#SBATCH --constrant=gpu
+#SBATCH --gpus=1
+#SBATCH --qos=shared
 #SBATCH --job-name Test_Run_10_Epochs_20_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH -t 00:20:00
-#SBATCH -A m3863_g
+#SBATCH --time=00:20:00
+#SBATCH --account=m3863_g
 
 #OpenMP settings:
 export OMP_NUM_THREADS=1
 export OMP_PLACES=threads
 export OMP_PROC_BIND=spread
 
-#run the application:
+export DFNO_3D_GPU=1
+
 #applications may perform better with --gpu-bind=none instead of --gpu-bind=single:1 
-srun -n 64 -c 2 --cpu_bind=cores -G 4 --gpu-bind=single:1 julia-1.8 ./train.jl
+srun -n 64 -c 2 --cpu_bind=cores julia-1.8 ./train.jl
