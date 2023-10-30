@@ -16,4 +16,4 @@ export OMP_PROC_BIND=spread
 
 #run the application:
 #applications may perform better with --gpu-bind=none instead of --gpu-bind=single:1 
-srun -n 64 -c 2 --cpu_bind=cores -G 4 --gpu-bind=single:1  julia-1.8 /global/homes/r/richardr/code/dfno/examples/perlmutter/train.jl
+srun -n 64 -c 2 --cpu_bind=cores -G 4 --gpu-bind=single:1  julia-1.8 ./train.jl
