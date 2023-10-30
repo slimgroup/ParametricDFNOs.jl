@@ -43,10 +43,10 @@ julia> exit()
 
 ## Submitting jobs
 
-- Open up `dfno/examples/permutter/train.jl`
+- Open up `dfno/examples/perlmutter/train.jl`
 - Modify `dim=20` to one of [20, 40, 80, 160]
     - The dataset would need to exist at `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³`
 - Run `rank == 0 && DFNO_3D.print_storage_complexity(modelConfig, batch=2)` to get an idea of required compute for given model
-- Modify `dfno/examples/permutter/train.sh` with required resources and flags
-- Modify `partition=[1,4,4,4,1]` in `dfno/examples/permutter/train.jl`
-- Submit job using `sbatch examples/permutter/train.sh`
+- Modify `dfno/examples/perlmutter/train.sh` with required resources and flags
+- Modify `partition=[1,4,4,4,1]` in `dfno/examples/perlmutter/train.jl`
+- Submit job using `sbatch examples/perlmutter/train.sh`
