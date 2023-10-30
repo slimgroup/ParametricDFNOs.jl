@@ -17,4 +17,4 @@
 export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
 
-mpiexecjl --project=../../ -n 64 julia-1.8 ./train.jl
+mpiexecjl --project=./ -n 64 julia-1.8 ./train.jl

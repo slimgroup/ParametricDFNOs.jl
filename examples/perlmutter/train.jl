@@ -2,7 +2,7 @@
 # mpiexecjl --project=./ -n <number_of_tasks> julia examples/perlmutter/train.jl
 
 using Pkg
-Pkg.activate("../../")
+Pkg.activate("./")
 
 include("../../src/models/DFNO_3D/DFNO_3D.jl")
 include("data.jl")
