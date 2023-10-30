@@ -14,7 +14,7 @@
 # export OMP_PLACES=threads
 # export OMP_PROC_BIND=spread
 
+export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
 
-# Applications may perform better with --gpu-bind=none instead of --gpu-bind=single:1 
-srun -n 64 -c 2 --cpu_bind=cores julia-1.8 ./train.jl
+mpiexecjl --project=../../ -n 64 julia-1.8 ./train.jl
