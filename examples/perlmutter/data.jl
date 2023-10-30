@@ -38,7 +38,6 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
     idx = 1
 
     for entry in readdir(path; join=true)
-        println(idx)
         perm_file = entry * "/inputs.jld2"
         conc_file = entry * "/outputs.jld2"
 
@@ -60,6 +59,7 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
             x_valid[:,:,:,:,:,idx-ntrain] = x[:,:,:,:,:,1]
             y_valid[:,:,:,:,:,idx-ntrain] = y[:,:,:,:,:,1]
         end
+        println("Loaded data sample no. $(idx) / $(n)")
         idx == n && break
         idx += 1
     end
