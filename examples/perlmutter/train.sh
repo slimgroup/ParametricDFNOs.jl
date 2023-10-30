@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --constrant=gpu
+#SBATCH --constraint=gpu
 #SBATCH --gpus=1
 #SBATCH --qos=shared
 #SBATCH --job-name Test_Run_10_Epochs_20_cube 
