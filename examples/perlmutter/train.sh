@@ -12,4 +12,4 @@ export SBATCH_ACCOUNT=m3863_g
 
 export DFNO_3D_GPU=1
 
-srun julia-1.8 examples/perlmutter/train.jl
+srun julia-1.8 ./train.jl
