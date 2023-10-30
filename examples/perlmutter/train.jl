@@ -16,7 +16,7 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 
 dim = 20
-partition = [1,1,1,1,1]
+partition = [1,4,4,4,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
