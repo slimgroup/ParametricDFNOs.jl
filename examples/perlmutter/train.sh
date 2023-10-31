@@ -6,7 +6,7 @@
 #SBATCH --job-name Test_Run_10_Epochs_20_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=00:20:00
+#SBATCH --time=01:30:00
 #SBATCH --account=m3863_g
 
 # # OpenMP settings: (TODO: Figure this out)
