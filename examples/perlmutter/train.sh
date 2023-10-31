@@ -17,5 +17,5 @@
 export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
 
-mpiexecjl --project=./ -n 4 julia-1.8 ./examples/perlmutter/train.jl
-# srun --ntasks=4 --export=ALL,LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0 julia-1.8 ./examples/perlmutter/train.jl
+# mpiexecjl --project=./ -n 4 julia-1.8 ./examples/perlmutter/train.jl
+srun --ntasks=64 --export=ALL,LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0 julia-1.8 ./examples/perlmutter/train.jl
