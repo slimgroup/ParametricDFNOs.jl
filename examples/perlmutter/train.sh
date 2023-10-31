@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=4
 #SBATCH --constraint=gpu
-#SBATCH --gpus=2
+#SBATCH --gpus=4
 #SBATCH --qos=regular
 #SBATCH --job-name Test_Run_10_Epochs_20_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
