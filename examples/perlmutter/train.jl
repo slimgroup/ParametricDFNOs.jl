@@ -16,7 +16,7 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 
 dim = 20
-partition = [1,4,4,4,1]
+partition = [1,4,1,1,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
@@ -26,7 +26,7 @@ rank == 0 && DFNO_3D.print_storage_complexity(modelConfig, batch=2)
 rank == 0 && println("Free memory before loading data: ", Sys.free_memory() / 2^20)
 
 dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³"
-x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=400)
+x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=10)
 
 rank == 0 && println("Free memory after loading data: ", Sys.free_memory() / 2^20)
 
@@ -34,7 +34,7 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 trainConfig = DFNO_3D.TrainConfig(
-    epochs=20,
+    epochs=2,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
