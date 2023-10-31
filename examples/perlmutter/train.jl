@@ -26,7 +26,7 @@ rank == 0 && DFNO_3D.print_storage_complexity(modelConfig, batch=2)
 rank == 0 && println("Free memory before loading data: ", Sys.free_memory() / 2^20)
 
 dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³"
-x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=10)
+x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=400)
 
 rank == 0 && println("Free memory after loading data: ", Sys.free_memory() / 2^20)
 
@@ -34,7 +34,7 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 trainConfig = DFNO_3D.TrainConfig(
-    epochs=2,
+    epochs=20,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
