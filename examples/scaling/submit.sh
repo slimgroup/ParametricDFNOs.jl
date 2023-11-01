@@ -27,8 +27,17 @@ STRONG_SCALING_CONFIGURATIONS=(
     "128 512 512 8 8 8 1024 1024 1024 20"
 )
 
-for config_str in "${STRONG_SCALING_CONFIGURATIONS[@]}"
+if [[ "$1" == "weak" ]]; then
+    CONFIGURATIONS=("${WEAK_SCALING_CONFIGURATIONS[@]}")
+elif [[ "$1" == "strong" ]]; then
+    CONFIGURATIONS=("${STRONG_SCALING_CONFIGURATIONS[@]}")
+else
+    echo "Invalid argument. Please specify 'weak' or 'strong'."
+    exit 1
+fi
+
+for config_str in "${CONFIGURATIONS[@]}"
 do
     config=($config_str)
-    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "${config[7]}" "${config[8]}" "${config[9]}"
+    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "${config[7]}" "${config[8]}" "${config[9]}" "$1"
 done
