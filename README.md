@@ -17,3 +17,4 @@
 ## Move plot folder of DFNO_3D
 
 1. ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov "cd /global/homes/r/richardr/code/dfno/plots/ && tar cz DFNO_3D" | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/plots/
+2. ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov "cd /global/homes/r/richardr/code/dfno/examples/scaling/ && tar cz results" | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/examples/scaling/
