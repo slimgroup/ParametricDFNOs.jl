@@ -20,7 +20,6 @@ rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
 nodes, gpus, ntasks, px, py, pz, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:10])
-config = ARGS[11]
 
 partition = [1,px,py,pz,1]
 
@@ -49,7 +48,7 @@ grads = gradient(params -> loss_helper(params), θ)[1]
 grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 grads_time = UTILS.dist_sum([grads_time]) / size
 
-final_dict = @strdict nodes gpus ntasks px py pz dimx dimy dimz dimt y_time grads_time config
+final_dict = @strdict nodes gpus ntasks px py pz dimx dimy dimz dimt y_time grads_time
 
 if rank == 0
     mkpath(projectdir("examples", "scaling", "results"))
