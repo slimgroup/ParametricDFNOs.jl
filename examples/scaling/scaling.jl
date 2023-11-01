@@ -26,7 +26,7 @@ partition = [1,px,py,pz,1]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mt=min(dimt, 4), nblocks=4, partition=partition)
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
