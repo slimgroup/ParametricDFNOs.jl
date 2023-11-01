@@ -8,6 +8,10 @@ function forward(model::Model, θ, x::Any)
     x = reshape(model.lifts(θ) * x, (model.config.nc_lift, :))
     x = reshape(x + model.biases[1](θ), (:, batch))
 
+    ignore() do
+        GC.gc(true)
+    end
+
     for i in 1:model.config.nblocks
         
         x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
@@ -36,6 +40,11 @@ function forward(model::Model, θ, x::Any)
         input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+
+        ignore() do
+            GC.gc(true)
+        end
+
         x = reshape(x, (input_size, :))
         
         if i < model.config.nblocks
@@ -43,9 +52,17 @@ function forward(model::Model, θ, x::Any)
         end
     end
 
+    ignore() do
+        GC.gc(true)
+    end
+
     x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
     x = reshape(x + model.biases[2](θ), (:, batch))
     x = relu.(x)
+
+    ignore() do
+        GC.gc(true)
+    end
 
     x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
     x = reshape(x, (model.config.nc_out ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nz ÷ model.config.partition[4], model.config.nt ÷ model.config.partition[5], batch))
