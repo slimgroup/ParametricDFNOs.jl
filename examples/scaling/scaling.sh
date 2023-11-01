@@ -1,5 +1,7 @@
 #!/bin/bash
+#SBATCH --nodes=$1
 #SBATCH --constraint=gpu
+#SBATCH --gpus=$2
 #SBATCH --qos=regular
 #SBATCH --job-name Scaling_nodes=${1}_gpus=${2}_ntasks=${3}_px=${4}_py=${5}_pz=${6}_dimx=${7}_dimy=${8}_dimz=${9}_nt=${10}
 #SBATCH --mail-user=richardr2926@gmail.com

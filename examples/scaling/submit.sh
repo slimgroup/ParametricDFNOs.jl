@@ -17,5 +17,5 @@ CONFIGURATIONS=(
 for config_str in "${CONFIGURATIONS[@]}"
 do
     config=($config_str)
-    sbatch --nodes="${config[0]}" --gpus="${config[1]}" examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "${config[7]}" "${config[8]}" "${config[9]}"
+    sbatch --wrap="examples/scaling/scaling.sh '${config[0]}' '${config[1]}' '${config[2]}' '${config[3]}' '${config[4]}' '${config[5]}' '${config[6]}' '${config[7]}' '${config[8]}' '${config[9]}'"
 done
