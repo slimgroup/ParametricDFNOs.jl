@@ -19,7 +19,7 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-px, py, pz, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:4])
+px, py, pz, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:7])
 
 partition = [1,px,py,pz,1]
 
