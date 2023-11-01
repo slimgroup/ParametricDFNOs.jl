@@ -3,6 +3,7 @@
 # (nodes, gpus, ntasks, px, py, pz, dimx, dimy, dimz, dimt)
 CONFIGURATIONS=(
     (1 1 1 1 1 1 64 64 64 20)
+)
     # (_ _ 2 2 1 1 128 64 64 20)
     # (_ _ 4 2 2 1 128 128 64 20)
     # (_ _ 8 2 2 2 128 128 128 20)
@@ -12,7 +13,6 @@ CONFIGURATIONS=(
     # (_ _ 128 8 4 4 1 512 256 256 20)
     # (_ _ 256 8 8 4 512 512 256 20)
     # (_ _ 512 8 8 8 512 512 512 20)
-)
 
 for config in "${CONFIGURATIONS[@]}"
 do
