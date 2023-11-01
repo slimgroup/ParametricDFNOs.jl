@@ -29,6 +29,11 @@ function dist_loss(local_pred_y, local_true_y)
     return norm_diff / norm_y
 end
 
+function dist_sum(local_vec)
+    reduce_sum = ParReduce(eltype(local_vec))
+    return sum(reduce_sum(local_vec))
+end
+
 function _get_local_indices(global_shape, partition, coords)
     indexes = []
     for (dim, value) in enumerate(global_shape)
@@ -86,6 +91,6 @@ function get_dist_indices(total_size, total_workers, coord)
     return start_index, end_index
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum
 
 end
