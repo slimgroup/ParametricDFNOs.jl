@@ -1,5 +1,6 @@
 #!/bin/bash
-#SBATCH --nodes="$1"
+echo $1
+#SBATCH --nodes=$1
 #SBATCH --constraint=gpu
 #SBATCH --gpus=$2
 #SBATCH --qos=regular
