@@ -4,6 +4,7 @@ function forward(model::Model, θ, x::Any)
     ignore() do
         GC.gc(true)
         CUDA.memory_status()
+        CUDA.device()
         println("\n")
     end
     x = reshape(x, (Domain(model.lifts), :))
@@ -15,6 +16,7 @@ function forward(model::Model, θ, x::Any)
     ignore() do
         GC.gc(true)
         CUDA.memory_status()
+        CUDA.device()
         println("\n")
     end
 
@@ -81,6 +83,7 @@ function forward(model::Model, θ, x::Any)
     ignore() do
         GC.gc(true)
         CUDA.memory_status()
+        CUDA.device()
         println("\n")
     end
 
@@ -91,6 +94,7 @@ function forward(model::Model, θ, x::Any)
     ignore() do
         GC.gc(true)
         CUDA.memory_status()
+        CUDA.device()
         println("\n")
     end
 
