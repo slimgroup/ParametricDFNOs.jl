@@ -27,8 +27,19 @@ WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
     "128 512 512 8 8 8 512 512 512 10"
 )
 
+# Testing config:
+
+# salloc --nodes=1 --constraint=gpu --gpus=2 --qos=interactive --time=00:20:00 --account=m3863_g --ntasks=2 --gpus-per-task=1
+# export PATH=$PATH:$HOME/.julia/bin
+# export DFNO_3D_GPU=1
+# export SLURM_CPU_BIND="cores"
+# export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
+# srun --export=ALL julia-1.8 ./examples/scaling/scaling.jl 1 2 2 2 1 1 256 128 128 1 test
+
 TEST_SCALING_CONFIGURATIONS=(
     "1 2 2 2 1 1 256 128 128 1"
+    "1 2 2 2 1 1 128 64 64 10"
+    "1 2 2 2 1 1 128 64 64 20"
     # "1 4 4 2 2 1 64 64 32 20"
     # "1 4 4 2 2 1 32 32 16 20"
     # "1 4 4 2 2 1 16 16 8 20"
