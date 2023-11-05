@@ -35,6 +35,8 @@ model = DFNO_3D.Model(modelConfig)
 x_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 5 ÷ prod(partition), 1)
 
 y = DFNO_3D.forward(model, θ, x_sample)
+
+exit()
 y = DFNO_3D.forward(model, θ, x_sample)
 y_time = @elapsed DFNO_3D.forward(model, θ, x_sample)
 y_time = UTILS.dist_sum([y_time]) / size
