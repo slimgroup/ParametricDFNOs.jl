@@ -14,6 +14,19 @@ WEAK_SPATIAL_SCALING_CONFIGURATIONS=(
     "128 512 512 8 8 8 1024 1024 1024 1"
 )
 
+WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
+    "1 1 1 1 1 1 64 64 64 1"
+    "1 2 2 2 1 1 128 64 64 1"
+    "1 4 4 2 2 1 128 128 64 1"
+    "2 8 8 2 2 2 128 128 128 1"
+    "4 16 16 4 2 2 256 128 128 1"
+    "8 32 32 4 4 2 256 256 128 1"
+    "16 64 64 4 4 4 256 256 256 1"
+    "32 128 128 8 4 4 512 256 256 1"
+    "64 256 256 8 8 4 512 512 256 1"
+    "128 512 512 8 8 8 512 512 512 1"
+)
+
 WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
     "1 1 1 1 1 1 64 64 64 10"
     "1 2 2 2 1 1 128 64 64 10"
@@ -69,12 +82,14 @@ TEST_SCALING_CONFIGURATIONS=(
 
 if [[ "$1" == "weak_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SCALING_CONFIGURATIONS[@]}")
+elif [[ "$1" == "weak_safe_spatial" ]]; then
+    CONFIGURATIONS=("${WEAK_SPATIAL_SAFE_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_temporal" ]]; then
     CONFIGURATIONS=("${WEAK_TEMPORAL_SCALING_CONFIGURATIONS[@]}")
 elif [[ "$1" == "test" ]]; then
     CONFIGURATIONS=("${TEST_SCALING_CONFIGURATIONS[@]}")
 else
-    echo "Invalid argument. Please specify 'weak_spatial' or 'weak_temporal' or 'test'."
+    echo "Invalid argument. Please specify 'weak_spatial' or 'weak_temporal' or 'test' or 'weak_safe_spatial'."
     exit 1
 fi
 
