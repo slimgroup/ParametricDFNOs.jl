@@ -14,6 +14,8 @@ using Parameters
 using ProgressMeter
 using ParametricOperators
 
+using CUDA
+
 global model_name = "DFNO_3D"
 global gpu_flag = parse(Bool, get(ENV, "DFNO_3D_GPU", "0"))
 global plot_path = plotsdir(model_name)

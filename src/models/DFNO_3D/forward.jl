@@ -1,7 +1,11 @@
 function forward(model::Model, θ, x::Any)
 
     gpu_flag && (x = x |> gpu)
-    
+    ignore() do
+        GC.gc(true)
+        CUDA.memory_status()
+        println("\n")
+    end
     x = reshape(x, (Domain(model.lifts), :))
     batch = size(x, 2)
 
@@ -10,6 +14,8 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
+        CUDA.memory_status()
+        println("\n")
     end
 
     for i in 1:model.config.nblocks
@@ -19,6 +25,12 @@ function forward(model::Model, θ, x::Any)
 
         N = ndims(x)
         ϵ = 1f-5
+
+        ignore() do
+            GC.gc(true)
+            CUDA.memory_status()
+            println("\n")
+        end
 
         reduce_dims = collect(2:N)
         scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
@@ -30,6 +42,12 @@ function forward(model::Model, θ, x::Any)
         gpu_flag && (μ = μ |> gpu)
 
         s = (x .- μ) .^ 2
+
+        ignore() do
+            GC.gc(true)
+            CUDA.memory_status()
+            println("\n")
+        end
 
         s = sum(s; dims=reduce_dims) |> cpu
         reduce_var = ParReduce(eltype(s))
@@ -43,10 +61,18 @@ function forward(model::Model, θ, x::Any)
 
         ignore() do
             GC.gc(true)
+            CUDA.memory_status()
+            println("\n")
         end
 
         x = reshape(x, (input_size, :))
         
+        ignore() do
+            GC.gc(true)
+            CUDA.memory_status()
+            println("\n")
+        end
+
         if i < model.config.nblocks
             x = relu.(x)
         end
@@ -54,6 +80,8 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
+        CUDA.memory_status()
+        println("\n")
     end
 
     x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
@@ -62,6 +90,8 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
+        CUDA.memory_status()
+        println("\n")
     end
 
     x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
