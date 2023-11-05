@@ -24,8 +24,6 @@ function forward(model::Model, θ, x::Any)
 
         ignore() do
             GC.gc(true)
-            CUDA.memory_status()
-            println("\n")
         end
 
         reduce_dims = collect(2:N)
@@ -41,8 +39,6 @@ function forward(model::Model, θ, x::Any)
 
         ignore() do
             GC.gc(true)
-            CUDA.memory_status()
-            println("\n")
         end
 
         s = sum(s; dims=reduce_dims) |> cpu
@@ -57,16 +53,12 @@ function forward(model::Model, θ, x::Any)
 
         ignore() do
             GC.gc(true)
-            CUDA.memory_status()
-            println("\n")
         end
 
         x = reshape(x, (input_size, :))
         
         ignore() do
             GC.gc(true)
-            CUDA.memory_status()
-            println("\n")
         end
 
         if i < model.config.nblocks
