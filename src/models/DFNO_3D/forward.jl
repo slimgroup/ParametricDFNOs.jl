@@ -3,9 +3,6 @@ function forward(model::Model, θ, x::Any)
     gpu_flag && (x = x |> gpu)
     ignore() do
         GC.gc(true)
-        CUDA.memory_status()
-        CUDA.device()
-        println("\n")
     end
     x = reshape(x, (Domain(model.lifts), :))
     batch = size(x, 2)
@@ -15,9 +12,6 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
-        CUDA.memory_status()
-        CUDA.device()
-        println("\n")
     end
 
     for i in 1:model.config.nblocks
@@ -82,9 +76,6 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
-        CUDA.memory_status()
-        CUDA.device()
-        println("\n")
     end
 
     x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
@@ -93,9 +84,6 @@ function forward(model::Model, θ, x::Any)
 
     ignore() do
         GC.gc(true)
-        CUDA.memory_status()
-        CUDA.device()
-        println("\n")
     end
 
     x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)

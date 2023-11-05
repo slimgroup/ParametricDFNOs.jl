@@ -28,6 +28,10 @@ WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
 )
 
 # Testing config:
+# julia> using MPI
+# julia> MPI.MPIPreferences.use_system_binary()
+# julia> exit()
+# julia>] instantiate
 
 # salloc --nodes=1 --constraint=gpu --gpus=2 --qos=interactive --time=00:20:00 --account=m3863_g --ntasks=2 --gpus-per-task=1
 # export PATH=$PATH:$HOME/.julia/bin
