@@ -15,16 +15,16 @@ WEAK_SPATIAL_SCALING_CONFIGURATIONS=(
 )
 
 WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
-    "1 1 1 1 1 1 64 64 64 1"
-    "1 2 2 2 1 1 128 64 64 1"
-    "1 4 4 2 2 1 128 128 64 1"
-    "2 8 8 2 2 2 128 128 128 1"
-    "4 16 16 4 2 2 256 128 128 1"
-    "8 32 32 4 4 2 256 256 128 1"
-    "16 64 64 4 4 4 256 256 256 1"
-    "32 128 128 8 4 4 512 256 256 1"
-    "64 256 256 8 8 4 512 512 256 1"
-    "128 512 512 8 8 8 512 512 512 1"
+    "1 1 1 1 1 1 64 64 64 2"
+    "1 2 2 2 1 1 128 64 64 2"
+    "1 4 4 2 2 1 128 128 64 2"
+    "2 8 8 2 2 2 128 128 128 2"
+    "4 16 16 4 2 2 256 128 128 2"
+    "8 32 32 4 4 2 256 256 128 2"
+    "16 64 64 4 4 4 256 256 256 2"
+    "32 128 128 8 4 4 512 256 256 2"
+    "64 256 256 8 8 4 512 512 256 2"
+    "128 512 512 8 8 8 512 512 512 2"
 )
 
 WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
@@ -51,7 +51,7 @@ WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
 # export DFNO_3D_GPU=1
 # export SLURM_CPU_BIND="cores"
 # export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
-# srun --export=ALL julia-1.8 ./examples/scaling/scaling.jl 1 2 2 2 1 1 256 128 128 1 test
+# srun --export=ALL julia-1.8 ./examples/scaling/scaling.jl 2 8 8 2 2 2 128 128 128 1 test_cloud
 
 TEST_SCALING_CONFIGURATIONS=(
     # "1 2 2 2 1 1 256 128 128 1"
