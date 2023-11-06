@@ -54,10 +54,10 @@ WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
 # srun --export=ALL julia-1.8 ./examples/scaling/scaling.jl 2 8 8 2 2 2 128 128 128 1 test_cloud
 
 TEST_SCALING_CONFIGURATIONS=(
-    "1 1 1 1 1 1 64 64 64 2"
-    "1 2 2 2 1 1 128 64 64 2"
-    "1 4 4 2 2 1 128 128 64 2"
-    "2 8 8 2 2 2 128 128 128 2"
+    "1 1 1 1 1 1 32 32 32 2"
+    "1 2 2 2 1 1 64 32 32 2"
+    "1 4 4 2 2 1 64 64 32 2"
+    "2 8 8 2 2 2 64 64 64 2"
     # "1 2 2 2 1 1 256 128 128 1"
     # "1 4 4 2 2 1 256 256 128 1"
     # "1 2 2 2 1 1 128 64 64 1"
