@@ -14,6 +14,13 @@ WEAK_SPATIAL_SCALING_CONFIGURATIONS=(
     "128 512 512 8 8 8 1024 1024 1024 1"
 )
 
+WEAK_SPATIAL_FORWARD_CONFIGURATIONS=(
+    "2 8 8 2 2 2 64 64 64 2"
+    "2 8 8 2 2 2 64 64 64 20"
+    "2 8 8 2 2 2 128 128 128 2"
+    "2 8 8 2 2 2 128 128 128 20"
+)
+
 WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
     "1 1 1 1 1 1 32 32 32 2"
     "1 2 2 2 1 1 64 32 32 2"
@@ -90,6 +97,8 @@ if [[ "$1" == "weak_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SCALING_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_safe_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SAFE_CONFIGURATIONS[@]}")
+elif [[ "$1" == "weak_forward" ]]; then
+    CONFIGURATIONS=("${WEAK_SPATIAL_FORWARD_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_temporal" ]]; then
     CONFIGURATIONS=("${WEAK_TEMPORAL_SCALING_CONFIGURATIONS[@]}")
 elif [[ "$1" == "test" ]]; then

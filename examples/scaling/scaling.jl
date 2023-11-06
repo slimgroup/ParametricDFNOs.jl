@@ -46,10 +46,14 @@ function loss_helper(params)
     return loss
 end
 
-grads = gradient(params -> loss_helper(params), θ)[1]
-grads = gradient(params -> loss_helper(params), θ)[1]
-grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
-grads_time = UTILS.dist_sum([grads_time]) / size
+grads_time = 0
+
+if config !== "weak_forward"
+    grads = gradient(params -> loss_helper(params), θ)[1]
+    grads = gradient(params -> loss_helper(params), θ)[1]
+    grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+    grads_time = UTILS.dist_sum([grads_time]) / size
+end
 
 final_dict = @strdict nodes gpus ntasks px py pz dimx dimy dimz dimt y_time grads_time config
 
