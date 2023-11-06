@@ -15,11 +15,7 @@ function forward(model::Model, θ, x::Any)
     end
 
     for i in 1:model.config.nblocks
-        MPI.Barrier(MPI.COMM_WORLD)
-        rank = MPI.Comm_rank(MPI.COMM_WORLD)
-        rank == 0 && println("Here before the first sconv layer")
         x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
-        exit()
         x = reshape(x, (model.config.nc_lift ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nz ÷ model.config.partition[4], model.config.nt ÷ model.config.partition[5], :))
 
         N = ndims(x)
