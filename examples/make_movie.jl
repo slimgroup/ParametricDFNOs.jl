@@ -70,8 +70,8 @@ function make_frame(i)
 end
 
 withfig(fig) do
-    myanim = anim.FuncAnimation(fig, make_frame, frames=size(y_pred,4), interval=120)
-    myanim[:save]("ML4Seismic_2D.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
+    myanim = anim.FuncAnimation(fig, make_frame, frames=size(y_pred,4), interval=80)
+    myanim[:save]("ML4Seismic_2D.mov", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
 end
 
 # showanim("ML4Seismic.mp4") 
