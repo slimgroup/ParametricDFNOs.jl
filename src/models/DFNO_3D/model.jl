@@ -67,7 +67,7 @@ mutable struct Model
             weight_mix = distribute(weight_mix, config.partition)
             restrict_dft = distribute(restrict_dft, config.partition)
     
-            sconv = restrict_dft' * weight_mix * restrict_dft
+            sconv = restrict_dft' * restrict_dft
     
             return sconv
         end
@@ -117,7 +117,8 @@ end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    for operator in Iterators.flatten((model.sconvs, model.convs, model.biases, model.sconv_biases, model.projects))
+    # model.sconvs, 
+    for operator in Iterators.flatten((model.convs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))
