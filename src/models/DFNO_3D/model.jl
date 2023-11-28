@@ -61,6 +61,7 @@ mutable struct Model
             # Setup FFT-restrict pattern and weightage with Kroneckers
             weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
             restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_z * fourier_z) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
+            restrict_dft = (fourier_t) ⊗ (fourier_z) ⊗ (fourier_y) ⊗ (fourier_x) ⊗ ParIdentity(T, config.nc_lift)
             
             push!(weight_mixes, weight_mix)
 
