@@ -31,9 +31,10 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 x_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 5 ÷ prod(partition), 1)
+y_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 1 ÷ prod(partition), 1)
 
 function loss_helper(params)
-    global loss = sum(DFNO_3D.forward(model, params, x_sample)) # UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y)
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y_sample)
     return loss
 end
 
