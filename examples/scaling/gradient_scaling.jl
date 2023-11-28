@@ -15,6 +15,8 @@ using DrWatson
 using ParametricOperators
 using CUDA
 
+gpu = ParametricOperators.gpu
+
 MPI.Init()
 
 comm = MPI.COMM_WORLD
@@ -31,7 +33,7 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 x_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 5 ÷ prod(partition), 1)
-y_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 1 ÷ prod(partition), 1)
+y_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 1 ÷ prod(partition), 1) |> gpu
 
 function loss_helper(params)
     global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y_sample)
