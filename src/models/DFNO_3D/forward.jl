@@ -14,8 +14,9 @@ function forward(model::Model, θ, x::Any)
         GC.gc(true)
     end
 
-    for i in 1:3
-        x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
+    for i in 1:2
+        # (model.sconvs[i](θ) * x) + 
+        x = reshape((model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
         x = reshape(x, (model.config.nc_lift ÷ model.config.partition[1], model.config.nx ÷ model.config.partition[2], model.config.ny ÷ model.config.partition[3], model.config.nz ÷ model.config.partition[4], model.config.nt ÷ model.config.partition[5], :))
 
         N = ndims(x)
