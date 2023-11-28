@@ -11,7 +11,7 @@
 
 ## Creating 1 day keys
 
-1. `./sshproxy.sh -u richardr`
+1. `~/sshproxy.sh -u richardr`
 2. `ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov`
 
 ## Move plot folder of DFNO_3D

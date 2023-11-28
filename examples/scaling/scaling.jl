@@ -42,7 +42,7 @@ y_time = UTILS.dist_sum([y_time]) / size
 y = y .+ rand(modelConfig.dtype)
 
 function loss_helper(params)
-    global loss = sum(DFNO_3D.forward(model, params, x_sample)) # UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y)
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y)
     return loss
 end
 
