@@ -27,7 +27,7 @@ WEAK_SPATIAL_FORWARD_CONFIGURATIONS=(
     "128 512 512 8 8 8 1024 1024 1024 1"
 )
 
-WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
+WEAK_TEMPORAL_SAFE_CONFIGURATIONS=(
     "1 1 1 1 1 1 32 32 32 2"
     "1 2 2 2 1 1 64 32 32 2"
     "1 4 4 2 2 1 64 64 32 2"
@@ -40,17 +40,17 @@ WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
     "128 512 512 8 8 8 256 256 256 2"
 )
 
-WEAK_TEMPORAL_SCALING_CONFIGURATIONS=(
-    "1 1 1 1 1 1 64 64 64 10"
-    "1 2 2 2 1 1 128 64 64 10"
-    "1 4 4 2 2 1 128 128 64 10"
-    "2 8 8 2 2 2 128 128 128 10"
-    "4 16 16 4 2 2 256 128 128 10"
-    "8 32 32 4 4 2 256 256 128 10"
-    "16 64 64 4 4 4 256 256 256 10"
-    "32 128 128 8 4 4 512 256 256 10"
-    "64 256 256 8 8 4 512 512 256 10"
-    "128 512 512 8 8 8 512 512 512 10"
+WEAK_SPATIAL_CONFIGURATIONS=(
+    "1 1 64 64 64 20"
+    "1 2 128 64 64 20"
+    "1 4 128 128 64 20"
+    "2 8 128 128 128 20"
+    "4 16 256 128 128 20"
+    "8 32 256 256 128 20"
+    "16 64 256 256 256 20"
+    "32 128 512 256 256 20"
+    "64 256 512 512 256 20"
+    "128 512 512 512 512 20"
 )
 
 # Testing config:
@@ -100,7 +100,7 @@ TEST_SCALING_CONFIGURATIONS=(
 )
 
 if [[ "$1" == "weak_spatial" ]]; then
-    CONFIGURATIONS=("${WEAK_SPATIAL_SCALING_CONFIGURATIONS[@]}")
+    CONFIGURATIONS=("${WEAK_SPATIAL_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_safe_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SAFE_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_forward" ]]; then
@@ -117,5 +117,5 @@ fi
 for config_str in "${CONFIGURATIONS[@]}"
 do
     config=($config_str)
-    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "${config[7]}" "${config[8]}" "${config[9]}" "$1"
+    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "$1"
 done

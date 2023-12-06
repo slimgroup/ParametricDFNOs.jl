@@ -21,10 +21,10 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-nodes, gpus, ntasks, px, py, pz, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:10])
-config = ARGS[11]
+nodes, gpus, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:6])
+config = ARGS[7]
 
-partition = [1,px,py,pz,1]
+partition = [1,size]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
@@ -55,7 +55,7 @@ if config !== "weak_forward"
     grads_time = UTILS.dist_sum([grads_time]) / size
 end
 
-final_dict = @strdict nodes gpus ntasks px py pz dimx dimy dimz dimt y_time grads_time config
+final_dict = @strdict nodes gpus dimx dimy dimz dimt y_time grads_time config
 
 if rank == 0
     mkpath(projectdir("examples", "scaling", "results"))
