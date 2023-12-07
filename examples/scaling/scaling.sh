@@ -14,6 +14,7 @@ sbatch <<EOT
 #SBATCH --time=00:20:00
 #SBATCH --account=m3863_g
 
+nvidia-smi
 export SLURM_CPU_BIND="cores"
 export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
