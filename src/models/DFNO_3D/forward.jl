@@ -16,7 +16,7 @@ function forward(model::Model, θ, x::Any)
 
     for i in 1:model.config.nblocks
         x = reshape((model.sconvs[i] * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
-        x = reshape(x, (model.config.nc_lift * model.config.nx * model.config.ny ÷ model.config.partition[1], model.config.nz * model.config.nt ÷ model.config.partition[2], :))
+        x = reshape(x, (model.config.nc_lift * model.config.nt * model.config.nx ÷ model.config.partition[1],  model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 
         N = ndims(x)
         ϵ = 1f-5
@@ -78,7 +78,7 @@ function forward(model::Model, θ, x::Any)
     end
 
     x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
-    x = reshape(x, (model.config.nc_out * model.config.nx * model.config.ny ÷ model.config.partition[1], model.config.nz * model.config.nt ÷ model.config.partition[2], :))
+    x = reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
     x = 1f0.-relu.(1f0.-relu.(x))
 
     return x
