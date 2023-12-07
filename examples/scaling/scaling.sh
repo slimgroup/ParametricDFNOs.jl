@@ -13,7 +13,6 @@ sbatch <<EOT
 #SBATCH --mail-type=ALL
 #SBATCH --time=00:20:00
 #SBATCH --account=m3863_g
-#SBATCH --gpu-bind=none
 
 export SLURM_CPU_BIND="cores"
 export PATH=$PATH:$HOME/.julia/bin
