@@ -46,25 +46,18 @@ mutable struct Model
             restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:config.mx, config.nx-config.mx+1:config.nx])
             restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:config.my, config.ny-config.my+1:config.ny])
             restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:config.mt])
-    
-            input_shape = (config.nc_lift, 2*config.mx, 2*config.my, config.mt)
-            weight_shape = (config.nc_lift, config.nc_lift, 2*config.mx, 2*config.my, config.mt)
-    
-            input_order = (1, 2, 3, 4)
-            weight_order = (5, 1, 2, 3, 4)
-            target_order = (5, 2, 3, 4)
-    
-            # Setup FFT-restrict pattern and weightage with Kroneckers
-            weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
-            restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
-            
-            push!(weight_mixes, weight_mix)
 
+            # Setup FFT-restrict pattern and weightage with Kroneckers
+            restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
+            weight_mix = ParMatrix(Complex{T},config.mt,config.mt, "ParMatrix_SCONV_T:($(layer))") ⊗ ParMatrix(Complex{T},2*config.my,2*config.my, "ParMatrix_SCONV_Y:($(layer))") ⊗ ParMatrix(Complex{T},2*config.mx,2*config.mx, "ParMatrix_SCONV_X:($(layer))") ⊗ ParMatrix(Complex{T}, config.nc_lift, config.nc_lift, "ParMatrix_SCONV_C:($(layer))")
+
+            push!(weight_mixes, weight_mix)
+            
+            # Distribute the linearly seperable operators
             weight_mix = distribute(weight_mix, config.partition)
             restrict_dft = distribute(restrict_dft, config.partition)
     
             sconv = restrict_dft' * weight_mix * restrict_dft
-    
             return sconv
         end
     

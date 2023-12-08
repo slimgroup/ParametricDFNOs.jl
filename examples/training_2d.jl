@@ -1,5 +1,5 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 4 julia main.jl
+# mpiexecjl --project=./ -n 4 julia examples/training_2d.jl
 
 using Pkg
 Pkg.activate("./")
