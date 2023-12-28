@@ -34,7 +34,7 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 x_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 5 ÷ prod(partition), 1)
-y_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 1 ÷ prod(partition), 1)# |> gpu
+y_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 1 ÷ prod(partition), 1) |> gpu
 
 y = DFNO_3D.forward(model, θ, x_sample)
 
