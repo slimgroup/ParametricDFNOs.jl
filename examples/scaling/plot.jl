@@ -15,7 +15,7 @@ function read_keys_from_jld2(file_path, keys)
     return data
 end
 
-directory = "examples/scaling/filtered/"
+directory = "examples/scaling/filtered_gradient/"
 
 # Get all JLD2 files in the current directory
 jld2_files = filter(x -> occursin(r"\.jld2$", x), readdir(directory))
@@ -26,8 +26,8 @@ data_points = []
 # Read the data from each file
 for file in jld2_files
     full_path = joinpath(directory, file)
-    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz"])
-    push!(data_points, (data["gpus"], data["y_time"], data["dimx"], data["dimy"], data["dimz"], data["nodes"]))
+    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz", "grads_time"])
+    push!(data_points, (data["gpus"], data["y_time"], data["dimx"], data["dimy"], data["dimz"], data["nodes"], data["grads_time"]))
 end
 
 # Sort the data by the 'gpus' value
@@ -38,10 +38,12 @@ gpus = [point[1] for point in sorted_data]
 y_times = [point[2] for point in sorted_data]
 dims = ["($(point[3]), $(point[4]), $(point[5]))" for point in sorted_data]
 nodes = [point[6] for point in sorted_data]
+grads_times = [point[7] for point in sorted_data]
 
 # Now plot the data
 fig, ax1 = subplots()
 ax1.plot(1:length(gpus), y_times, "s-b", label="Inference Time")  # Plot against evenly spaced x-axis
+ax1.plot(1:length(gpus), grads_times, "o-r", label="Gradient Time")  # Add this line for gradients time
 
 # # Add a grey dotted line for comparison
 # # Assuming you want a line with a slope of 1 for comparison
@@ -49,8 +51,8 @@ ax1.plot(1:length(gpus), y_times, "s-b", label="Inference Time")  # Plot against
 # ax1.plot(1:max_val, 1:max_val, "--", color="grey", label="Ideal Scaling")  # Grey dotted line
 
 # Calculate padding for the y-axis
-y_padding = (maximum(y_times) - minimum(y_times)) * 0.20  # 5% padding from the range of y_times
-ax1.set_ylim(minimum(y_times) - y_padding, maximum(y_times) + y_padding)
+y_padding = (maximum(grads_times) - minimum(y_times)) * 0.20  # 5% padding from the range of grads_times and y_times
+ax1.set_ylim(minimum(y_times) - y_padding, maximum(grads_times) + y_padding)
 
 ax1.set_xlabel("# GPUs/Nodes", labelpad=10, fontsize=20)
 ax1.set_ylabel("Runtime [s]", fontsize=20)
