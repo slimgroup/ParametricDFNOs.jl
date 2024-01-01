@@ -2,6 +2,7 @@
 #SBATCH --nodes=16
 #SBATCH --constraint=gpu
 #SBATCH --gpus=64
+#SBATCH --ntasks=64
 #SBATCH --gpus-per-task=1
 #SBATCH --qos=regular
 #SBATCH --job-name Test_Run_200_Epochs_80_cube 
@@ -20,4 +21,4 @@ export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
 export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
 
-srun --ntasks=64 --export=ALL julia-1.8 ./examples/perlmutter/train.jl
+srun --export=ALL julia-1.8 ./examples/perlmutter/train.jl
