@@ -16,7 +16,7 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
-dim = 80
+dim = 40
 partition = [1,pe_count]
 
 @assert MPI.Comm_size(comm) == prod(partition)
