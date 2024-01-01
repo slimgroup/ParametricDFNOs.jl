@@ -51,12 +51,12 @@ mutable struct Model
             restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:config.mz, config.nz-config.mz+1:config.nz])
             restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:config.mt])
     
-            input_shape = (config.nc_lift, 2*config.mx, 2*config.my, 2*config.mz, config.mt)
-            weight_shape = (config.nc_lift, config.nc_lift, 2*config.mx, 2*config.my, 2*config.mz, config.mt)
+            input_shape = (config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
+            weight_shape = (config.nc_lift, config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
     
-            input_order = (1, 2, 3, 4, 5)
-            weight_order = (6, 1, 2, 3, 4, 5)
-            target_order = (6, 2, 3, 4, 5)
+            input_order = (1, 2, 3)
+            weight_order = (1, 4, 2, 3)
+            target_order = (4, 2, 3)
     
             # Setup FFT-restrict pattern and weightage with Kroneckers
             weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
@@ -64,10 +64,10 @@ mutable struct Model
             
             push!(weight_mixes, weight_mix)
             
-            # weight_mix = distribute(weight_mix, config.partition)
+            weight_mix = distribute(weight_mix, [1, config.partition...])
             restrict_dft = distribute(restrict_dft, config.partition)
     
-            sconv = restrict_dft' * restrict_dft
+            sconv = restrict_dft' * weight_mix * restrict_dft
     
             return sconv
         end
@@ -116,8 +116,7 @@ end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    # model.sconvs, 
-    for operator in Iterators.flatten((model.convs, model.biases, model.sconv_biases, model.projects))
+    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))
