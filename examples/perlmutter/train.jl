@@ -16,7 +16,7 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
-dim = 40
+dim = 80
 partition = [1,pe_count]
 
 @assert MPI.Comm_size(comm) == prod(partition)
@@ -24,7 +24,7 @@ partition = [1,pe_count]
 modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, nblocks=4, partition=partition)
 
 dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³"
-x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=5)
+x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=2000)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
@@ -34,7 +34,6 @@ model = DFNO_3D.Model(modelConfig)
 # DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 trainConfig = DFNO_3D.TrainConfig(
-    nbatch=1,
     epochs=200,
     x_train=x_train,
     y_train=y_train,
