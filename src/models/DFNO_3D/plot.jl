@@ -49,21 +49,21 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
 
     fig = figure(figsize=(20, 12))
     fixed_z = modelConfig.nz ÷ 2
-    for i = 1:5
+    for i = 1:1
         subplot(4,5,i)
-        imshow(x_plot[1,:,:,fixed_z,10*i+1]')
+        imshow(x_plot[1,:,:,fixed_z,5*i+1]')
         title("input permeability")
 
         subplot(4,5,i+5)
-        imshow(y_plot[1,:,:,fixed_z,10*i+1]', vmin=0, vmax=1)
+        imshow(y_plot[1,:,:,fixed_z,5*i+1]', vmin=0, vmax=1)
         title("true saturation")
 
         subplot(4,5,i+10)
-        imshow(y_predict[1,:,:,fixed_z,10*i+1]', vmin=0, vmax=1)
+        imshow(y_predict[1,:,:,fixed_z,5*i+1]', vmin=0, vmax=1)
         title("predicted saturation")
 
         subplot(4,5,i+15)
-        imshow(5f0 .* abs.(y_plot[1,:,:,fixed_z,10*i+1]'-y_predict[1,:,:,fixed_z,10*i+1]'), vmin=0, vmax=1)
+        imshow(5f0 .* abs.(y_plot[1,:,:,fixed_z,5*i+1]'-y_predict[1,:,:,fixed_z,10*i+1]'), vmin=0, vmax=1)
         title("5X abs difference")
 
     end
