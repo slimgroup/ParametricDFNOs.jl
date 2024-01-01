@@ -19,6 +19,7 @@ function loadDistData(config::DataConfig;
 
     comm_cart = MPI.Cart_create(comm, config.modelConfig.partition)
     coords = MPI.Cart_coords(comm_cart)
+    rank = MPI.Comm_rank(comm)
 
     yz_start, yz_end = UTILS.get_dist_indices(config.modelConfig.ny * config.modelConfig.nz, config.modelConfig.partition[2], coords[2])
 
@@ -41,6 +42,14 @@ function loadDistData(config::DataConfig;
         y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
 
         target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt*config.modelConfig.nx, 1, config.ntrain+config.nvalid)
+        
+        if rank == 0
+            println(size(x_sample))
+            println(size(y_sample))
+
+            println(size(x_data))
+            println(size(y_sample))
+        end
 
         x_sample = target_zeros .+ x_sample
         # t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1))
