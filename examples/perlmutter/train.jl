@@ -34,6 +34,7 @@ model = DFNO_3D.Model(modelConfig)
 # DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 trainConfig = DFNO_3D.TrainConfig(
+    nbatch=1,
     epochs=200,
     x_train=x_train,
     y_train=y_train,

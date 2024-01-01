@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --nodes=4
+#SBATCH --nodes=16
 #SBATCH --constraint=gpu
-#SBATCH --gpus=16
-#SBATCH --ntasks=16
+#SBATCH --gpus=64
+#SBATCH --ntasks=64
 #SBATCH --gpus-per-task=1
 #SBATCH --qos=regular
-#SBATCH --job-name Test_Run_10_Epochs_20_cube 
+#SBATCH --job-name Test_Run_200_Epochs_80_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
 #SBATCH --time=05:00:00
