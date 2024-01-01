@@ -51,18 +51,18 @@ function loadDistData(config::DataConfig;
         # 1,t,x,yz,n
         target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt, config.modelConfig.nx, 1, config.ntrain+config.nvalid)
         
-        if rank == 0
-            println(size(target_zeros))
+        # if rank == 0
+        #     println(size(target_zeros))
 
-            println(size(x_sample))
-            println(size(y_sample))
+        #     println(size(x_sample))
+        #     println(size(y_sample))
 
-            println(size(x_data))
-            println(size(y_data))
+        #     println(size(x_data))
+        #     println(size(y_data))
 
-            println(size(x_data[:, :, yz_coord-yz_start+1, :]))
-            println(size(y_data[:, :, yz_coord-yz_start+1, :]))
-        end
+        #     println(size(x_data[:, :, yz_coord-yz_start+1, :]))
+        #     println(size(y_data[:, :, yz_coord-yz_start+1, :]))
+        # end
 
         x_sample = target_zeros .+ x_sample
         t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1, 1))
@@ -74,13 +74,9 @@ function loadDistData(config::DataConfig;
         y_data[:, :, yz_coord-yz_start+1, :] = vec(y_sample)
     end
 
-    println(size(x_data))
-    
     # combine ctx dim
-    x_data = reshape(x_data, (size(x_data, 1) * size(x_data, 2) * size(x_data, 3), size(x_data, 4), size(x_data, 5)))
+    x_data = reshape(x_data, (size(x_data, 1) * size(x_data, 2), size(x_data, 3), size(x_data, 4)))
     y_data = reshape(y_data, (size(y_data, 1) * size(y_data, 2), size(y_data, 3), size(y_data, 4)))
-
-    println(size(x_data))
 
     train_indices = (:, :, 1:config.ntrain)
     valid_indices = (:, :, config.ntrain+1:config.ntrain+config.nvalid)
