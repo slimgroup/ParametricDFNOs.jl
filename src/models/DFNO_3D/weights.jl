@@ -24,8 +24,8 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
             id = _dist_key(k, coords)
             for (k1, v1) in θ
                 if k1.id == id
-                    gpu_flag && θ[k1] = (_dist_value(v, partition) |> gpu)
-                    !gpu_flag && θ[k1] = _dist_value(v, partition)
+                    gpu_flag && (θ[k1] = _dist_value(v, partition) |> gpu)
+                    !gpu_flag && (θ[k1] = _dist_value(v, partition))
                 end
             end
         end
