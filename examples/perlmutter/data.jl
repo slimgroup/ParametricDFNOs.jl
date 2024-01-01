@@ -30,10 +30,10 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
         return reshape(data, 1, (size(data)...), 1)
     end
     
-    x_train = zeros(modelConfig.dtype, modelConfig.nc_in ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], ntrain)
-    y_train = zeros(modelConfig.dtype, modelConfig.nc_out ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], ntrain)
-    x_valid = zeros(modelConfig.dtype, modelConfig.nc_in ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], nvalid)
-    y_valid = zeros(modelConfig.dtype, modelConfig.nc_out ÷ modelConfig.partition[1], modelConfig.nx ÷ modelConfig.partition[2], modelConfig.ny ÷ modelConfig.partition[3], modelConfig.nz ÷ modelConfig.partition[4], modelConfig.nt ÷ modelConfig.partition[5], nvalid)
+    x_train = zeros(modelConfig.dtype, modelConfig.nc_in * modelConfig.nt * modelConfig.nx ÷ modelConfig.partition[1], modelConfig.ny * modelConfig.nz ÷ modelConfig.partition[2], ntrain)
+    y_train = zeros(modelConfig.dtype, modelConfig.nc_out * modelConfig.nt * modelConfig.nx ÷ modelConfig.partition[1], modelConfig.ny * modelConfig.nz ÷ modelConfig.partition[2], ntrain)
+    x_valid = zeros(modelConfig.dtype, modelConfig.nc_in * modelConfig.nt * modelConfig.nx ÷ modelConfig.partition[1], modelConfig.ny * modelConfig.nz ÷ modelConfig.partition[2], nvalid)
+    y_valid = zeros(modelConfig.dtype, modelConfig.nc_out * modelConfig.nt * modelConfig.nx ÷ modelConfig.partition[1], modelConfig.ny * modelConfig.nz ÷ modelConfig.partition[2], nvalid)
 
     idx = 1
 
@@ -53,11 +53,11 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
         dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
 
         if idx <= ntrain
-            x_train[:,:,:,:,:,idx] = x[:,:,:,:,:,1]
-            y_train[:,:,:,:,:,idx] = y[:,:,:,:,:,1]
+            x_train[:,:,idx] = x[:,:,1]
+            y_train[:,:,idx] = y[:,:,1]
         else
-            x_valid[:,:,:,:,:,idx-ntrain] = x[:,:,:,:,:,1]
-            y_valid[:,:,:,:,:,idx-ntrain] = y[:,:,:,:,:,1]
+            x_valid[:,:,idx-ntrain] = x[:,:,1]
+            y_valid[:,:,idx-ntrain] = y[:,:,1]
         end
         println("Loaded data sample no. $(idx) / $(n)")
         idx == n && break

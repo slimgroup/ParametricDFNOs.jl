@@ -19,13 +19,13 @@ pe_count = MPI.Comm_size(comm)
 
 partition = [1,pe_count]
 
-modelConfig = DFNO_3D.ModelConfig(nblocks=4, partition=partition, ntrain=2, nvalid=2)
+modelConfig = DFNO_3D.ModelConfig(nblocks=4, partition=partition)
 dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig)
 
 x_train, y_train, x_valid, y_valid = DFNO_3D.loadDistData(dataConfig)
 
 trainConfig = DFNO_3D.TrainConfig(
-    epochs=1,
+    epochs=200,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
@@ -39,21 +39,6 @@ model = DFNO_3D.Model(modelConfig)
 # filename = "/path/to/checkpoint.jld2"
 # DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
-x_sample_cpu = x_train[:, :, 1:1]
-y_sample_cpu = y_train[:, :, 1:1]
-
-x_global_shape = (modelConfig.nc_in * modelConfig.nt, modelConfig.nx * modelConfig.ny)
-y_global_shape = (modelConfig.nc_out * modelConfig.nt, modelConfig.nx * modelConfig.ny)
-
-x_sample_global = UTILS.collect_dist_tensor(x_sample_cpu, x_global_shape, modelConfig.partition, comm)
-y_sample_global = UTILS.collect_dist_tensor(y_sample_cpu, y_global_shape, modelConfig.partition, comm)
-
-if rank > 0
-    MPI.Finalize()
-    exit()
-end
-
-plotEvaluation(modelConfig, trainConfig, x_sample_global, y_sample_global, y_sample_global)
-# DFNO_3D.train!(trainConfig, model, θ)
+DFNO_3D.train!(trainConfig, model, θ)
 
 MPI.Finalize()
