@@ -42,6 +42,7 @@ function loadDistData(config::DataConfig;
 
         target_zeros = zeros(config.modelConfig.dtype, 1, nt_end-nt_start+1, 1, config.ntrain+config.nvalid)
 
+        # target is 1,t,xy,n and x_sample is 1,x,y,n since x=y=xy=1, you can do the below
         x_sample = target_zeros .+ x_sample
         t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1))
         x_indices = target_zeros .+ reshape(x_coord:x_coord, (1, 1, :, 1))

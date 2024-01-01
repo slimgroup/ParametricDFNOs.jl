@@ -27,6 +27,7 @@ function loadDistData(config::DataConfig;
     nt_start, nt_end = 1, config.modelConfig.nt
     nx_start, nx_end = 1, config.modelConfig.nx
 
+    # c,tx,yz,n
     x_data = zeros(config.modelConfig.dtype, config.modelConfig.nc_in, config.modelConfig.nt*config.modelConfig.nx, yz_end-yz_start+1, config.ntrain+config.nvalid)
     y_data = zeros(config.modelConfig.dtype, config.modelConfig.nc_out, config.modelConfig.nt*config.modelConfig.nx, yz_end-yz_start+1, config.ntrain+config.nvalid)
 
@@ -38,14 +39,21 @@ function loadDistData(config::DataConfig;
         x_indices = (nx_start:nx_end, y_coord:y_coord, z_coord:z_coord, 1:config.ntrain+config.nvalid)
         y_indices = (nx_start:nx_end, y_coord:y_coord, z_coord:z_coord, nt_start:nt_end, 1:config.ntrain+config.nvalid)
 
+        # 1,x,y,z,n -> 1,1,x,yz,n
         x_sample = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
-        y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
+        x_sample = reshape(x_sample, (1, 1, size(x_sample, 2), size(x_sample, 3) * size(x_sample, 4), size(x_sample, 5)))
 
-        target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt*config.modelConfig.nx, 1, config.ntrain+config.nvalid)
+        # 1,x,y,z,t,n -> 1,t,x,y,z,n -> 1,tx,yz,n
+        y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
+        y_sample = permutedims(y_sample, [1,5,2,3,4,6])
+        y_sample = reshape(y_sample, (1, size(y_sample, 2) * size(y_sample, 3), size(y_sample, 4) * size(y_sample, 5), size(y_sample, 6)))
+
+        # 1,t,x,yz,n
+        target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt, config.modelConfig.nx, 1, config.ntrain+config.nvalid)
         
         if rank == 0
             println(size(target_zeros))
-            
+
             println(size(x_sample))
             println(size(y_sample))
 
@@ -54,17 +62,18 @@ function loadDistData(config::DataConfig;
         end
 
         x_sample = target_zeros .+ x_sample
-        # t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1))
-        # x_indices = target_zeros .+ reshape(x_coord:x_coord, (1, :, 1, 1))
-        y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, :, 1))
-        z_indices = target_zeros .+ reshape(z_coord:z_coord, (1, 1, :, 1))
+        t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1, 1))
+        x_indices = target_zeros .+ reshape(x_coord:x_coord, (1, 1, :, 1, 1))
+        y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, 1, :, 1))
+        z_indices = target_zeros .+ reshape(z_coord:z_coord, (1, 1, 1, :, 1))
 
-        x_data[:, :, yz_coord-yz_start+1, :] = cat(x_sample, y_indices, z_indices, dims=1)
+        x_data[:, :, yz_coord-yz_start+1, :] = cat(x_sample, t_indices, x_indices, y_indices, z_indices, dims=1)
         y_data[:, :, yz_coord-yz_start+1, :] = y_sample
+        exit()
     end
 
-    # combine c and tx dim
-    x_data = reshape(x_data, (size(x_data, 1) * size(x_data, 2), size(x_data, 3), size(x_data, 4)))
+    # combine ctx dim
+    x_data = reshape(x_data, (size(x_data, 1) * size(x_data, 2) * size(x_data, 3), size(x_data, 4), size(x_data, 5)))
     y_data = reshape(y_data, (size(y_data, 1) * size(y_data, 2), size(y_data, 3), size(y_data, 4)))
 
     train_indices = (:, :, 1:config.ntrain)
