@@ -1,24 +1,36 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 4 julia main.jl
+# mpiexecjl --project=./ -n 4 julia examples/training_3d.jl
 
 using Pkg
 Pkg.activate("./")
 
 include("../src/models/DFNO_3D/DFNO_3D.jl")
+include("../src/utils.jl")
 
 using .DFNO_3D
 using MPI
+using .UTILS
 
 MPI.Init()
 
 comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
-size = MPI.Comm_size(comm)
+pe_count = MPI.Comm_size(comm)
 
-partition = [1,size]
+partition = [1,pe_count]
 
-modelConfig = DFNO_3D.ModelConfig(nblocks=4, partition=partition)
-dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig) # Or Provide custom datafile path, channels and permutation. see examples/perlmutter
+modelConfig = DFNO_3D.ModelConfig(nblocks=4, partition=partition, ntrain=2, nvalid=2)
+dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig)
+
+x_train, y_train, x_valid, y_valid = DFNO_3D.loadDistData(dataConfig)
+
+trainConfig = DFNO_3D.TrainConfig(
+    epochs=1,
+    x_train=x_train,
+    y_train=y_train,
+    x_valid=x_valid,
+    y_valid=y_valid,
+)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
@@ -27,16 +39,21 @@ model = DFNO_3D.Model(modelConfig)
 # filename = "/path/to/checkpoint.jld2"
 # DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
-x_train, y_train, x_valid, y_valid = DFNO_3D.loadDistData(dataConfig)
+x_sample_cpu = x_train[:, :, 1:1]
+y_sample_cpu = y_train[:, :, 1:1]
 
-trainConfig = DFNO_3D.TrainConfig(
-    epochs=200,
-    x_train=x_train,
-    y_train=y_train,
-    x_valid=x_valid,
-    y_valid=y_valid,
-)
+x_global_shape = (modelConfig.nc_in * modelConfig.nt, modelConfig.nx * modelConfig.ny)
+y_global_shape = (modelConfig.nc_out * modelConfig.nt, modelConfig.nx * modelConfig.ny)
 
-DFNO_3D.train!(trainConfig, model, θ)
+x_sample_global = UTILS.collect_dist_tensor(x_sample_cpu, x_global_shape, modelConfig.partition, comm)
+y_sample_global = UTILS.collect_dist_tensor(y_sample_cpu, y_global_shape, modelConfig.partition, comm)
+
+if rank > 0
+    MPI.Finalize()
+    exit()
+end
+
+plotEvaluation(modelConfig, trainConfig, x_sample_global, y_sample_global, y_sample_global)
+# DFNO_3D.train!(trainConfig, model, θ)
 
 MPI.Finalize()
