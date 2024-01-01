@@ -59,11 +59,14 @@ function loadDistData(config::DataConfig;
 
             println(size(x_data))
             println(size(y_data))
+
+            println(size(x_data[:, :, yz_coord-yz_start+1, :]))
+            println(size(y_data[:, :, yz_coord-yz_start+1, :]))
         end
 
         x_sample = target_zeros .+ x_sample
         t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1, 1))
-        x_indices = target_zeros .+ reshape(x_coord:x_coord, (1, 1, :, 1, 1))
+        x_indices = target_zeros .+ reshape(nx_start:nx_end, (1, 1, :, 1, 1))
         y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, 1, :, 1))
         z_indices = target_zeros .+ reshape(z_coord:z_coord, (1, 1, 1, :, 1))
 
