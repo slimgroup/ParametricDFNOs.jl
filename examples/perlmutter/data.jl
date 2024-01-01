@@ -52,6 +52,16 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
         x, y, _, _ = DFNO_3D.loadDistData(dataConfig, 
         dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
 
+        println(size(x))
+        println(size(x[:,:,1]))
+        println(size(x_train))
+        prinlnt(size(x_train[:,:,idx]))
+
+        println(size(y))
+        println(size(y[:,:,1]))
+        println(size(y_train))
+        prinlnt(size(y_train[:,:,idx]))
+
         if idx <= ntrain
             x_train[:,:,idx] = x[:,:,1]
             y_train[:,:,idx] = y[:,:,1]
