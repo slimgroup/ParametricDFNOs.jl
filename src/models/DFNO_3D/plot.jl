@@ -1,8 +1,8 @@
 function _getFigname(config::TrainConfig, additional::Dict)
     nbatch = config.nbatch
     epochs = config.epochs
-    ntrain = size(config.x_train, 6)
-    nvalid = size(config.x_valid, 6)
+    ntrain = size(config.x_train, 3)
+    nvalid = size(config.x_valid, 3)
     
     figname = @strdict nbatch epochs ntrain nvalid
     return merge(additional,figname)
@@ -10,7 +10,7 @@ end
 
 function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dict())
 
-    ntrain = size(trainConfig.x_train, 6)
+    ntrain = size(trainConfig.x_train, 3)
     nbatches = Int(ntrain/trainConfig.nbatch)
 
     loss_train = Loss[1:ep*nbatches]
@@ -43,27 +43,29 @@ end
 
 function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
 
-    x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
-    y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
-    y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nx, modelConfig.ny, modelConfig.nz, modelConfig.nt))
+    spacing = 5
+
+    x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
+    y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
+    y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
 
     fig = figure(figsize=(20, 12))
     fixed_z = modelConfig.nz ÷ 2
     for i = 1:1
         subplot(4,5,i)
-        imshow(x_plot[1,:,:,fixed_z,5*i+1]')
+        imshow(x_plot[1,spacing*i+1,:,:,fixed_z]')
         title("input permeability")
 
         subplot(4,5,i+5)
-        imshow(y_plot[1,:,:,fixed_z,5*i+1]', vmin=0, vmax=1)
+        imshow(y_plot[1,spacing*i+1,:,:,fixed_z]', vmin=0, vmax=1)
         title("true saturation")
 
         subplot(4,5,i+10)
-        imshow(y_predict[1,:,:,fixed_z,5*i+1]', vmin=0, vmax=1)
+        imshow(y_predict[1,spacing*i+1,:,:,fixed_z]', vmin=0, vmax=1)
         title("predicted saturation")
 
         subplot(4,5,i+15)
-        imshow(5f0 .* abs.(y_plot[1,:,:,fixed_z,5*i+1]'-y_predict[1,:,:,fixed_z,10*i+1]'), vmin=0, vmax=1)
+        imshow(5f0 .* abs.(y_plot[1,spacing*i+1,:,:,fixed_z]'-y_predict[1,spacing*i+1,:,:,fixed_z]'), vmin=0, vmax=1)
         title("5X abs difference")
 
     end
@@ -77,21 +79,21 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
     fig = figure(figsize=(20, 12))
     fixed_y = modelConfig.ny ÷ 2
 
-    for i = 1:5
+    for i = 1:1
         subplot(4,5,i)
-        imshow(x_plot[1,:,fixed_y,:,10*i+1]')
+        imshow(x_plot[1,spacing*i+1,:,fixed_y,:]')
         title("input permeability")
 
         subplot(4,5,i+5)
-        imshow(y_plot[1,:,fixed_y,:,10*i+1]', vmin=0, vmax=1)
+        imshow(y_plot[1,spacing*i+1,:,fixed_y,:]', vmin=0, vmax=1)
         title("true saturation")
 
         subplot(4,5,i+10)
-        imshow(y_predict[1,:,fixed_y,:,10*i+1]', vmin=0, vmax=1)
+        imshow(y_predict[1,spacing*i+1,:,fixed_y,:]', vmin=0, vmax=1)
         title("predicted saturation")
 
         subplot(4,5,i+15)
-        imshow(5f0 .* abs.(y_plot[1,:,fixed_y,:,10*i+1]'-y_predict[1,:,fixed_y,:,10*i+1]'), vmin=0, vmax=1)
+        imshow(5f0 .* abs.(y_plot[1,spacing*i+1,:,fixed_y,:]'-y_predict[1,spacing*i+1,:,fixed_y,:]'), vmin=0, vmax=1)
         title("5X abs difference")
 
     end
