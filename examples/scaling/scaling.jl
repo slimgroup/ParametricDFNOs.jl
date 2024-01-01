@@ -21,12 +21,10 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-nodes, gpus, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:6])
-config = ARGS[7]
-
 partition = [1,size]
 
-@assert MPI.Comm_size(comm) == prod(partition)
+nodes, gpus, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:6])
+config = ARGS[7]
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mt=min(dimt, 4), nblocks=4, partition=partition)
 model = DFNO_3D.Model(modelConfig)

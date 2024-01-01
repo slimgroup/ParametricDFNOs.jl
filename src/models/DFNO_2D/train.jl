@@ -15,8 +15,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     rank = MPI.Comm_rank(comm)
     p = MPI.Comm_size(comm)
 
-    ntrain = size(config.x_train, 5)
-    nvalid = size(config.x_valid, 5)
+    ntrain = size(config.x_train, 3)
+    nvalid = size(config.x_valid, 3)
 
     opt = Flux.Optimise.ADAMW(config.learning_rate, (0.9f0, 0.999f0), 1f-4)
     nbatches = Int(ntrain/config.nbatch)
@@ -24,14 +24,14 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     rng1 = Random.seed!(config.seed)
     valid_idx = randperm(rng1, nvalid)[1:config.nbatch]
 
-    x_sample = config.x_valid[:, :, :, :, valid_idx]
-    y_sample = config.y_valid[:, :, :, :, valid_idx]
+    x_sample = config.x_valid[:, :, valid_idx]
+    y_sample = config.y_valid[:, :, valid_idx]
 
-    x_sample_cpu = x_sample[:, :, :, :, 1:1]
-    y_sample_cpu = y_sample[:, :, :, :, 1:1]
+    x_sample_cpu = x_sample[:, :, 1:1]
+    y_sample_cpu = y_sample[:, :, 1:1]
 
-    x_global_shape = (model.config.nc_in, model.config.nx, model.config.ny, model.config.nt)
-    y_global_shape = (model.config.nc_out, model.config.nx, model.config.ny, model.config.nt)
+    x_global_shape = (model.config.nc_in * model.config.nt, model.config.nx * model.config.ny)
+    y_global_shape = (model.config.nc_out * model.config.nt, model.config.nx * model.config.ny)
 
     x_sample_global = UTILS.collect_dist_tensor(x_sample_cpu, x_global_shape, model.config.partition, comm)
     y_sample_global = UTILS.collect_dist_tensor(y_sample_cpu, y_global_shape, model.config.partition, comm)
@@ -49,8 +49,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         idx_e = reshape(randperm(rng2, ntrain), config.nbatch, nbatches)
 
         for b = 1:nbatches
-            x = config.x_train[:, :, :, :, idx_e[:,b]]
-            y = config.y_train[:, :, :, :, idx_e[:,b]]
+            x = config.x_train[:, :, idx_e[:,b]]
+            y = config.y_train[:, :, idx_e[:,b]]
             
             gpu_flag && (y = y |> gpu)
 
@@ -76,7 +76,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         rank == 0 && (Loss_valid[ep] = loss_valid)
         ep % config.plot_every > 0 && continue
 
-        y_cpu = y[:, :, :, :, 1:1]
+        y_cpu = y[:, :, 1:1]
         gpu_flag && (y_cpu = y_cpu |> cpu)
         y_global = UTILS.collect_dist_tensor(y_cpu, y_global_shape, model.config.partition, comm)
 

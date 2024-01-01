@@ -13,10 +13,9 @@ MPI.Init()
 
 comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
+size = MPI.Comm_size(comm)
 
-partition = [1,2,2,2,1]
-
-@assert MPI.Comm_size(comm) == prod(partition)
+partition = [1,size]
 
 modelConfig = DFNO_3D.ModelConfig(nblocks=4, partition=partition)
 dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig) # Or Provide custom datafile path, channels and permutation. see examples/perlmutter
