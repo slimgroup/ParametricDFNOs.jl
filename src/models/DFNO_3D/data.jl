@@ -44,11 +44,13 @@ function loadDistData(config::DataConfig;
         target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt*config.modelConfig.nx, 1, config.ntrain+config.nvalid)
         
         if rank == 0
+            println(size(target_zeros))
+            
             println(size(x_sample))
             println(size(y_sample))
 
             println(size(x_data))
-            println(size(y_sample))
+            println(size(y_data))
         end
 
         x_sample = target_zeros .+ x_sample
