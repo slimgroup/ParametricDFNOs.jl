@@ -43,7 +43,7 @@ end
 
 function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
 
-    spacing = 5
+    spacing = 10
 
     x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
     y_plot = reshape(y_plot, (modelConfig.nc_out, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
@@ -51,7 +51,7 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
 
     fig = figure(figsize=(20, 12))
     fixed_z = modelConfig.nz ÷ 2
-    for i = 1:1
+    for i = 1:5
         subplot(4,5,i)
         imshow(x_plot[1,spacing*i+1,:,:,fixed_z]')
         title("input permeability")
@@ -79,7 +79,7 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
     fig = figure(figsize=(20, 12))
     fixed_y = modelConfig.ny ÷ 2
 
-    for i = 1:1
+    for i = 1:5
         subplot(4,5,i)
         imshow(x_plot[1,spacing*i+1,:,fixed_y,:]')
         title("input permeability")

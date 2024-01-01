@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --nodes=2
+#SBATCH --nodes=4
 #SBATCH --constraint=gpu
-#SBATCH --gpus=8
-#SBATCH --ntasks=8
+#SBATCH --gpus=16
+#SBATCH --ntasks=16
 #SBATCH --gpus-per-task=1
 #SBATCH --qos=regular
 #SBATCH --job-name Test_Run_10_Epochs_20_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=03:00:00
+#SBATCH --time=05:00:00
 #SBATCH --account=m3863_g
 
 # # OpenMP settings: (TODO: Figure this out)
