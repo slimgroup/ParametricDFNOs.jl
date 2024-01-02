@@ -66,6 +66,7 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
         catch e
             println("Failed to load data sample no. $(idx). Error: $e")
             continue
+        end
     end
 
     return x_train, y_train, x_valid, y_valid
