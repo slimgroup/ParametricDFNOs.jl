@@ -38,30 +38,34 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
     idx = 1
 
     for entry in readdir(path; join=true)
-        perm_file = entry * "/inputs.jld2"
-        conc_file = entry * "/outputs.jld2"
+        try
+            perm_file = entry * "/inputs.jld2"
+            conc_file = entry * "/outputs.jld2"
 
-        dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig, 
-                                        ntrain=1, 
-                                        nvalid=0, 
-                                        perm_file=perm_file,
-                                        conc_file=conc_file,
-                                        perm_key="K",
-                                        conc_key="saturations")
+            dataConfig = DFNO_3D.DataConfig(modelConfig=modelConfig, 
+                                            ntrain=1, 
+                                            nvalid=0, 
+                                            perm_file=perm_file,
+                                            conc_file=conc_file,
+                                            perm_key="K",
+                                            conc_key="saturations")
 
-        x, y, _, _ = DFNO_3D.loadDistData(dataConfig, 
-        dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
+            x, y, _, _ = DFNO_3D.loadDistData(dataConfig, 
+            dist_read_x_tensor=read_x_tensor, dist_read_y_tensor=read_y_tensor)
 
-        if idx <= ntrain
-            x_train[:,:,idx] = x[:,:,1]
-            y_train[:,:,idx] = y[:,:,1]
-        else
-            x_valid[:,:,idx-ntrain] = x[:,:,1]
-            y_valid[:,:,idx-ntrain] = y[:,:,1]
-        end
-        println("Loaded data sample no. $(idx) / $(n)")
-        idx == n && break
-        idx += 1
+            if idx <= ntrain
+                x_train[:,:,idx] = x[:,:,1]
+                y_train[:,:,idx] = y[:,:,1]
+            else
+                x_valid[:,:,idx-ntrain] = x[:,:,1]
+                y_valid[:,:,idx-ntrain] = y[:,:,1]
+            end
+            println("Loaded data sample no. $(idx) / $(n)")
+            idx == n && break
+            idx += 1
+        catch e
+            println("Failed to load data sample no. $(idx). Error: $e")
+            continue
     end
 
     return x_train, y_train, x_valid, y_valid
