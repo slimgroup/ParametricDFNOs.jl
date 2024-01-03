@@ -22,9 +22,13 @@ epochs, dim, samples = parse.(Int, ARGS[1:3])
 @assert MPI.Comm_size(comm) == prod(partition)
 
 modes = max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float64)
 
 dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³"
+
+# Switch to below after done copying dataset to scratch file
+# dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
+
 x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=samples)
 
 model = DFNO_3D.Model(modelConfig)
