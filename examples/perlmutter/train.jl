@@ -21,7 +21,7 @@ epochs, dim, samples = parse.(Int, ARGS[1:3])
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=dim÷8, my=dim÷8, mz=dim÷8, mt=dim÷8, nblocks=4, partition=partition)
 
 dataset_path = "/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5/$(dim)³"
 x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, n=samples)
