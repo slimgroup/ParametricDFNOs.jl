@@ -26,7 +26,13 @@ partition = [1,size]
 nodes, gpus, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:6])
 config = ARGS[7]
 
-modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mt=min(dimt, 4), nblocks=4, partition=partition)
+modesx = max(dimx÷8, 4)
+modesy = max(dimy÷8, 4)
+modesz = max(dimz÷8, 4)
+modest = max(dimt÷8, 4)
+
+modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=4, partition=partition)
+
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
