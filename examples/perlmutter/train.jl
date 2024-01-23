@@ -42,7 +42,8 @@ trainConfig = DFNO_3D.TrainConfig(
     y_train=y_train,
     x_valid=x_valid,
     y_valid=y_valid,
-    plot_every=2
+    plot_every=2,
+    nbatch=1
 )
 
 DFNO_3D.train!(trainConfig, model, θ)
