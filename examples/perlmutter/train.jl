@@ -22,7 +22,7 @@ epochs, dim, samples = parse.(Int, ARGS[1:3])
 @assert MPI.Comm_size(comm) == prod(partition)
 
 modes = max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float64)
+modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, nt=4, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float64)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
 dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
