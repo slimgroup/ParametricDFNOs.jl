@@ -4,6 +4,7 @@
 .vscode/
 .ipynb_checkpoints/
 .DS_Store
-*.py
+dataset.py
+rawdataset.py
 *.mp4
 *.mov
