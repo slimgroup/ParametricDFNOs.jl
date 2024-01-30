@@ -1,9 +1,11 @@
 import jax
 import jax.numpy as jnp
 from jax import random, grad
-from jax.experimental import stax
-from jax.experimental.stax import Dense, Relu
+from jax.example_libraries import stax
+from jax.example_libraries.stax import Dense, Relu
 from time import time
+
+# conda activate /pscratch/sd/r/richardr/.conda/jax_test
 
 def FourierLayer(weights_shape):
     """
@@ -16,7 +18,7 @@ def FourierLayer(weights_shape):
         weights = random.normal(k1, weights_shape)
         return output_shape, (weights,)
     
-    def apply_fun(params, inputs):
+    def apply_fun(params, inputs, rng=None):
         # Apply FFT
         fft_inputs = jnp.fft.fftn(inputs, axes=[1, 2, 3])
         # Apply learned weights in Fourier space
