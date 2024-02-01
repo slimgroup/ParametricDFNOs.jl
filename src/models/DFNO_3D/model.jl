@@ -74,7 +74,7 @@ mutable struct Model
     
         # Lift Channel dimension
         lifts = ParKron(ParIdentity(T,config.nz) ⊗ ParIdentity(T,config.ny), ParIdentity(T,config.nx) ⊗ ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_BIAS:(1)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)"))
         
         lifts = distribute(lifts, config.partition)
         push!(biases, bias)
@@ -83,7 +83,7 @@ mutable struct Model
     
             sconv_layer = spectral_convolution(i)
             conv_layer = ParKron(ParIdentity(T,config.nz) ⊗ ParIdentity(T,config.ny), ParIdentity(T,config.nx) ⊗ ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))"))
-            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_SCONV:($(i))"))
+            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))"))
     
             conv_layer = distribute(conv_layer, config.partition)
     
@@ -94,7 +94,7 @@ mutable struct Model
     
         # Uplift channel dimension once more
         uc = ParKron(ParIdentity(T,config.nz) ⊗ ParIdentity(T,config.ny), ParIdentity(T,config.nx) ⊗ ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParDiagonal_BIAS:(2)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)"))
     
         uc = distribute(uc, config.partition)
     
@@ -103,7 +103,7 @@ mutable struct Model
     
         # Project channel dimension
         pc = ParKron(ParIdentity(T,config.nz) ⊗ ParIdentity(T,config.ny), ParIdentity(T,config.nx) ⊗ ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParDiagonal_BIAS:(3)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)"))
     
         pc = distribute(pc, config.partition)
     
