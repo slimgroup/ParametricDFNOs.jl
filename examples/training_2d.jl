@@ -30,7 +30,6 @@ trainConfig = DFNO_2D.TrainConfig(
     y_train=y_train,
     x_valid=x_valid,
     y_valid=y_valid,
-    nbatch=1
 )
 
 model = DFNO_2D.Model(modelConfig)
