@@ -55,7 +55,7 @@ mutable struct Model
             target_order = (4, 2, 3)
 
             # Setup FFT-restrict pattern and weightage with Kroneckers
-            weight_mix = ParMatrixN(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
+            weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParTensor_SCONV:($(layer))")
             restrict_dft = ParKron((restrict_y * fourier_y) ⊗ (restrict_x * fourier_x), (restrict_t * fourier_t) ⊗ ParIdentity(T, config.nc_lift))
             
             push!(weight_mixes, weight_mix)
