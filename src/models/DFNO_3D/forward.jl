@@ -28,7 +28,7 @@ function forward(model::Model, θ, x::Any)
         reduce_dims = collect(2:N)
         scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
 
-        s = sum(x; dims=reduce_dims) |> cpu
+        s = sum(x; dims=reduce_dims)
         reduce_mean = ParReduce(eltype(s))
         μ = reduce_mean(s) ./ scale
 
@@ -38,7 +38,7 @@ function forward(model::Model, θ, x::Any)
             GC.gc(true)
         end
 
-        s = sum(s; dims=reduce_dims) |> cpu
+        s = sum(s; dims=reduce_dims)
         reduce_var = ParReduce(eltype(s))
         σ² = reduce_var(s) ./ scale
 
