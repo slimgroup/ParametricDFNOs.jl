@@ -32,8 +32,6 @@ function forward(model::Model, θ, x::Any)
         reduce_mean = ParReduce(eltype(s))
         μ = reduce_mean(s) ./ scale
 
-        gpu_flag && (μ = μ |> gpu)
-
         s = (x .- μ) .^ 2
 
         ignore() do
@@ -43,8 +41,6 @@ function forward(model::Model, θ, x::Any)
         s = sum(s; dims=reduce_dims) |> cpu
         reduce_var = ParReduce(eltype(s))
         σ² = reduce_var(s) ./ scale
-
-        gpu_flag && (σ² = σ² |> gpu)
 
         input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
