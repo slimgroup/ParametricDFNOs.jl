@@ -20,7 +20,7 @@ pe_count = MPI.Comm_size(comm)
 partition = [1,pe_count]
 
 modelConfig = DFNO_2D.ModelConfig(nblocks=4, partition=partition)
-dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig, ntrain=2, nvalid=2)
+dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig)
 
 x_train, y_train, x_valid, y_valid = DFNO_2D.loadDistData(dataConfig)
 
