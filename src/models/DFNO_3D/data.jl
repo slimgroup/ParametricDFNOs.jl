@@ -11,7 +11,8 @@ end
 function loadDistData(config::DataConfig;
     dist_read_x_tensor=UTILS.dist_read_tensor,
     dist_read_y_tensor=UTILS.dist_read_tensor,
-    comm=MPI.COMM_WORLD)
+    comm=MPI.COMM_WORLD;
+    print_progress=false)
     # TODO: maybe move seperating train and valid to trainconfig ? 
     # TODO: Abstract this for 2D and 3D (dimension agnostic ?) and support uneven partition
     @assert config.modelConfig.partition[1] == 1 # Creating channel dimension here
@@ -33,7 +34,7 @@ function loadDistData(config::DataConfig;
 
     for yz_coord in yz_start:yz_end
 
-        rank == 0 && println("Loaded coordinate: ", yz_coord - yz_start, " / ", yz_end - yz_start)
+        print_progress && (rank == 0) && println("Loaded coordinate: ", yz_coord - yz_start, " / ", yz_end - yz_start)
 
         # 1D index to 2D index. column major julia
         y_coord = ((yz_coord - 1) % config.modelConfig.nz) + 1

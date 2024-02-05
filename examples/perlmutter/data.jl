@@ -3,7 +3,7 @@ using .DFNO_3D
 
 #### PERLMUTTER Data Loading Hack ####
 
-function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=1000)
+function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int; n::Int=1000)
 
     ntrain = Int64(n ÷ 1.25)
     nvalid = Int64(n ÷ 5)
@@ -60,11 +60,11 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig; n::Int=100
                 x_valid[:,:,idx-ntrain] = x[:,:,1]
                 y_valid[:,:,idx-ntrain] = y[:,:,1]
             end
-            println("Loaded data sample no. $(idx) / $(n)")
+            (rank == 0) && println("Loaded data sample no. $(idx) / $(n)")
             idx == n && break
             idx += 1
         catch e
-            println("Failed to load data sample no. $(idx). Error: $e")
+            (rank == 0) && println("Failed to load data sample no. $(idx). Error: $e")
             continue
         end
     end
