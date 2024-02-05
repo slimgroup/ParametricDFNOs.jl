@@ -45,7 +45,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     Time_train = rank == 0 ? zeros(Float32, config.epochs*nbatches) : nothing
     Time_overhead = rank == 0 ? zeros(Float32, config.epochs) : nothing
 
-    # prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
+    prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
 
     for ep = 1:config.epochs
         rng2 = Random.seed!(config.seed + ep)
@@ -73,7 +73,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
                 end
 
                 rank == 0 && (Loss[(ep-1)*nbatches+b] = loss)
-                rank == 0 && println("EP : ", ep, ". B : ", b) # ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
+                rank == 0 && ProgressMeter.next!(prog; showvalues = [(:loss, loss), (:epoch, ep), (:batch, b)])
             end
             rank == 0 && (Time_train[(ep-1)*nbatches+b] = time_train)
         end
