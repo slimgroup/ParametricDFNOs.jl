@@ -32,6 +32,9 @@ function loadDistData(config::DataConfig;
     y_data = zeros(config.modelConfig.dtype, config.modelConfig.nc_out, config.modelConfig.nt*config.modelConfig.nx, yz_end-yz_start+1, config.ntrain+config.nvalid)
 
     for yz_coord in yz_start:yz_end
+
+        rank == 0 && println("Loaded coordinate: ", yz_coord - yz_start, " / ", yz_end - yz_start)
+
         # 1D index to 2D index. column major julia
         y_coord = ((yz_coord - 1) % config.modelConfig.nz) + 1
         z_coord = ((yz_coord - 1) ÷ config.modelConfig.nz) + 1

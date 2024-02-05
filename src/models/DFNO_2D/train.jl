@@ -48,6 +48,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         Base.flush(Base.stdout)
         idx_e = reshape(randperm(rng2, ntrain), config.nbatch, nbatches)
 
+        (ep % 10 == 0) && GC.gc(true)
+
         for b = 1:nbatches
             x = config.x_train[:, :, idx_e[:,b]]
             y = config.y_train[:, :, idx_e[:,b]]
