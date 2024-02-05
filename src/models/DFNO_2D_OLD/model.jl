@@ -55,7 +55,7 @@ mutable struct Model
             target_order = (5, 2, 3, 4)
     
             # Setup FFT-restrict pattern and weightage with Kroneckers
-            weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParMatrixN_SCONV:($(layer))")
+            weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParTensor_SCONV:($(layer))")
             restrict_dft = (restrict_t * fourier_t) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ ParIdentity(T, config.nc_lift)
             
             push!(weight_mixes, weight_mix)
@@ -70,7 +70,7 @@ mutable struct Model
     
         # Lift Channel dimension
         lifts = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
-        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_BIAS:(1)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)"))
     
         lifts = distribute(lifts, config.partition)
     
@@ -80,7 +80,7 @@ mutable struct Model
     
             sconv_layer = spectral_convolution(i)
             conv_layer = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
-            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParDiagonal_SCONV:($(i))"))
+            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))"))
     
             conv_layer = distribute(conv_layer, config.partition)
     
@@ -91,7 +91,7 @@ mutable struct Model
     
         # Uplift channel dimension once more
         uc = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)")
-        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParDiagonal_BIAS:(2)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)"))
     
         uc = distribute(uc, config.partition)
     
@@ -100,7 +100,7 @@ mutable struct Model
     
         # Project channel dimension
         pc = ParIdentity(T,config.nt) ⊗ ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx) ⊗ ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)")
-        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParDiagonal_BIAS:(3)"))
+        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)"))
     
         pc = distribute(pc, config.partition)
     

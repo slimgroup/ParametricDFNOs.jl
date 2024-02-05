@@ -1,5 +1,11 @@
 module DFNO_2D_OLD
 
+################ NOTE ################
+# For the old DFNO_2D to work, you would need to make sure that
+# 1. Kron collapsing rules are correct in PO
+# 2. Identity Operators kroneckered together are not combined
+######################################
+
 using MAT
 using MPI
 using Flux
