@@ -11,7 +11,7 @@ end
 function loadDistData(config::DataConfig;
     dist_read_x_tensor=UTILS.dist_read_tensor,
     dist_read_y_tensor=UTILS.dist_read_tensor,
-    comm=MPI.COMM_WORLD;
+    comm=MPI.COMM_WORLD,
     print_progress=false)
     # TODO: maybe move seperating train and valid to trainconfig ? 
     # TODO: Abstract this for 2D and 3D (dimension agnostic ?) and support uneven partition
