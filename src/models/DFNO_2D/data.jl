@@ -19,6 +19,7 @@ function loadDistData(config::DataConfig;
 
     comm_cart = MPI.Cart_create(comm, config.modelConfig.partition)
     coords = MPI.Cart_coords(comm_cart)
+    rank = MPI.Comm_rank(comm)
 
     xy_start, xy_end = UTILS.get_dist_indices(config.modelConfig.nx * config.modelConfig.ny, config.modelConfig.partition[2], coords[2])
     nt_start, nt_end = 1, config.modelConfig.nt # Contingous along ct
@@ -27,6 +28,9 @@ function loadDistData(config::DataConfig;
     y_data = zeros(config.modelConfig.dtype, config.modelConfig.nc_out, nt_end-nt_start+1, xy_end-xy_start+1, config.ntrain+config.nvalid)
 
     for xy_coord in xy_start:xy_end
+
+        rank == 0 && println("Loaded coordinate: ", xy_coord - xy_start, " / ", xy_end - xy_start)
+
         # 1D index to 2D index. column major julia
         x_coord = ((xy_coord - 1) % config.modelConfig.ny) + 1
         y_coord = ((xy_coord - 1) ÷ config.modelConfig.ny) + 1
