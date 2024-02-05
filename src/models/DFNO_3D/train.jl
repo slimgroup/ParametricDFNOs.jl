@@ -45,7 +45,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     Time_train = rank == 0 ? zeros(Float32, config.epochs*nbatches) : nothing
     Time_overhead = rank == 0 ? zeros(Float32, config.epochs) : nothing
 
-    prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
+    # prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
+    prog = Progress(round(Int, ntrain * config.epochs / config.nbatch))
 
     for ep = 1:config.epochs
         rng2 = Random.seed!(config.seed + ep)
