@@ -44,7 +44,7 @@ function forward(model::Model, θ, x::Any)
 
         input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
-        x = (x .- μ) #./ sqrt.(σ² .+ ϵ)
+        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
         # ignore() do
             # GC.gc(true)
