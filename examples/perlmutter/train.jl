@@ -9,7 +9,6 @@ include("data.jl")
 
 using .DFNO_3D
 using MPI
-using DrWatson
 
 MPI.Init()
 
