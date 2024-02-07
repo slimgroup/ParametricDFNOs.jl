@@ -53,7 +53,7 @@ model_name = "test"
 final_dict = @strdict θ
 
 mkpath(projectdir("weights", model_name))
-@save "example.jld2" θ
+@save "example.jld2" final_dict
 
 # @tagsave(
 #     projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),

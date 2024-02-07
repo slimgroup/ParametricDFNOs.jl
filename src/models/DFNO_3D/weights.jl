@@ -89,9 +89,12 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     final_dict = merge(final_dict, additional)
 
     mkpath(projectdir("weights", model_name))
-    @tagsave(
-        projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
-        final_dict;
-        safe=false #OVERWRITES WEIGHTS
-    )
+    @save joinpath("weights", model_name) final_dict
+
+    # TODO: Fix Below
+    # @tagsave(
+    #     projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
+    #     final_dict;
+    #     safe=false #OVERWRITES WEIGHTS
+    # )
 end
