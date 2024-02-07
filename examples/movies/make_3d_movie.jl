@@ -81,7 +81,7 @@ end
 
 withfig(fig) do
     myanim = anim.FuncAnimation(fig, make_z_frame, frames=size(y_predict,2), interval=80)
-    myanim[:save]("3D_z_slice.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
+    myanim[:save]("3D_z_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
 end
 
 fig = figure(figsize=(12, (size(x_plot,6))*4))
@@ -109,7 +109,7 @@ end
 
 withfig(fig) do
     myanim = anim.FuncAnimation(fig, make_y_frame, frames=size(y_predict,2), interval=80)
-    myanim[:save]("3D_y_slice.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
+    myanim[:save]("3D_y_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
 end
 
 fig = figure(figsize=(12, (size(x_plot,6))*4))
@@ -137,7 +137,7 @@ end
 
 withfig(fig) do
     myanim = anim.FuncAnimation(fig, make_x_frame, frames=size(y_predict,2), interval=80)
-    myanim[:save]("3D_x_slice.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
+    myanim[:save]("3D_x_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "libx264", "-pix_fmt", "yuv420p"])
 end
 
 MPI.Finalize()
