@@ -85,9 +85,9 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     partition = model.config.partition
     dtype = model.config.dtype
 
-    final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nz nt nc_in nc_mid nc_lift nc_out mx my mz mt partition dtype
+    final_dict = @strdict lifts sconvs convs projects nblocks nx ny nz nt nc_in nc_mid nc_lift nc_out mx my mz mt partition dtype
     final_dict = merge(final_dict, additional)
-    for (k, v) in final_dict
+    for (k, v) in θ_save
         println(k)
     end
     mkpath(projectdir("weights", model_name))
