@@ -53,7 +53,7 @@ time_point = 25
 channel = 1
 
 # Extracting the 3D slice
-data_slice = x_plot[channel, time_point, :, :, :, :]
+data_slice = y_plot[channel, time_point, :, :, :, :]
 
 # Preparing the grid
 dim_x, dim_y, dim_z, _ = size(data_slice)
@@ -65,9 +65,9 @@ display(plot(volume(
     y=Y[:],
     z=Z[:],
     value=data_slice[:],
-    isomin=0.1,
-    isomax=0.8,
-    opacity=0.1,
+    isomin=0.2,
+    isomax=1,
+    opacity=0.5,
     surface_count=17
 )))
 
