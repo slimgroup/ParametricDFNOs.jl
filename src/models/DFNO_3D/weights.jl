@@ -94,7 +94,14 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     final_dict = merge(final_dict, additional)
 
     mkpath(projectdir("weights", model_name))
-    @save joinpath("weights", model_name, savename(final_dict, "jld2"; digits=6)) final_dict
+    file_path = joinpath("weights", model_name, savename(final_dict, "jld2"; digits=6)) final_dict
+    
+    # Temporary fix
+    jldopen(file_path, "w") do file
+        for (key, value) in final_dict
+            file[key] = value
+        end
+    end
 
     # TODO: Fix Below for perlmutter
     # @tagsave(
