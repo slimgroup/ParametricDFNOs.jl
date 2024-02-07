@@ -46,6 +46,6 @@ model = DFNO_3D.Model(modelConfig)
 # )
 
 # DFNO_3D.train!(trainConfig, model, θ)
-saveWeights(θ, model, additional=labels, comm=comm)
+saveWeights(θ, model, comm=comm)
 
 MPI.Finalize()
