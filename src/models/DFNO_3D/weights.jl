@@ -16,6 +16,11 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
     
     file = projectdir("weights", model_name, filename)
 
+    test = load(file)
+    for k in keys(test)
+        println(k)
+    end
+
     saved = load(file)[key]
     for (k, v) in saved
         haskey(θ, k) && gpu_flag && (θ[k] = v |> gpu)
