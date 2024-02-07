@@ -63,6 +63,7 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     # TODO: Make this simpler and add more info and remove dependence from model and move to utils
     rank = MPI.Comm_rank(comm)
     θ_save = collectWeights(θ, model, comm=comm)
+    println("MY RANK IS ", rank)
     rank > 0 && return
 
     lifts = model.lifts
