@@ -1,11 +1,11 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 4 julia examples/training_3d.jl
+# mpiexecjl --project=./ -n 4 julia examples/training/training_3d.jl
 
 using Pkg
 Pkg.activate("./")
 
-include("../src/models/DFNO_3D/DFNO_3D.jl")
-include("../src/utils.jl")
+include("../../src/models/DFNO_3D/DFNO_3D.jl")
+include("../../src/utils.jl")
 
 using .DFNO_3D
 using MPI
