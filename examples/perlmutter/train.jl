@@ -49,7 +49,7 @@ model = DFNO_3D.Model(modelConfig)
 # DFNO_3D.train!(trainConfig, model, θ)
 
 model_name = "test"
-final_dict = @strdict θ_save
+final_dict = @strdict θ
 
 mkpath(projectdir("weights", model_name))
 @tagsave(
