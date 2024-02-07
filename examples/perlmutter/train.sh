@@ -11,7 +11,7 @@ sbatch <<EOT
 #SBATCH --job-name Test_Run_${3}_Epochs_${4}_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=10:00:00
+#SBATCH --time=00:30:00
 #SBATCH --account=m3863_g
 
 # # OpenMP settings: (TODO: Figure this out)
