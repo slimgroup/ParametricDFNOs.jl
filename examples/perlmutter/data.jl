@@ -38,6 +38,7 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int;
     idx = 1
 
     for entry in readdir(path; join=true)
+        println(entry)
         try
             perm_file = entry * "/inputs.jld2"
             conc_file = entry * "/outputs.jld2"
