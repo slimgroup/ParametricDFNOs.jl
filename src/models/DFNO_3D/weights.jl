@@ -36,25 +36,28 @@ function collectWeights(θ, model; comm=MPI.COMM_WORLD)
     # TODO: Address this when rethinking ParMatrixN
     comm_cart = MPI.Cart_create(comm, model.config.partition)
     coords = MPI.Cart_coords(comm_cart)
-
+    println("Checkpoint 2")
     gpu_flag && !isnothing(θ) && (θ = Dict(k => cpu(v) for (k, v) in pairs(θ)))
-
+    println("Checkpoint 3")
     θ_save = Dict()
     keys_to_remove = []
 
     w_partition = [1, model.config.partition...] # works only when the w is oixyt 
     for weight_mix in model.weight_mixes
         id = _dist_key(weight_mix, coords)
+        println("Checkpoint inside for")
         for (k, v) in θ
+            println("Checkpoint inside For for", k)
             if k.id == id
                 push!(keys_to_remove, k)
                 θ_save[weight_mix] = UTILS.collect_dist_tensor(v, weight_mix.weight_shape, w_partition, comm)
             end
         end
     end
-
+    println("Checkpoint 4")
     merge!(θ_save, θ)
     for key in keys_to_remove
+        println("Checkpoint Removal ", key)
         delete!(θ_save, key)
     end
 
@@ -65,8 +68,9 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
 
     # TODO: Make this simpler and add more info and remove dependence from model and move to utils
     rank = MPI.Comm_rank(comm)
+    println("Checkpoint 1")
     θ_save = collectWeights(θ, model, comm=comm)
-    
+    println("Checkpoint Final")
     rank > 0 && return
 
     lifts = model.lifts
