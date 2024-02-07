@@ -28,25 +28,24 @@ modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
 dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
 
-# x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), n=samples)
+x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), n=samples)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
-# # To train from a checkpoint
-# filename = "ep=1_mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=10_nx=20_ny=20_nz=20_p=1.jld2"
-# DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
+# To train from a checkpoint
+filename = "mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=20_ny=20_nz=20.jld2"
+DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
-# trainConfig = DFNO_3D.TrainConfig(
-#     epochs=epochs,
-#     x_train=x_train,
-#     y_train=y_train,
-#     x_valid=x_train,
-#     y_valid=y_train,
-#     plot_every=2
-# )
+trainConfig = DFNO_3D.TrainConfig(
+    epochs=epochs,
+    x_train=x_train,
+    y_train=y_train,
+    x_valid=x_train,
+    y_valid=y_train,
+    plot_every=2
+)
 
-# DFNO_3D.train!(trainConfig, model, θ)
-DFNO_3D.saveWeights(θ, model, comm=comm)
+DFNO_3D.train!(trainConfig, model, θ)
 
 MPI.Finalize()
