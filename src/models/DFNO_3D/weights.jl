@@ -63,7 +63,6 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     # TODO: Make this simpler and add more info and remove dependence from model and move to utils
     rank = MPI.Comm_rank(comm)
     θ_save = collectWeights(θ, model, comm=comm)
-    println("MY RANK IS ", rank)
     rank > 0 && return
 
     lifts = model.lifts
@@ -86,7 +85,7 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
     partition = model.config.partition
     dtype = model.config.dtype
 
-    final_dict = @strdict θ_save # lifts sconvs convs projects nblocks nx ny nz nt nc_in nc_mid nc_lift nc_out mx my mz mt partition dtype
+    final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nz nt nc_in nc_mid nc_lift nc_out mx my mz mt partition dtype
     final_dict = merge(final_dict, additional)
 
     mkpath(projectdir("weights", model_name))

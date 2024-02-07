@@ -9,6 +9,7 @@ include("data.jl")
 
 using .DFNO_3D
 using MPI
+using DrWatson
 
 MPI.Init()
 
@@ -46,6 +47,15 @@ model = DFNO_3D.Model(modelConfig)
 # )
 
 # DFNO_3D.train!(trainConfig, model, θ)
-saveWeights(θ, model, comm=comm)
+
+model_name = "test"
+final_dict = @strdict θ_save
+
+mkpath(projectdir("weights", model_name))
+@tagsave(
+    projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
+    final_dict;
+    safe=false #OVERWRITES WEIGHTS
+)
 
 MPI.Finalize()
