@@ -5,6 +5,8 @@ using .DFNO_3D
 
 function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int; ntrain::Int=1000, nvalid::Int=100)
 
+    n = ntrain + nvalid
+    
     function read_x_tensor(file_name, key, indices)
         # indices for xyzn -> cxyzn where c=n=1 (t gets introduced and broadcasted later)
         data = nothing
