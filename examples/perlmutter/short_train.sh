@@ -11,7 +11,7 @@ sbatch <<EOT
 #SBATCH --job-name Test_Run_${3}_Epochs_${4}_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=03:00:00
+#SBATCH --time=00:30:00
 #SBATCH --account=m3863_g
 
 # # OpenMP settings: (TODO: Figure this out)
@@ -22,9 +22,11 @@ sbatch <<EOT
 export SLURM_CPU_BIND="cores"
 export PATH=$PATH:$HOME/.julia/bin
 export DFNO_3D_GPU=1
-export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
+export LD_LIBRARY_PATH=
+# export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
 
-srun --export=ALL julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5
+# srun --export=ALL julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5 $6
+mpiexecjl --project=./ julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5 $6
 
 exit 0
 EOT
