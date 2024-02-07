@@ -31,11 +31,10 @@ x_train, y_train, x_valid, y_valid = read_perlmutter_data(dataset_path, modelCon
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
-DFNO_3D.saveWeights(θ, model, comm=comm)
 
-# To train from a checkpoint
-filename = "mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=20_ny=20_nz=20.jld2"
-DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
+# # To train from a checkpoint
+# filename = "mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=20_ny=20_nz=20.jld2"
+# DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 trainConfig = DFNO_3D.TrainConfig(
     epochs=epochs,
