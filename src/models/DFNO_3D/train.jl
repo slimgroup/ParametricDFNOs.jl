@@ -96,8 +96,8 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         # TODO: Better way for name dict? and move weights to cpu before saving and handle rank conditionals better
         labels = @strdict p ep Loss_valid Loss Time_train Time_overhead
 
-        # TODO: control frequency of storage
-        saveWeights(θ, model, additional=labels, comm=comm)
+        # # TODO: control frequency of storage
+        # saveWeights(θ, model, additional=labels, comm=comm)
 
         rank > 0 && continue
         
