@@ -87,7 +87,9 @@ function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.C
 
     final_dict = @strdict lifts sconvs convs projects θ_save nblocks nx ny nz nt nc_in nc_mid nc_lift nc_out mx my mz mt partition dtype
     final_dict = merge(final_dict, additional)
-    println(final_dict)
+    for (k, v) in final_dict
+        println(k)
+    end
     mkpath(projectdir("weights", model_name))
     @tagsave(
         projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
