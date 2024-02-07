@@ -97,7 +97,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         labels = @strdict p ep Loss_valid Loss Time_train Time_overhead
 
         # TODO: control frequency of storage
-        saveWeights(θ, model, additional=labels, comm=comm)
+        (ep % 20 == 0) && saveWeights(θ, model, additional=labels, comm=comm)
 
         rank > 0 && continue
         
