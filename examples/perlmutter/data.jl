@@ -3,10 +3,7 @@ using .DFNO_3D
 
 #### PERLMUTTER Data Loading Hack ####
 
-function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int; n::Int=1000)
-
-    ntrain = Int64(n ÷ 1.25)
-    nvalid = Int64(n ÷ 5)
+function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int; ntrain::Int=1000, nvalid::Int=100)
 
     function read_x_tensor(file_name, key, indices)
         # indices for xyzn -> cxyzn where c=n=1 (t gets introduced and broadcasted later)

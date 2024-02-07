@@ -35,7 +35,7 @@ DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
 dataset_path = "/Users/richardr2926/Desktop/Research/Code/dfno/data/DFNO_3D/v5/$(dim)³"
-x_plot, y_plot, _, _ = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), n=samples)
+x_plot, y_plot, _, _ = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), ntrain=samples, nvalid=0)
 
 # # For random loading to test:
 # x_plot = rand(modelConfig.dtype, Domain(model.lifts), samples)
