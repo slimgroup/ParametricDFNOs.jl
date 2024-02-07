@@ -10,6 +10,7 @@ include("data.jl")
 using .DFNO_3D
 using MPI
 using DrWatson
+using JLD2, FileIO 
 
 MPI.Init()
 
@@ -52,10 +53,12 @@ model_name = "test"
 final_dict = @strdict θ
 
 mkpath(projectdir("weights", model_name))
-@tagsave(
-    projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
-    final_dict;
-    safe=false #OVERWRITES WEIGHTS
-)
+@save "example.jld2" θ
+
+# @tagsave(
+#     projectdir("weights", model_name, savename(final_dict, "jld2"; digits=6)),
+#     final_dict;
+#     safe=false #OVERWRITES WEIGHTS
+# )
 
 MPI.Finalize()
