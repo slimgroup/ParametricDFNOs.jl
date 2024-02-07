@@ -22,3 +22,7 @@
 ## Move weights folder of DFNO_3D
 
 1. `ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov "cd /pscratch/sd/r/richardr/dfno/weights/ && tar cz DFNO_3D" | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/weights/`
+
+## Move some samples to test locally
+
+1. `ssh -l richardr -i ~/.ssh/nersc perlmutter.nersc.gov "cd /pscratch/sd/r/richardr/v5/20³ && tar cz FOLDERNAME" | tar zxv -C /Users/richardr2926/Desktop/Research/Code/dfno/data/DFNO_3D/v5/20³`

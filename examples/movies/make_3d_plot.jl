@@ -1,5 +1,5 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 1 julia examples/movies/make_3d_vis.jl
+# mpiexecjl --project=./ -n 1 julia examples/movies/make_3d_plot.jl 20 5
 
 using Pkg
 Pkg.activate("./")
@@ -26,21 +26,20 @@ dim, samples = parse.(Int, ARGS[1:2])
 modes = max(dim÷8, 4)
 modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
 
-# Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
-dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
-
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 # Load Trained Weights
-# filename = "mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=20_ny=20_nz=20.jld2"
-# DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
+filename = "mt=4_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=20_ny=20_nz=20_p=1.jld2"
+DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
-# x_plot, y_plot, _, _ = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), n=samples)
+# Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
+dataset_path = "/Users/richardr2926/Desktop/Research/Code/dfno/data/DFNO_3D/v5/$(dim)³"
+x_plot, y_plot, _, _ = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), n=samples)
 
-# For random loading to test:
-x_plot = rand(modelConfig.dtype, Domain(model.lifts), samples)
-y_plot = rand(modelConfig.dtype, Range(model.projects[2]), samples)
+# # For random loading to test:
+# x_plot = rand(modelConfig.dtype, Domain(model.lifts), samples)
+# y_plot = rand(modelConfig.dtype, Range(model.projects[2]), samples)
 
 y_predict = DFNO_3D.forward(model, θ, x_plot)
 
@@ -50,7 +49,7 @@ y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nt, modelConfig.
 
 #### IMPLEMENT HERE ####
 
-time_point = 1
+time_point = 25
 channel = 1
 
 # Extracting the 3D slice
@@ -69,7 +68,7 @@ display(plot(volume(
     isomin=0.1,
     isomax=0.8,
     opacity=0.1,
-    surface_count=0
+    surface_count=17
 )))
 
 while true
