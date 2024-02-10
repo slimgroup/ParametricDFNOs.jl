@@ -8,7 +8,7 @@ sbatch <<EOT
 #SBATCH --ntasks=$2
 #SBATCH --gpus-per-task=1
 #SBATCH --qos=regular
-#SBATCH --job-name Test_Run_${3}_Epochs_${4}_cube 
+#SBATCH --job-name Test_Run_${10}_Epochs_${4}_cube 
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
 #SBATCH --time=02:00:00
