@@ -17,12 +17,11 @@ rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
 partition = [1,pe_count]
-epochs, dim, ntrain, nvalid = parse.(Int, ARGS[1:4])
+nblocks, dim, md, mt, ntrain, nvalid, nbatch, epochs = parse.(Int, ARGS[1:7])
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modes = max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float64)
+modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=md, my=md, mz=md, mt=mt, nblocks=nblocks, partition=partition, dtype=Float64)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
 dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
@@ -42,7 +41,8 @@ trainConfig = DFNO_3D.TrainConfig(
     y_train=y_train,
     x_valid=x_valid,
     y_valid=y_valid,
-    plot_every=2
+    plot_every=2,
+    nbatch=nbatch
 )
 
 DFNO_3D.train!(trainConfig, model, θ)
