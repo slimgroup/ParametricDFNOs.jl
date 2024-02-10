@@ -9,3 +9,4 @@ rawdataset.py
 *.mp4
 *.mov
 data/
+out.txt

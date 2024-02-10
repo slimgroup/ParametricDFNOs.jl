@@ -17,7 +17,7 @@ rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
 partition = [1,pe_count]
-nblocks, dim, md, mt, ntrain, nvalid, nbatch, epochs = parse.(Int, ARGS[1:7])
+nblocks, dim, md, mt, ntrain, nvalid, nbatch, epochs = parse.(Int, ARGS[1:8])
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
