@@ -53,6 +53,20 @@ WEAK_SPATIAL_CONFIGURATIONS=(
     "128 512 512 512 512 10"
 )
 
+WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
+    "1 1 32 64 64 10"
+    "1 2 64 64 64 10"
+    "1 4 128 64 64 10"
+    "2 8 128 128 64 10"
+    "4 16 128 128 128 10"
+    "8 32 256 128 128 10"
+    # "16 64 256 256 128 10"
+    # "32 128 256 256 256 10"
+    # "64 256 512 256 256 10"
+    # "128 512 512 512 256 10"
+    # "256 1024 512 512 256 10"
+)
+
 # Testing config:
 # julia> using MPI
 # julia> MPI.MPIPreferences.use_system_binary()
