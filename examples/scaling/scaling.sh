@@ -11,7 +11,7 @@ sbatch <<EOT
 #SBATCH --job-name Scaling_nodes=${1}_gpus=${2}_dimx=${3}_dimy=${4}_dimz=${5}_dimt=${6}_config=${7}
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=00:30:00
+#SBATCH --time=00:15:00
 #SBATCH --account=m3863_g
 
 nvidia-smi
