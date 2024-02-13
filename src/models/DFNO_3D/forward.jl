@@ -42,7 +42,7 @@ function forward(model::Model, θ, x::Any)
         # reduce_var = ParReduce(eltype(s))
         # σ² = reduce_var(s) ./ scale
 
-        # input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
+        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
         # x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
@@ -50,7 +50,7 @@ function forward(model::Model, θ, x::Any)
         #     GC.gc(true)
         # end
 
-        # x = reshape(x, (input_size, :))
+        x = reshape(x, (input_size, :))
         
         # ignore() do
         #     GC.gc(true)
