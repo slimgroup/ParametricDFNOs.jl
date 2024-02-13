@@ -88,7 +88,7 @@ function forward(model::Model, θ, x::Any)
 
     x = model.lifts(θ) * x
 
-    for i in 1:model.config.nblocks
+    for i in 1:2 # model.config.nblocks
         x = (model.sconvs[i](θ) * x) + (model.convs[i](θ) * x)
         # x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1],  model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 
