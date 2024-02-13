@@ -33,7 +33,7 @@ modesy = 4 # max(dimy÷8, 4)
 modesz = 4 # max(dimz÷8, 4)
 modest = 4 # max(dimt÷8, 4)
 
-modelConfig = DFNO_3D.ModelConfig(nc_mid=20, nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=4, partition=partition)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
