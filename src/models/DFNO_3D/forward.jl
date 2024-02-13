@@ -14,47 +14,47 @@ function forward(model::Model, θ, x::Any)
         GC.gc(true)
     end
 
-    for i in 1:model.config.nblocks
+    for i in 1:0 # model.config.nblocks
         x = reshape((model.sconvs[i] * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
-        # x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1],  model.config.ny * model.config.nz ÷ model.config.partition[2], :))
+        x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1],  model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 
-        # N = ndims(x)
-        # ϵ = 1f-5
+        N = ndims(x)
+        ϵ = 1f-5
 
-        # ignore() do
-        #     GC.gc(true)
-        # end
+        ignore() do
+            GC.gc(true)
+        end
 
-        # reduce_dims = collect(2:N)
-        # scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
+        reduce_dims = collect(2:N)
+        scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
 
-        # s = sum(x; dims=reduce_dims)
-        # reduce_mean = ParReduce(eltype(s))
-        # μ = reduce_mean(s) ./ scale
+        s = sum(x; dims=reduce_dims)
+        reduce_mean = ParReduce(eltype(s))
+        μ = reduce_mean(s) ./ scale
 
-        # s = (x .- μ) .^ 2
+        s = (x .- μ) .^ 2
 
-        # ignore() do
-        #     GC.gc(true)
-        # end
+        ignore() do
+            GC.gc(true)
+        end
 
-        # s = sum(s; dims=reduce_dims)
-        # reduce_var = ParReduce(eltype(s))
-        # σ² = reduce_var(s) ./ scale
+        s = sum(s; dims=reduce_dims)
+        reduce_var = ParReduce(eltype(s))
+        σ² = reduce_var(s) ./ scale
 
         input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
-        # x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
-        # ignore() do
-        #     GC.gc(true)
-        # end
+        ignore() do
+            GC.gc(true)
+        end
 
         x = reshape(x, (input_size, :))
         
-        # ignore() do
-        #     GC.gc(true)
-        # end
+        ignore() do
+            GC.gc(true)
+        end
 
         if i < model.config.nblocks
             x = relu.(x)
