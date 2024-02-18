@@ -40,12 +40,14 @@ y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) # |> gpu
 
 # GC.enable_logging(true)
 @time y = DFNO_3D.forward(model, θ, x_sample)
+@time y = DFNO_3D.forward(model, θ, x_sample)
 
 function loss_helper(params)
     global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y_sample)
     return loss
 end
 
+@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 
 MPI.Finalize()

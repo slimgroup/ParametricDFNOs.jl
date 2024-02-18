@@ -1,15 +1,23 @@
 function forward(model::Model, θ, x::Any)
+     
+     input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nt) ÷ prod(model.config.partition)
+     gpu_flag && (x = x |> gpu)
 
-    gpu_flag && (x = x |> gpu)
-    x = reshape(x, (Domain(model.lifts), :))
-    batch = size(x, 2)
-
-    x = reshape(model.lifts(θ) * x, (model.config.nc_lift, :))
-    x = reshape(x + model.biases[1](θ), (:, batch))
+     batch = input_size ÷ length(x)
+     x = reshape(x, (model.config.nc_in, :, batch))
+     x = (model.lifts(θ) * x) + model.biases[1](θ)
 
     for i in 1:model.config.nblocks
-        
-        x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
+        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nt) ÷ prod(model.config.partition)
+
+        x = reshape(x, (input_size, :))
+        s = model.sconvs[i](θ)
+        x1 = (s * x)
+
+        x = reshape(x, (model.config.nc_lift, :, batch))
+        x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
+
+        x = vec(x1) + vec(x2)
         x = reshape(x, (model.config.nc_lift, model.config.nt ÷ model.config.partition[1], model.config.nx * model.config.ny ÷ model.config.partition[2], :))
 
         N = ndims(x)
@@ -28,23 +36,19 @@ function forward(model::Model, θ, x::Any)
         reduce_var = ParReduce(eltype(s))
         σ² = reduce_var(s) ./ scale
 
-        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nt) ÷ prod(model.config.partition)
-
         x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
-        x = reshape(x, (input_size, :))
 
         if i < model.config.nblocks
             x = relu.(x)
         end
     end
+    x = reshape(x, (model.config.nc_lift, :, batch))
 
-    x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
-    x = reshape(x + model.biases[2](θ), (:, batch))
+    x = (model.projects[1](θ) * x) + model.biases[2](θ)
     x = relu.(x)
 
-    x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
-    x = reshape(x, (model.config.nc_out * model.config.nt ÷ model.config.partition[1], model.config.nx * model.config.ny ÷ model.config.partition[2], :))
+    x = (model.projects[2](θ) * x) + model.biases[3](θ)
     x = 1f0.-relu.(1f0.-relu.(x))
 
-    return x
+    return reshape(x, (model.config.nc_out * model.config.nt ÷ model.config.partition[1], model.config.nx * model.config.ny ÷ model.config.partition[2], :))
 end

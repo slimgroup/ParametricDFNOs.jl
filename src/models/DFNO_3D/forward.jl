@@ -1,81 +1,54 @@
 function forward(model::Model, θ, x::Any)
-
+     
+    input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
     gpu_flag && (x = x |> gpu)
-    ignore() do
-        GC.gc(true)
-    end
-    x = reshape(x, (Domain(model.lifts), :))
-    batch = size(x, 2)
 
-    x = reshape(model.lifts(θ) * x, (model.config.nc_lift, :))
-    x = reshape(x + model.biases[1](θ), (:, batch))
+    batch = input_size ÷ length(x)
+    x = reshape(x, (model.config.nc_in, :, batch))
+    x = (model.lifts(θ) * x) + model.biases[1](θ)
 
-    ignore() do
-        GC.gc(true)
-    end
+   for i in 1:model.config.nblocks
+       input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
-    for i in 1:model.config.nblocks
-        x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
-        x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1],  model.config.ny * model.config.nz ÷ model.config.partition[2], :))
+       x = reshape(x, (input_size, :))
+       s = model.sconvs[i](θ)
+       x1 = (s * x)
 
-        N = ndims(x)
-        ϵ = 1f-5
+       x = reshape(x, (model.config.nc_lift, :, batch))
+       x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
 
-        ignore() do
-            GC.gc(true)
-        end
+       x = vec(x1) + vec(x2)
+       x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 
-        reduce_dims = collect(2:N)
-        scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
+       N = ndims(x)
+       ϵ = 1f-5
 
-        s = sum(x; dims=reduce_dims)
-        reduce_mean = ParReduce(eltype(s))
-        μ = reduce_mean(s) ./ scale
+       reduce_dims = collect(2:N)
+       scale = batch * model.config.nx * model.config.ny * model.config.nz * model.config.nt
 
-        s = (x .- μ) .^ 2
+       s = sum(x; dims=reduce_dims)
+       reduce_mean = ParReduce(eltype(s))
+       μ = reduce_mean(s) ./ scale
 
-        ignore() do
-            GC.gc(true)
-        end
+       s = (x .- μ) .^ 2
 
-        s = sum(s; dims=reduce_dims)
-        reduce_var = ParReduce(eltype(s))
-        σ² = reduce_var(s) ./ scale
+       s = sum(s; dims=reduce_dims)
+       reduce_var = ParReduce(eltype(s))
+       σ² = reduce_var(s) ./ scale
 
-        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
+       x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
-        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+       if i < model.config.nblocks
+           x = relu.(x)
+       end
+   end
+   x = reshape(x, (model.config.nc_lift, :, batch))
 
-        ignore() do
-            GC.gc(true)
-        end
+   x = (model.projects[1](θ) * x) + model.biases[2](θ)
+   x = relu.(x)
 
-        x = reshape(x, (input_size, :))
-        
-        ignore() do
-            GC.gc(true)
-        end
+   x = (model.projects[2](θ) * x) + model.biases[3](θ)
+   x = 1f0.-relu.(1f0.-relu.(x))
 
-        if i < model.config.nblocks
-            x = relu.(x)
-        end
-    end
-
-    ignore() do
-        GC.gc(true)
-    end
-
-    x = reshape(model.projects[1](θ) * x, (model.config.nc_mid, :))
-    x = reshape(x + model.biases[2](θ), (:, batch))
-    x = relu.(x)
-
-    ignore() do
-        GC.gc(true)
-    end
-
-    x = reshape(model.projects[2](θ) * x, (model.config.nc_out, :)) + model.biases[3](θ)
-    x = reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
-    x = 1f0.-relu.(1f0.-relu.(x))
-
-    return x
+   return reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.nx * model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 end
