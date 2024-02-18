@@ -55,6 +55,7 @@ end
 grads_time = 0
 
 if config !== "weak_forward"
+    rank == 0 && println("STARTING GRADIENT SCALING")
     grads = gradient(params -> loss_helper(params), θ)[1]
     grads = gradient(params -> loss_helper(params), θ)[1]
     grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
