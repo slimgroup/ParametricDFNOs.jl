@@ -11,7 +11,7 @@ function forward(model::Model, θ, x::Any)
        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
        x = reshape(x, (input_size, :))
-       x1 = model.sconvs[i] * x
+       x1 = model.sconvs[i](θ) * x
 
        x = reshape(x, (model.config.nc_lift, :, batch))
        x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
