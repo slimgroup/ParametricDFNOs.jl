@@ -50,5 +50,5 @@ function forward(model::Model, θ, x::Any)
    x = (model.projects[2](θ) * x) + model.biases[3](θ)
    x = 1f0.-relu.(1f0.-relu.(x))
 
-   return reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.nx * model.config.ny * model.config.nz ÷ model.config.partition[2], :))
+   return reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 end
