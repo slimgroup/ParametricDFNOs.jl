@@ -51,6 +51,8 @@ function loss_helper(params)
     return loss
 end
 
+rank == 0 && println("STARTED GRADIENT SCALING")
+
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
