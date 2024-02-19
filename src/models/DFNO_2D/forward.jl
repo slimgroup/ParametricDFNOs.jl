@@ -4,17 +4,14 @@ function forward(model::Model, θ, x::Any)
      gpu_flag && (x = x |> gpu)
 
      batch = length(x) ÷ input_size 
-     x = reshape(x, (model.config.nc_in, :, batch))
+     x = reshape(x, (model.config.nc_in, :))
      x = (model.lifts(θ) * x) + model.biases[1](θ)
 
     for i in 1:model.config.nblocks
-        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nt) ÷ prod(model.config.partition)
+        x = reshape(x, (:, batch))
+        x1 = (model.sconvs[i](θ) * x)
 
-        x = reshape(x, (input_size, :))
-        s = model.sconvs[i](θ)
-        x1 = (s * x)
-
-        x = reshape(x, (model.config.nc_lift, :, batch))
+        x = reshape(x, (model.config.nc_lift, :))
         x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
 
         x = vec(x1) + vec(x2)
@@ -42,7 +39,7 @@ function forward(model::Model, θ, x::Any)
             x = relu.(x)
         end
     end
-    x = reshape(x, (model.config.nc_lift, :, batch))
+    x = reshape(x, (model.config.nc_lift, :))
 
     x = (model.projects[1](θ) * x) + model.biases[2](θ)
     x = relu.(x)

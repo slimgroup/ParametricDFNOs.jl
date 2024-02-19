@@ -13,12 +13,10 @@ function forward(model::Model, θ, x::Any)
     end
 
    for i in 1:model.config.nblocks
-       input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
-
-       x = reshape(x, (input_size, :))
+       x = reshape(x, (:, batch))
        x1 = model.sconvs[i](θ) * x
 
-       x = reshape(x, (model.config.nc_lift, :, batch))
+       x = reshape(x, (model.config.nc_lift, :))
        x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
        ignore() do
            GC.gc(true)
