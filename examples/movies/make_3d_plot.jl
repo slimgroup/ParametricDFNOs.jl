@@ -24,7 +24,7 @@ dim, samples = parse.(Int, ARGS[1:2])
 @assert MPI.Comm_size(comm) == prod(partition)
 
 modes = max(dim÷8, 4)
-modest = 4
+modest = 8
 modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modest, nblocks=4, partition=partition, dtype=Float32)
 
 model = DFNO_3D.Model(modelConfig)
