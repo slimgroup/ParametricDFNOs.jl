@@ -30,7 +30,7 @@ partition = [1,size]
 @assert MPI.Comm_size(comm) == prod(partition)
 
 modes = 4 # max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=32, ny=16, nz=16, nt=10, mx=modes, my=modes, mz=modes, mt=modes, nblocks=0, partition=partition, dtype=Float32)
+modelConfig = DFNO_3D.ModelConfig(nx=32, ny=16, nz=16, nt=10, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
