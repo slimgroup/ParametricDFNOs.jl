@@ -16,7 +16,7 @@ function forward(model::Model, θ, x::Any)
        input_size = (model.config.nc_lift * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
 
        x = reshape(x, (input_size, :))
-    #    x1 = model.sconvs[i](θ) * x
+       x1 = model.sconvs[i](θ) * x
 
        x = reshape(x, (model.config.nc_lift, :, batch))
        x2 = (model.convs[i](θ) * x) + model.sconv_biases[i](θ)
@@ -24,7 +24,7 @@ function forward(model::Model, θ, x::Any)
            GC.gc(true)
        end
 
-       x = vec(x2)
+       x = vec(x1) + vec(x2)
        x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 
        N = ndims(x)
