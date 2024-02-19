@@ -29,14 +29,17 @@ partition = [1,size]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modes = max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, nt=dimt, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
+modes = 4 # max(dim÷8, 4)
+modelConfig = DFNO_3D.ModelConfig(nx=32, ny=16, nz=16, nt=10, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
-x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
-y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) # |> gpu
+input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nz * model.config.nt)
+output_size = input_size * model.config.nc_out ÷ model.config.nc_in
+
+x_sample = rand(modelConfig.dtype, input_size, 1)
+y_sample = rand(modelConfig.dtype, output_size, 1) # |> gpu
 
 # GC.enable_logging(true)
 @time y = DFNO_3D.forward(model, θ, x_sample)
