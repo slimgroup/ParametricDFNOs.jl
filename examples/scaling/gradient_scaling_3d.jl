@@ -39,7 +39,7 @@ input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.con
 output_size = input_size * model.config.nc_out ÷ model.config.nc_in
 
 x_sample = rand(modelConfig.dtype, input_size, 1)
-y_sample = rand(modelConfig.dtype, output_size, 1) # |> gpu
+y_sample = rand(modelConfig.dtype, output_size, 1) |> gpu
 
 # GC.enable_logging(true)
 @time y = DFNO_3D.forward(model, θ, x_sample)
