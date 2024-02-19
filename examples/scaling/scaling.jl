@@ -28,10 +28,10 @@ config = ARGS[7]
 
 # For scaling tests, use 4 modes, training use 25% modes
 
-modesx = 4 # max(dimx÷8, 4)
-modesy = 4 # max(dimy÷8, 4)
-modesz = 4 # max(dimz÷8, 4)
-modest = 4 # max(dimt÷8, 4)
+modesx = max(dimx÷16, 4)
+modesy = max(dimy÷16, 4)
+modesz = max(dimz÷16, 4)
+modest = max(dimt÷16, 4)
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=4, partition=partition)
 
