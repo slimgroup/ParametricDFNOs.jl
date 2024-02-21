@@ -9,8 +9,8 @@ if CUDA.has_cuda_gpu()
     device = gpu
 
     # Create weight matrix and input tensor
-    W = randn(100, 100) |> device
-    input_tensor = randn(100) |> device
+    W = randn(10000, 65000) |> device
+    input_tensor = randn(65000) |> device
 
     # Define the loss function
     loss(x) = sum(W * x)
