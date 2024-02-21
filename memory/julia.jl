@@ -7,7 +7,7 @@ using CUDA
 # Function to convert bytes to megabytes
 bytes_to_MB(x) = x / 1024^2
 
-if CUDA.has_cuda_gpu()
+if true # CUDA.has_cuda_gpu()
     # Move computations to the GPU
     device = gpu
 
