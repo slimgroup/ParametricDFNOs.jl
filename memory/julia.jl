@@ -7,8 +7,8 @@ using CUDA
 # Function to convert bytes to megabytes
 bytes_to_MB(x) = x / 1024^2
 
-W = randn(10000, 100000) |> gpu
-input_tensor = randn(100000) |> gpu
+W = randn(10000, 1000000) |> gpu
+input_tensor = randn(1000000) |> gpu
 # Define the loss function
 
 loss(x) = sum(W * x)
