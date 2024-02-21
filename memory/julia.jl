@@ -1,8 +1,8 @@
-using Pkg
-Pkg.activate("./")
-
 using Flux
 using CUDA
+
+# Function to convert bytes to megabytes
+bytes_to_MB(x) = x / 1024^2
 
 if CUDA.has_cuda_gpu()
     # Move computations to the GPU
@@ -19,8 +19,8 @@ if CUDA.has_cuda_gpu()
         println("\nIteration $i")
 
         # Memory usage before the operation
-        println("Memory allocated before operation: ", CUDA.memory_allocated())
-        println("Memory reserved before operation: ", CUDA.memory_reserved())
+        println("Memory allocated before operation: ", bytes_to_MB(CUDA.memory_allocated()), " MB")
+        println("Memory reserved before operation: ", bytes_to_MB(CUDA.memory_reserved()), " MB")
 
         # Forward pass and loss
         L = loss(input_tensor)
@@ -29,8 +29,8 @@ if CUDA.has_cuda_gpu()
         grads = gradient(() -> loss(input_tensor), params(W))
 
         # Memory usage after the operation
-        println("Memory allocated after operation: ", CUDA.memory_allocated())
-        println("Memory reserved after operation: ", CUDA.memory_reserved())
+        println("Memory allocated after operation: ", bytes_to_MB(CUDA.memory_allocated()), " MB")
+        println("Memory reserved after operation: ", bytes_to_MB(CUDA.memory_reserved()), " MB")
     end
 else
     println("CUDA-enabled GPU is not available.")

@@ -1,5 +1,9 @@
 import torch
 
+# Function to convert bytes to megabytes
+def bytes_to_MB(bytes):
+    return bytes / (1024 ** 2)
+
 # Ensure CUDA is available
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -13,8 +17,8 @@ if torch.cuda.is_available():
         print(f"\nIteration {i + 1}")
 
         # GPU memory usage before the operation
-        print("Memory allocated before operation:", torch.cuda.memory_allocated(device))
-        print("Memory reserved before operation:", torch.cuda.memory_reserved(device))
+        print("Memory allocated before operation:", bytes_to_MB(torch.cuda.memory_allocated(device)), "MB")
+        print("Memory reserved before operation:", bytes_to_MB(torch.cuda.memory_reserved(device)), "MB")
 
         # Forward pass
         output = W @ input_tensor
@@ -26,8 +30,8 @@ if torch.cuda.is_available():
         L.backward()
 
         # GPU memory usage after the operation
-        print("Memory allocated after operation:", torch.cuda.memory_allocated(device))
-        print("Memory reserved after operation:", torch.cuda.memory_reserved(device))
+        print("Memory allocated after operation:", bytes_to_MB(torch.cuda.memory_allocated(device)), "MB")
+        print("Memory reserved after operation:", bytes_to_MB(torch.cuda.memory_reserved(device)), "MB")
 
 else:
     print("CUDA is not available. Please run this code on a GPU-enabled environment.")
