@@ -19,18 +19,16 @@ if CUDA.has_cuda_gpu()
         println("\nIteration $i")
 
         # Memory usage before the operation
-        println("Memory allocated before operation: ", bytes_to_MB(CUDA.memory_allocated()), " MB")
-        println("Memory reserved before operation: ", bytes_to_MB(CUDA.memory_reserved()), " MB")
+        CUDA.memory_allocated()
 
         # Forward pass and loss
         L = loss(input_tensor)
 
         # Backward pass
-        grads = gradient(() -> loss(input_tensor), params(W))
+        @time grads = gradient(() -> loss(input_tensor), Flux.params(W))
 
         # Memory usage after the operation
-        println("Memory allocated after operation: ", bytes_to_MB(CUDA.memory_allocated()), " MB")
-        println("Memory reserved after operation: ", bytes_to_MB(CUDA.memory_reserved()), " MB")
+        CUDA.memory_allocated()
     end
 else
     println("CUDA-enabled GPU is not available.")
