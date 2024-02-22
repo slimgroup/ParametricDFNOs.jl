@@ -24,16 +24,18 @@ class SimpleLinearNet(nn.Module):
         self.linear3 = nn.Linear(128, 1)
 
     def forward(self, x):
-        n, c, xyzt = x.shape[0], x.shape[1], x.shape[2:].numel()
+        n, c, *spatial_dims = x.shape
         x = x.view(n, c, -1)  # Reshape to (n, c, xyzt)
 
-        x = self.linear1(x)
-        x = self.linear2(x)
-        x = nn.ReLU()(x)
-        x = self.linear3(x)
-        x = nn.ReLU()(x)
+        x = self.linear1(x.view(-1, c))  # Flatten spatial dimensions for linear layer
+        x = x.view(n, -1, *spatial_dims)  # Reshape back to include spatial dimensions
 
-        x = x.view(n, -1, *xyzt)  # Reshape back to (n, c2, x, y, z, t)
+        x = self.linear2(x.view(n, -1, *spatial_dims).view(-1, 20))
+        x = nn.ReLU()(x.view(n, -1, *spatial_dims))
+
+        x = self.linear3(x.view(n, -1, *spatial_dims).view(-1, 128))
+        x = nn.ReLU()(x.view(n, -1, *spatial_dims))
+
         return x
 
 # Initialize model
@@ -41,8 +43,8 @@ model = SimpleLinearNet().to(device)
 
 # Create a dummy input and target
 x, y, z, t = args.x, args.y, args.z, args.t
-input_tensor = torch.randn(1, 5, x*y*z*t, requires_grad=True).to(device)
-target = torch.randn(1, 1, x*y*z*t).to(device)
+input_tensor = torch.randn(1, 5, x, y, z, t, requires_grad=True).to(device)
+target = torch.randn(1, 1, x, y, z, t).to(device)
 
 # Forward pass and compute loss
 mem_before = mem.memory_allocated(device)
