@@ -23,5 +23,5 @@ function forward(weights, x)
     w1, w2, w3 = weights[:w1], weights[:w2], weights[:w3]
     return norm(relu.(w3 * relu.(w2 * (w1 * x))) - y)
 end
-
-gradient_weights = Zygote.gradient(weights -> forward(weights, x), weights)
+forward(weights, x)
+# gradient_weights = Zygote.gradient(weights -> forward(weights, x), weights)
