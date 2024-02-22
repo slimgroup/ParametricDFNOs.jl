@@ -23,7 +23,7 @@ size = MPI.Comm_size(comm)
 
 partition = [1,size]
 
-nodes, gpus, dimx, dimy, dimz, dimt = parse.(Int, ARGS[1:6])
+nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:6])
 config = ARGS[7]
 
 # For scaling tests, use 4 modes, training use 25% modes
@@ -33,7 +33,7 @@ modesy = 4 # max(dimy÷32, 4)
 modesz = 4 # max(dimz÷32, 4)
 modest = 4 # max(dimt÷32, 4)
 
-modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=4, partition=partition)
+modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
