@@ -17,7 +17,7 @@ weights = Dict(
 
 x = x |> gpu
 y = y |> gpu
-weights = map(gpu, weights)
+weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
 
 function forward(weights, x)
     w1, w2, w3 = weights[:w1], weights[:w2], weights[:w3]
