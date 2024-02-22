@@ -7,7 +7,7 @@ function forward(model::Model, θ, x::Any)
     # end
     batch = length(x) ÷ input_size 
     x = reshape(x, (model.config.nc_in, :))
-    x = (model.lifts(θ) * x) + model.biases[1](θ)
+    x = (model.lifts(θ) * x) # + model.biases[1](θ)
     # ignore() do
         # GC.gc(true)
     # end
@@ -58,7 +58,7 @@ function forward(model::Model, θ, x::Any)
     #    GC.gc(true)
 #    end
 
-   x = (model.projects[1](θ) * x) + model.biases[2](θ)
+   x = (model.projects[1](θ) * x) # + model.biases[2](θ)
 #    ignore() do
     #    GC.gc(true)
 #    end
@@ -67,7 +67,7 @@ function forward(model::Model, θ, x::Any)
     #    GC.gc(true)
 #    end
 
-   x = (model.projects[2](θ) * x) + model.biases[3](θ)
+   x = (model.projects[2](θ) * x) # + model.biases[3](θ)
 #    ignore() do
     #    GC.gc(true)
 #    end
