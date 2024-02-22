@@ -54,7 +54,7 @@ mem_after = mem.memory_allocated(device)
 mem_forward = (mem_after - mem_before) / (1024**2)  # in MB
 
 # Backward pass
-loss.backward()
+# loss.backward()
 mem_backward = (mem.memory_allocated(device) - mem_after) / (1024**2)  # in MB
 
 # Print memory consumption

@@ -51,7 +51,7 @@ function loss_helper(params)
     return loss
 end
 
-@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
-@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+# @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+# @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 
 MPI.Finalize()
