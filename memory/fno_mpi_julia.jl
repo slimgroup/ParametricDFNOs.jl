@@ -34,9 +34,9 @@ w1 = ParMatrix(T, 20, 5)
 w2 = ParMatrix(T, 128, 20)
 w3 = ParMatrix(T, 1, 128)
 
-w1 = distribute(w1)
-w2 = distribute(w2)
-w3 = distribute(w3)
+# w1 = distribute(w1)
+# w2 = distribute(w2)
+# w3 = distribute(w3)
 
 θ = init(w1)
 init!(w2, θ)
