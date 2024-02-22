@@ -17,16 +17,11 @@ using ParametricOperators
 using CUDA
 
 # gpu = ParametricOperators.gpu
-println("Checkpoint 1")
 MPI.Init()
-println("Checkpoint 2")
 
 comm = MPI.COMM_WORLD
-println("Checkpoint 3")
 rank = MPI.Comm_rank(comm)
-println("Checkpoint 4")
 size = MPI.Comm_size(comm)
-println("Checkpoint 5")
 
 nx, ny, nz, nt, nblocks = parse.(Int, ARGS[1:5])
 partition = [1,size]
