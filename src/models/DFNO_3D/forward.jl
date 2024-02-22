@@ -71,7 +71,7 @@ function forward(model::Model, θ, x::Any)
 #    ignore() do
     #    GC.gc(true)
 #    end
-   x = 1f0.-relu.(1f0.-relu.(x))
+   x = relu.(x) # 1f0.-relu.(1f0.-relu.(x))
 #    ignore() do
     #    GC.gc(true)
 #    end
