@@ -28,7 +28,7 @@ println("Checkpoint 4")
 size = MPI.Comm_size(comm)
 println("Checkpoint 5")
 
-nx, ny, nz, nt, nblocks = parse.(Int, ARGS[1:4])
+nx, ny, nz, nt, nblocks = parse.(Int, ARGS[1:5])
 partition = [1,size]
 
 @assert MPI.Comm_size(comm) == prod(partition)
