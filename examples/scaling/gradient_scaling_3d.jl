@@ -47,7 +47,7 @@ gpu_flag && (y_sample = y_sample |> gpu)
 @time y = DFNO_3D.forward(model, θ, x_sample)
 
 function loss_helper(params)
-    global loss = norm()UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y_sample)
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y_sample)
     return loss
 end
 
