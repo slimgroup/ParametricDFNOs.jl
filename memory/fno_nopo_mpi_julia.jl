@@ -13,7 +13,6 @@ Pkg.activate("./")
 using MPI
 using Zygote
 using DrWatson
-using ParametricOperators
 using CUDA
 using Flux
 using LinearAlgebra
