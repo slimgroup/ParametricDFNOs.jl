@@ -26,18 +26,18 @@ size = MPI.Comm_size(comm)
 nx, ny, nz, nt = parse.(Int, ARGS[1:4])
 T = Float32
 
-x = rand(T, 5, nx*ny*nz*nt)
-y = rand(T, 1, nx*ny*nz*nt)
+x = CUDA.rand(T, 5, nx*ny*nz*nt)
+y = CUDA.rand(T, 1, nx*ny*nz*nt)
 
 weights = Dict(
-    :w1 => rand(T, 20, 5),
-    :w2 => rand(T, 128, 20),
-    :w3 => rand(T, 1, 128)
+    :w1 => CUDA.rand(T, 20, 5),
+    :w2 => CUDA.rand(T, 128, 20),
+    :w3 => CUDA.rand(T, 1, 128)
 )
 
-x = x |> gpu
-y = y |> gpu
-weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
+# x = x |> gpu
+# y = y |> gpu
+# weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
 
 function forward(weights, x)
     w1, w2, w3 = weights[:w1], weights[:w2], weights[:w3]
