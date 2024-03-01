@@ -16,6 +16,8 @@ for d in devices
     println(d)
 end
 
+println(rank)
+
 CUDA.memory_status()
 
 if rank == 0
