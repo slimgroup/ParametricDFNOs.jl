@@ -36,18 +36,19 @@ weights = Dict(
 )
 # After initializing the GPU
 gpu_id = CUDA.device()
-total_mem = CUDA.total_memory()
-free_mem = CUDA.free_memory()
-used_mem = total_mem - free_mem
+total_mem_1 = CUDA.total_memory()
 
 x = x |> gpu
 y = y |> gpu
 weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
 
+total_mem_2 = CUDA.total_memory()
+used_mem = total_mem_2 - total_mem_1
+
 # Printing the GPU ID and memory usage for each task
 println("Task on GPU ID on $rank: $gpu_id")
-println("Total GPU Memory on $rank: $total_mem bytes")
-println("Free GPU Memory on $rank: $free_mem bytes")
+println("Total GPU Memory 1 on $rank: $total_mem_2 bytes")
+println("Total GPU Memory 2 on $rank: $total_mem_2 bytes")
 println("Used GPU Memory on $rank: $used_mem bytes")
 
 function forward(weights, x)
