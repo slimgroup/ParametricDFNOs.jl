@@ -38,12 +38,13 @@ end
 
 MPI.Barrier(comm)
 
-if rank == 0
-    println("$rank Rank: ")
-    CUDA.memory_status()
+for r in 0:size-1
+    if rank == r
+        println("$rank Rank: ")
+        CUDA.memory_status()
+    end
+    MPI.Barrier(comm)
 end
-
-MPI.Barrier(comm)
 
 # CUDA.versioninfo()
 # MPI.has_cuda()
