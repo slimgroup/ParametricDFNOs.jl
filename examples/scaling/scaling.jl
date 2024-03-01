@@ -21,6 +21,8 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
+CUDA.device!(rank % 4)
+
 partition = [1,size]
 
 nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
