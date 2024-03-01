@@ -19,7 +19,7 @@ for d in devices
     println("Device: ", d)
 end
 
-# CUDA.device!(rank % 4)
+CUDA.device!(rank % 4)
 
 println(length(CUDA.devices()))
 println(CUDA.device(), " @ ", rank)
@@ -32,7 +32,7 @@ MPI.Barrier(comm)
 
 # CUDA.memory_status()
 
-if rank > 2
+if rank == 0
     c = CUDA.rand(100000)
 end
 
