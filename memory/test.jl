@@ -37,4 +37,10 @@ MPI.Barrier(comm)
 
 CUDA.memory_status()
 
+MPI.Barrier(comm)
+
+CUDA.versioninfo()
+MPI.has_cuda()
+MPI.identify_implementation()
+
 MPI.Finalize()
