@@ -24,6 +24,8 @@ if rank == 0
     c = CUDA.rand(1000)
 end
 
+MPI.Barrier(comm)
+
 CUDA.memory_status()
 
 MPI.Finalize()
