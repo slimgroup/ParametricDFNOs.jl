@@ -35,6 +35,10 @@ modesy = 4 # max(dimy÷32, 4)
 modesz = 4 # max(dimz÷32, 4)
 modest = 4 # max(dimt÷32, 4)
 
+(gpus > 64) && (modesy = modesy * 2)
+(gpus > 128) && (modesy = modesy * 2)
+(gpus > 256) && (modesy = modesy * 2)
+
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
 
 model = DFNO_3D.Model(modelConfig)
