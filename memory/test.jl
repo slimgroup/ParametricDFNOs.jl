@@ -32,7 +32,7 @@ MPI.Barrier(comm)
 
 # CUDA.memory_status()
 
-if rank == 0
+if rank == 1
     c = CUDA.rand(100000000)
 end
 
