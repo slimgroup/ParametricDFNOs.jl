@@ -24,7 +24,12 @@ rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
 # Select GPU based on MPI rank
-CUDA.device!(rank)
+devices = CUDA.devices()
+for d in devices
+    println(d)
+end
+
+CUDA.device!(devices[rank])
 
 nx, ny, nz, nt = parse.(Int, ARGS[1:4])
 T = Float32
