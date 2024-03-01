@@ -27,10 +27,10 @@ println(rank)
 
 MPI.Barrier(comm)
 
-CUDA.memory_status()
+# CUDA.memory_status()
 
 if rank > 2
-    c = CUDA.rand(1000)
+    c = CUDA.rand(100000)
 end
 
 MPI.Barrier(comm)
@@ -39,8 +39,8 @@ CUDA.memory_status()
 
 MPI.Barrier(comm)
 
-CUDA.versioninfo()
-MPI.has_cuda()
-MPI.identify_implementation()
+# CUDA.versioninfo()
+# MPI.has_cuda()
+# MPI.identify_implementation()
 
 MPI.Finalize()
