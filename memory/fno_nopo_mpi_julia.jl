@@ -34,10 +34,21 @@ weights = Dict(
     :w2 => rand(T, 128, 20),
     :w3 => rand(T, 1, 128)
 )
+# After initializing the GPU
+gpu_id = CUDA.device()
+total_mem = CUDA.total_memory()
+free_mem = CUDA.free_memory()
+used_mem = total_mem - free_mem
 
 x = x |> gpu
 y = y |> gpu
 weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
+
+# Printing the GPU ID and memory usage for each task
+println("Task on GPU ID on $rank: $gpu_id")
+println("Total GPU Memory on $rank: $total_mem bytes")
+println("Free GPU Memory on $rank: $free_mem bytes")
+println("Used GPU Memory on $rank: $used_mem bytes")
 
 function forward(weights, x)
     w1, w2, w3 = weights[:w1], weights[:w2], weights[:w3]
