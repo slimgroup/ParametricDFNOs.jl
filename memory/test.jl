@@ -16,4 +16,12 @@ for d in devices
     println(d)
 end
 
+CUDA.memory_status()
+
+if rank == 0
+    c = CUDA.rand(1000)
+end
+
+CUDA.memory_status()
+
 MPI.Finalize()
