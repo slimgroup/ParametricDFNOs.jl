@@ -38,7 +38,7 @@ for r in 0:size-1
     MPI.Barrier(comm)
 end
 
-if rank == 7
+if rank == 0
     c = CUDA.rand(100000000)
 end
 
