@@ -7,6 +7,7 @@ sbatch <<EOT
 #SBATCH --gpus=$2
 #SBATCH --ntasks=$2
 #SBATCH --gpus-per-task=1
+#SBATCH --gpu-bind=none
 #SBATCH --qos=regular
 #SBATCH --job-name Scaling_nodes=${1}_gpus=${2}_dimx=${3}_dimy=${4}_dimz=${5}_dimt=${6}_config=${8}
 #SBATCH --mail-user=richardr2926@gmail.com
