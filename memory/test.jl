@@ -19,6 +19,10 @@ for d in devices
     global i += 1
 end
 
+println(length(CUDA.devices()))
+
+MPI.Barrier(comm)
+
 println(rank)
 
 MPI.Barrier(comm)
