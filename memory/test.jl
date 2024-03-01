@@ -10,6 +10,8 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
+# module load cudnn/8.9.3_cuda12 julia/1.9
+
 # Select GPU based on MPI rank
 devices = CUDA.devices()
 
