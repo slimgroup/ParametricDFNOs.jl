@@ -23,14 +23,6 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-# # Select GPU based on MPI rank
-# devices = CUDA.devices()
-# for d in devices
-#     println(d)
-# end
-
-# CUDA.device!(devices[rank])
-
 nx, ny, nz, nt = parse.(Int, ARGS[1:4])
 T = Float32
 
@@ -49,15 +41,6 @@ total_mem_1 = CUDA.total_memory()
 x = x |> gpu
 y = y |> gpu
 weights = Dict(k => gpu(v) for (k, v) in pairs(weights))
-
-total_mem_2 = CUDA.total_memory()
-used_mem = total_mem_2 - total_mem_1
-
-# Printing the GPU ID and memory usage for each task
-println("Task on GPU ID on $rank: $gpu_id")
-println("Total GPU Memory 1 on $rank: $total_mem_2 bytes")
-println("Total GPU Memory 2 on $rank: $total_mem_2 bytes")
-println("Used GPU Memory on $rank: $used_mem bytes")
 
 function forward(weights, x)
     w1, w2, w3 = weights[:w1], weights[:w2], weights[:w3]
