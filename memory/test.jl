@@ -38,7 +38,10 @@ end
 
 MPI.Barrier(comm)
 
-println("$rank Rank: ", CUDA.memory_status())
+if rank == 0
+    println("$rank Rank: ")
+    CUDA.memory_status()
+end
 
 MPI.Barrier(comm)
 
