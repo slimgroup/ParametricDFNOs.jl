@@ -40,7 +40,7 @@ MPI.Barrier(comm)
 
 for r in 0:size-1
     if rank == r
-        println("$rank Rank: ")
+        println("$rank Rank: ", CUDA.device())
         CUDA.memory_status()
     end
     MPI.Barrier(comm)
