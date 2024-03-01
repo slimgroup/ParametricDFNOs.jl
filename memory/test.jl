@@ -15,6 +15,7 @@ devices = CUDA.devices()
 
 global i = 0
 for d in devices
+    println("Device: ", d)
     (i == rank) && CUDA.device!(d)
     global i += 1
 end
