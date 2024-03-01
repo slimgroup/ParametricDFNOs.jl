@@ -12,8 +12,11 @@ size = MPI.Comm_size(comm)
 
 # Select GPU based on MPI rank
 devices = CUDA.devices()
+
+i = 0
 for d in devices
-    println(d)
+    i == rank && CUDA.device!(d)
+    i += 1
 end
 
 println(rank)
