@@ -20,6 +20,7 @@ for d in devices
 end
 
 println(length(CUDA.devices()))
+println(CUDA.device(), " @ ", rank)
 
 MPI.Barrier(comm)
 
