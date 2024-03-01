@@ -30,9 +30,15 @@ println(rank)
 
 MPI.Barrier(comm)
 
-# CUDA.memory_status()
+for r in 0:size-1
+    if rank == r
+        println("$rank Rank: ", CUDA.device())
+        CUDA.memory_status()
+    end
+    MPI.Barrier(comm)
+end
 
-if rank == 1
+if rank == 7
     c = CUDA.rand(100000000)
 end
 
