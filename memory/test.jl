@@ -33,7 +33,7 @@ MPI.Barrier(comm)
 # CUDA.memory_status()
 
 if rank == 0
-    c = CUDA.rand(100000)
+    c = CUDA.rand(100000000)
 end
 
 MPI.Barrier(comm)
