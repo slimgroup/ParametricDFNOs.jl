@@ -19,7 +19,7 @@ for d in devices
     println("Device: ", d)
 end
 
-CUDA.device!(rank)
+CUDA.device!(rank % 4)
 
 println(length(CUDA.devices()))
 println(CUDA.device(), " @ ", rank)
