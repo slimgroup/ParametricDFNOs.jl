@@ -114,7 +114,7 @@ TEST_SCALING_CONFIGURATIONS=(
 
 if [[ "$1" == "weak_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_CONFIGURATIONS[@]}")
-if [[ "$1" == "weak_old_spatial" ]]; then
+elif [[ "$1" == "weak_old_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_safe_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SAFE_CONFIGURATIONS[@]}")
