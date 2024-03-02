@@ -15,7 +15,7 @@ function read_keys_from_jld2(file_path, keys)
     return data
 end
 
-directory = "examples/scaling/filtered_gradient/"
+directory = "examples/scaling/combined_dims_gradient/"
 
 # Get all JLD2 files in the current directory
 jld2_files = filter(x -> occursin(r"\.jld2$", x), readdir(directory))
