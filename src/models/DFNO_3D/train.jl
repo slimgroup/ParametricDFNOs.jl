@@ -93,7 +93,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
             y = forward(model, θ, x_sample)
             loss_valid = UTILS.dist_loss(y, y_sample)
 
-            println("RANK 1: ", rank)
+            println("RANK 1: ", rank, "EP: ", ep, "Plot EVE", config.plot_every)
             # TODO: Re-evaluate validation
             rank == 0 && (Loss_valid[ep] = loss_valid)
             ep % config.plot_every > 0 && continue
