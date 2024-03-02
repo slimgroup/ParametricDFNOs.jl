@@ -24,7 +24,7 @@ size = MPI.Comm_size(comm)
 
 partition = [1,size]
 
-nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
+dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
 config = ARGS[8]
 
 # For scaling tests, use 4 modes, training use 25% modes
