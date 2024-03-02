@@ -46,6 +46,13 @@ fig, ax1 = subplots()
 ax1.plot(1:length(gpus), y_times, "s-b", label="Inference Time")  # Plot against evenly spaced x-axis
 ax1.plot(1:length(gpus), grads_times, "o-r", label="Gradient Time")  # Add this line for gradients time
 
+# # Set the y-axis to log scale with base 10
+# ax1.set_yscale("log")
+
+# # Custom y-ticks from 10^-1 to 10^1 at intervals of 0.5
+# y_ticks = [10^(-1 + 0.5*i) for i in 0:4]
+# ax1.set_yticks(y_ticks)
+
 # # Add a grey dotted line for comparison
 # # Assuming you want a line with a slope of 1 for comparison
 # max_val = max(maximum(y_times), length(gpus))  # Find the maximum value for x and y
