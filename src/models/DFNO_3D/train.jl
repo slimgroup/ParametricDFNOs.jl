@@ -93,11 +93,9 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
             y = forward(model, θ, x_sample)
             loss_valid = UTILS.dist_loss(y, y_sample)
 
-            println("RANK 1: ", rank, "EP: ", ep, "Plot EVE", config.plot_every)
             # TODO: Re-evaluate validation
             rank == 0 && (Loss_valid[ep] = loss_valid)
             ep % config.plot_every > 0 && continue
-            println("RANK 2: ", rank)
             y_cpu = y[:, :, 1:1]
             gpu_flag && (y_cpu = y_cpu |> cpu)
             y_global = UTILS.collect_dist_tensor(y_cpu, y_global_shape, model.config.partition, comm)
