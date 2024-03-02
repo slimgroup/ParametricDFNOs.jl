@@ -23,19 +23,17 @@ rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
 partition = [1,pe_count]
-dim, samples = parse.(Int, ARGS[1:2])
+nblocks, dim, md, mt, samples = parse.(Int, ARGS[1:5])
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modes = max(dim÷8, 4)
-modest = modes * 2
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=modes, my=modes, mz=modes, mt=modest, nblocks=4, partition=partition, dtype=Float64)
+modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, mx=md, my=md, mz=md, mt=mt, nblocks=nblocks, partition=partition, dtype=Float64)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 # Load Trained Weights
-filename = "mt=8_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=2.jld2"
+filename = "mt=4_mx=4_my=4_mz=4_nblocks=6_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=4.jld2"
 DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
