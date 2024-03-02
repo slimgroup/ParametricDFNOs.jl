@@ -4,7 +4,10 @@
 using Pkg
 Pkg.activate("./")
 
+include("../../src/models/DFNO_3D/DFNO_3D.jl")
 include("data.jl")
+
+using .DFNO_3D
 
 dim, start, finish = parse.(Int, ARGS[1:3])
 
