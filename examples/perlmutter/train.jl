@@ -9,12 +9,15 @@ include("data.jl")
 
 using .DFNO_3D
 using MPI
+using CUDA
 
 MPI.Init()
 
 comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
+
+CUDA.device!(rank % 4)
 
 partition = [1,pe_count]
 nblocks, dim, md, mt, ntrain, nvalid, nbatch, epochs = parse.(Int, ARGS[1:8])
