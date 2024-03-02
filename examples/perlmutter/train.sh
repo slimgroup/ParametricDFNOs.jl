@@ -28,8 +28,8 @@ export DFNO_3D_GPU=1
 export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
 module load cudnn/8.9.3_cuda12 julia/1.9
 
-srun julia ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 $10
-# mpiexecjl --project=./ julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 $10
+srun julia ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 ${10}
+# mpiexecjl --project=./ julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 ${10}
 
 exit 0
 EOT
