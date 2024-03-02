@@ -42,7 +42,6 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
 end
 
 function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
-    println("GEETINNG HERE")
     spacing = 10
 
     x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))

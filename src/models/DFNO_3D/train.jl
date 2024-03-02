@@ -108,7 +108,6 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
 
         # TODO: control frequency of storage
         (ep % 2 == 0) && saveWeights(θ, model, additional=labels, comm=comm)
-        println("RANK: ", rank)
         rank > 0 && continue
         
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
