@@ -33,7 +33,7 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 # Load Trained Weights
-filename = "mt=4_mx=4_my=4_mz=4_nblocks=6_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=4.jld2"
+filename = "ep=20_mt=4_mx=4_my=4_mz=4_nblocks=6_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=4.jld2"
 DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
