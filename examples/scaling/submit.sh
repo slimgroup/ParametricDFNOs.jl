@@ -132,5 +132,9 @@ fi
 for config_str in "${CONFIGURATIONS[@]}"
 do
     config=($config_str)
-    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "$1"
+    if [[ "$1" == "weak_old_spatial" ]]; then
+        bash examples/scaling/scaling_old.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "$1"
+    else
+        bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "$1"
+    fi
 done
