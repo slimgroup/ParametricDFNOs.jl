@@ -86,7 +86,7 @@ function make_z_frame(i)
 end
 
 myanim = anim.FuncAnimation(fig, make_z_frame, frames=size(y_predict,2), interval=80)
-myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_z_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "-pix_fmt"])
+myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_z_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec"])
 
 fig = figure(figsize=(12, (size(x_plot,6))*4))
 fixed_y = modelConfig.ny ÷ 2
@@ -113,7 +113,7 @@ end
 
 
 myanim = anim.FuncAnimation(fig, make_y_frame, frames=size(y_predict,2), interval=80)
-myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_y_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "-pix_fmt"])
+myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_y_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec"])
 
 fig = figure(figsize=(12, (size(x_plot,6))*4))
 fixed_x = modelConfig.nx ÷ 2
@@ -140,6 +140,6 @@ end
 
 
 myanim = anim.FuncAnimation(fig, make_x_frame, frames=size(y_predict,2), interval=80)
-myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_x_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec", "-pix_fmt"])
+myanim[:save]("movies/DFNO_3D/$(filename[1:end-5])_x_slice_$(dim)³.mp4", bitrate=-1, extra_args=["-vcodec"])
 
 MPI.Finalize()
