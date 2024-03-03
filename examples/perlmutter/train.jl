@@ -44,7 +44,7 @@ trainConfig = DFNO_3D.TrainConfig(
     y_train=y_train,
     x_valid=x_valid,
     y_valid=y_valid,
-    plot_every=20,
+    plot_every=5,
     nbatch=nbatch
 )
 
