@@ -23,12 +23,14 @@ jld2_files = filter(x -> occursin(r"\.jld2$", x), readdir(directory))
 
 # Initialize arrays to hold the data
 data_points = []
+dimt = 0
 
 # Read the data from each file
 for file in jld2_files
     full_path = joinpath(directory, file)
-    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz", "grads_time"])
+    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz", "grads_time", "dimt"])
     push!(data_points, (data["gpus"], data["y_time"], data["dimx"], data["dimy"], data["dimz"], data["nodes"], data["grads_time"]))
+    global dimt = data["dimt"]
 end
 
 # Sort the data by the 'gpus' value
@@ -64,7 +66,7 @@ ax1.set_ylim(minimum(y_times) - y_padding, maximum(grads_times) + y_padding)
 
 ax1.set_xlabel("# GPUs/Nodes", labelpad=10, fontsize=20)
 ax1.set_ylabel("Runtime [s]", fontsize=20)
-ax1.set_title("Weak Scaling", pad=10, fontsize=20)
+ax1.set_title("Weak Scaling for $dimt time steps", pad=10, fontsize=20)
 ax1.legend()
 ax1.grid(true)
 
