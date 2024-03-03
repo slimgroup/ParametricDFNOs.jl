@@ -22,7 +22,7 @@ rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
 partition = [1,pe_count]
-nblocks, dim, md, mt, samples = parse.(Int, ARGS[1:5])
+nblocks, dim, md, mt, samples, isLocal = parse.(Int, ARGS[1:6])
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
@@ -32,14 +32,18 @@ model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
 # Load Trained Weights
-filename = "mt=8_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=2.jld2"
-# filename = "ep=140_mt=25_mx=10_my=10_mz=10_nblocks=20_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_ntrain=1_nvalid=1_nx=20_ny=20_nz=20_p=8.jld2"
+filename = "ep=140_mt=25_mx=10_my=10_mz=10_nblocks=20_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_ntrain=1_nvalid=1_nx=20_ny=20_nz=20_p=8.jld2"
+if isLocal == 1
+    global filename = "mt=8_mx=4_my=4_mz=4_nblocks=4_nc_in=5_nc_lift=20_nc_mid=128_nc_out=1_nd=20_nt=51_nx=20_ny=20_nz=20_p=2.jld2"
+end
 
 DFNO_3D.loadWeights!(θ, filename, "θ_save", partition)
 
 # Use `/global/cfs/projectdirs/m3863/mark/training-data/training-samples/v5` if not copied to scratch
-dataset_path = "/Users/richardr2926/Desktop/Research/Code/dfno/data/DFNO_3D/v5/$(dim)³"
-# dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
+dataset_path = "/pscratch/sd/r/richardr/v5/$(dim)³"
+if isLocal == 1
+    global dataset_path = "/Users/richardr2926/Desktop/Research/Code/dfno/data/DFNO_3D/v5/$(dim)³"
+end
 
 x_plot, y_plot, _, _ = read_perlmutter_data(dataset_path, modelConfig, MPI.Comm_rank(comm), ntrain=samples, nvalid=0)
 
