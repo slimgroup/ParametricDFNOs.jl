@@ -104,7 +104,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         rank == 0 && (Time_overhead[ep] = time_overhead)
 
         # TODO: Better way for name dict? and move weights to cpu before saving and handle rank conditionals better
-        labels = @strdict p ep Loss_valid Loss Time_train Time_overhead nblocks mx my mz mt nd
+        labels = @strdict p ep Loss_valid Loss Time_train Time_overhead nblocks mx my mz mt nd ntrain nvalid
 
         # TODO: control frequency of storage
         (ep % 2 == 0) && saveWeights(θ, model, additional=labels, comm=comm)
@@ -113,6 +113,6 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
     end
-    labels = @strdict p Loss_valid Loss Time_train Time_overhead nblocks mx my mz mt nd
+    labels = @strdict p Loss_valid Loss Time_train Time_overhead nblocks mx my mz mt nd ntrain nvalid
     saveWeights(θ, model, additional=labels, comm=comm)
 end
