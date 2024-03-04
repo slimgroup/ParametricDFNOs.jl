@@ -66,6 +66,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         GC.gc(true)
 
         for b = 1:nbatches
+            break
             time_train = @elapsed begin
                 x = config.x_train[:, :, idx_e[:,b]]
                 y = config.y_train[:, :, idx_e[:,b]]
