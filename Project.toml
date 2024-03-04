@@ -1,3 +1,8 @@
+name = "DFNO"
+uuid = "3b406863-5cae-494d-8b19-779e643ae09e"
+authors = ["Richard Rex <richardr2926@gatech.edu>"]
+version = "1.0.0"
+
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
