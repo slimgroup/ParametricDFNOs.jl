@@ -35,21 +35,26 @@ modelConfig = DFNO_2D.ModelConfig(nx=dim, ny=dim, nt=dimt, mx=modes, my=modes, m
 model = DFNO_2D.Model(modelConfig)
 θ = DFNO_2D.initModel(model)
 
-x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
-y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) # |> gpu
+input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nt)
+output_size = input_size * model.config.nc_out ÷ model.config.nc_in
+
+x_sample = rand(modelConfig.dtype, input_size, 1)
+y_sample = rand(modelConfig.dtype, output_size, 1) # |> gpu
 
 # GC.enable_logging(true)
-y = DFNO_2D.forward(model, θ, x_sample)
-# y = DFNO_2D.forward(model, θ, x_sample)
-# y = DFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
 
 function loss_helper(params)
     global loss = UTILS.dist_loss(DFNO_2D.forward(model, params, x_sample), y_sample)
     return loss
 end
 
-# @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
-# @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
-# @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+rank == 0 && println("STARTED GRADIENT SCALING")
+
+@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 
 MPI.Finalize()

@@ -1,9 +1,9 @@
 @with_kw struct DataConfig
     ntrain::Int = 1000
     nvalid::Int = 100
-    perm_key::String = "perm"
+    perm_key::Any = "perm"
     perm_file::String = datadir(model_name, "perm_gridspacing15.0.jld2")
-    conc_key::String = "conc"
+    conc_key::Any = "conc"
     conc_file::String = datadir(model_name, "conc_gridspacing15.0.jld2")
     modelConfig::ModelConfig
 end
@@ -37,25 +37,29 @@ function loadDistData(config::DataConfig;
         print_progress && (rank == 0) && println("Loaded coordinate: ", yz_coord - yz_start, " / ", yz_end - yz_start)
 
         # 1D index to 2D index. column major julia
-        y_coord = ((yz_coord - 1) % config.modelConfig.nz) + 1
-        z_coord = ((yz_coord - 1) ÷ config.modelConfig.nz) + 1
+        y_coord = ((yz_coord - 1) % config.modelConfig.ny) + 1
+        z_coord = ((yz_coord - 1) ÷ config.modelConfig.ny) + 1
 
         x_indices = (nx_start:nx_end, y_coord:y_coord, z_coord:z_coord, 1:config.ntrain+config.nvalid)
         y_indices = (nx_start:nx_end, y_coord:y_coord, z_coord:z_coord, nt_start:nt_end, 1:config.ntrain+config.nvalid)
 
+        data_channels = config.modelConfig.nc_in - 4
+
         # 1,x,y,z,n -> 1,1,x,yz,n
         x_sample = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
-        x_sample = reshape(x_sample, (1, 1, size(x_sample, 2), size(x_sample, 3) * size(x_sample, 4), size(x_sample, 5)))
+        x_sample = reshape(x_sample, (data_channels, 1, size(x_sample, 2), size(x_sample, 3) * size(x_sample, 4), size(x_sample, 5)))
 
         # 1,x,y,z,t,n -> 1,t,x,y,z,n -> 1,tx,yz,n
         y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
         y_sample = permutedims(y_sample, [1,5,2,3,4,6])
-        y_sample = reshape(y_sample, (1, size(y_sample, 2) * size(y_sample, 3), size(y_sample, 4) * size(y_sample, 5), size(y_sample, 6)))
+        y_sample = reshape(y_sample, (config.modelConfig.nc_out, size(y_sample, 2) * size(y_sample, 3), size(y_sample, 4) * size(y_sample, 5), size(y_sample, 6)))
 
-        # 1,t,x,yz,n
-        target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt, config.modelConfig.nx, 1, config.ntrain+config.nvalid)
-
+        # 1,t,x,yz,n # Broadcast for t here
+        target_zeros = zeros(config.modelConfig.dtype, data_channels, config.modelConfig.nt, config.modelConfig.nx, 1, config.ntrain+config.nvalid)
         x_sample = target_zeros .+ x_sample
+
+        # 1,t,x,yz,n # Broadcast everything else
+        target_zeros = zeros(config.modelConfig.dtype, 1, config.modelConfig.nt, config.modelConfig.nx, 1, config.ntrain+config.nvalid)
         t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1, 1))
         x_indices = target_zeros .+ reshape(nx_start:nx_end, (1, 1, :, 1, 1))
         y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, 1, :, 1))

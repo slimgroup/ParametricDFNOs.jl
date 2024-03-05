@@ -4,10 +4,10 @@
 using Pkg
 Pkg.activate("./")
 
-include("../../src/models/DFNO_3D/DFNO_3D.jl")
+include("../../src/models/DFNO_3D_OLD/DFNO_3D_OLD.jl")
 include("../../src/utils.jl")
 
-using .DFNO_3D
+using .DFNO_3D_OLD
 using .UTILS
 using MPI
 using Zygote
@@ -23,38 +23,39 @@ size = MPI.Comm_size(comm)
 
 CUDA.device!(rank % 4)
 
-partition = [1,size]
-
 nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
 config = ARGS[8]
 
 # For scaling tests, use 4 modes, training use 25% modes
 
-modesx = 4 # max(dimx÷32, 4)
-modesy = 4 # max(dimy÷32, 4)
-modesz = 4 # max(dimz÷32, 4)
-modest = 4 # max(dimt÷32, 4)
+modesx = 4
+modesy = 4
+modesz = 4
+modest = 4
 
-(gpus > 64) && (modesy = modesy * 2)
-(gpus > 128) && (modesy = modesy * 2)
-(gpus > 256) && (modesy = modesy * 2)
+px = dimx ÷ 64
+py = dimy ÷ 64
+pz = dimz ÷ 64
+pt = 1
 
-modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
+partition = [1,pt,px,py,pz]
 
-model = DFNO_3D.Model(modelConfig)
-θ = DFNO_3D.initModel(model)
+modelConfig = DFNO_3D_OLD.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
+
+model = DFNO_3D_OLD.Model(modelConfig)
+θ = DFNO_3D_OLD.initModel(model)
 
 x_sample = rand(modelConfig.dtype, dimx * dimy * dimz * dimt * 5 ÷ prod(partition), 1)
 
-@time y = DFNO_3D.forward(model, θ, x_sample)
-@time y = DFNO_3D.forward(model, θ, x_sample)
-y_time = @elapsed DFNO_3D.forward(model, θ, x_sample)
+@time y = DFNO_3D_OLD.forward(model, θ, x_sample)
+@time y = DFNO_3D_OLD.forward(model, θ, x_sample)
+y_time = @elapsed DFNO_3D_OLD.forward(model, θ, x_sample)
 y_time = UTILS.dist_sum([y_time]) / size
 
 y = y .+ rand(modelConfig.dtype)
 
 function loss_helper(params)
-    global loss = UTILS.dist_loss(DFNO_3D.forward(model, params, x_sample), y)
+    global loss = UTILS.dist_loss(DFNO_3D_OLD.forward(model, params, x_sample), y)
     return loss
 end
 

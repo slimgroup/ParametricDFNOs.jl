@@ -40,31 +40,35 @@ WEAK_TEMPORAL_SAFE_CONFIGURATIONS=(
     "128 512 512 8 8 8 256 256 256 2"
 )
 
+WEAK_OLD_SPATIAL_CONFIGURATIONS=(
+    "128 512 512 512 512 10 4"
+)
+
 WEAK_SPATIAL_CONFIGURATIONS=(
-    "1 1 64 64 64 10"
-    "1 2 128 64 64 10"
-    "1 4 128 128 64 10"
-    "2 8 128 128 128 10"
-    "4 16 256 128 128 10"
-    "8 32 256 256 128 10"
-    "16 64 256 256 256 10"
-    "32 128 512 256 256 10"
-    "64 256 512 512 256 10"
-    "128 512 512 512 512 10"
+    # "1 1 64 64 64 18 4"
+    # "1 2 128 64 64 18 4"
+    # "1 4 128 128 64 18 4"
+    # "2 8 128 128 128 18 4"
+    # "4 16 256 128 128 18 4"
+    # "8 32 256 256 128 18 4"
+    # "16 64 256 256 256 18 4"
+    # "32 128 512 256 256 18 4"
+    # "64 256 512 512 256 18 4"
+    # "128 512 512 512 512 18 4"
+    "128 512 512 512 512 15 4"
 )
 
 WEAK_SPATIAL_SAFE_CONFIGURATIONS=(
-    "1 1 32 64 64 10"
-    "1 2 64 64 64 10"
-    "1 4 128 64 64 10"
-    "2 8 128 128 64 10"
-    "4 16 128 128 128 10"
-    "8 32 256 128 128 10"
-    # "16 64 256 256 128 10"
-    # "32 128 256 256 256 10"
-    # "64 256 512 256 256 10"
-    # "128 512 512 512 256 10"
-    # "256 1024 512 512 256 10"
+    # "1 1 32 64 64 10 0"
+    # "1 2 64 64 64 10 0"
+    "1 4 128 64 64 10 0"
+    "2 8 128 128 64 10 0"
+    "4 16 128 128 128 10 0"
+    "8 32 256 128 128 10 0"
+    "16 64 256 256 128 10 0"
+    # "32 128 256 256 256 10 0"
+    # "64 256 512 256 256 10 0"
+    # "128 512 512 512 256 10 0"
 )
 
 # Testing config:
@@ -115,6 +119,8 @@ TEST_SCALING_CONFIGURATIONS=(
 
 if [[ "$1" == "weak_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_CONFIGURATIONS[@]}")
+elif [[ "$1" == "weak_old_spatial" ]]; then
+    CONFIGURATIONS=("${WEAK_OLD_SPATIAL_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_safe_spatial" ]]; then
     CONFIGURATIONS=("${WEAK_SPATIAL_SAFE_CONFIGURATIONS[@]}")
 elif [[ "$1" == "weak_forward" ]]; then
@@ -131,5 +137,9 @@ fi
 for config_str in "${CONFIGURATIONS[@]}"
 do
     config=($config_str)
-    bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "$1"
+    if [[ "$1" == "weak_old_spatial" ]]; then
+        bash examples/scaling/scaling_old.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "$1"
+    else
+        bash examples/scaling/scaling.sh "${config[0]}" "${config[1]}" "${config[2]}" "${config[3]}" "${config[4]}" "${config[5]}" "${config[6]}" "$1"
+    fi
 done

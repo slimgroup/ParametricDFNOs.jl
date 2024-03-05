@@ -10,3 +10,4 @@ rawdataset.py
 *.mov
 data/
 out.txt
+movies/

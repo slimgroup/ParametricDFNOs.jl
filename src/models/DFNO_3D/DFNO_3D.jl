@@ -35,6 +35,6 @@ include("../../utils.jl")
 
 using .UTILS
 
-export Model, ModelConfig, DataConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, collectWeights, print_storage_complexity, loadDistData
+export Model, ModelConfig, DataConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, collectWeights, print_storage_complexity, loadDistData, gpu_flag
 
 end

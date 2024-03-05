@@ -70,3 +70,13 @@ function read_perlmutter_data(path::String, modelConfig::ModelConfig, rank::Int;
 
     return x_train, y_train, x_valid, y_valid
 end
+
+function print_filenames(path::String, start::Int=1001, finish::Int=1200)
+    idx = 1
+    for entry in readdir(path; join=true)
+        if idx >= start && idx <= finish
+            println("Sample $idx : ", entry)
+        end
+        idx += 1
+    end
+end

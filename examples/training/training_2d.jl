@@ -30,10 +30,15 @@ trainConfig = DFNO_2D.TrainConfig(
     y_train=y_train,
     x_valid=x_valid,
     y_valid=y_valid,
+    plot_every=10
 )
 
 model = DFNO_2D.Model(modelConfig)
 θ = DFNO_2D.initModel(model)
+
+# # To train from a checkpoint
+# filename = "ep=80_mt=4_mx=4_my=4_nblocks=4_nc_in=4_nc_lift=20_nc_mid=128_nc_out=1_nt=51_nx=64_ny=64_p=1.jld2"
+# DFNO_2D.loadWeights!(θ, filename, "θ_save", partition)
 
 DFNO_2D.train!(trainConfig, model, θ)
 

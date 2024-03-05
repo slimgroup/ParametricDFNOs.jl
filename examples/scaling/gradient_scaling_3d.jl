@@ -17,28 +17,33 @@ using ParametricOperators
 using CUDA
 
 # gpu = ParametricOperators.gpu
-
 MPI.Init()
 
 comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-dim, dimt = parse.(Int, ARGS[1:2])
+nx, ny, nz, nt, nblocks = parse.(Int, ARGS[1:5])
 partition = [1,size]
 
 @assert MPI.Comm_size(comm) == prod(partition)
 
-modes = max(dim÷8, 4)
-modelConfig = DFNO_3D.ModelConfig(nx=dim, ny=dim, nz=dim, nt=dimt, mx=modes, my=modes, mz=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
+modes = 4 # max(dim÷8, 4)
+modelConfig = DFNO_3D.ModelConfig(nx=nx, ny=ny, nz=nz, nt=nt, mx=modes, my=modes, mz=modes, mt=modes, nblocks=nblocks, partition=partition, dtype=Float32)
 
 model = DFNO_3D.Model(modelConfig)
 θ = DFNO_3D.initModel(model)
 
-x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
-y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) # |> gpu
+input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nz * model.config.nt)
+output_size = input_size * model.config.nc_out ÷ model.config.nc_in
+
+x_sample = rand(modelConfig.dtype, input_size, 1)
+y_sample = rand(modelConfig.dtype, output_size, 1)
+
+gpu_flag && (y_sample = y_sample |> gpu)
 
 # GC.enable_logging(true)
+@time y = DFNO_3D.forward(model, θ, x_sample)
 @time y = DFNO_3D.forward(model, θ, x_sample)
 
 function loss_helper(params)
@@ -46,6 +51,7 @@ function loss_helper(params)
     return loss
 end
 
+@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 
 MPI.Finalize()

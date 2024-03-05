@@ -1,5 +1,6 @@
+# for non perlmutter, use this
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n <number_of_tasks> julia examples/scaling/scaling.jl
+# mpiexecjl --project=./ -n <number_of_tasks> julia examples/scaling/scaling_np.jl
 
 using Pkg
 Pkg.activate("./")
@@ -21,23 +22,17 @@ comm = MPI.COMM_WORLD
 rank = MPI.Comm_rank(comm)
 size = MPI.Comm_size(comm)
 
-CUDA.device!(rank % 4)
-
 partition = [1,size]
 
-nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
-config = ARGS[8]
+dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:5])
+config = ARGS[6]
 
 # For scaling tests, use 4 modes, training use 25% modes
 
-modesx = 4 # max(dimx÷32, 4)
-modesy = 4 # max(dimy÷32, 4)
-modesz = 4 # max(dimz÷32, 4)
-modest = 4 # max(dimt÷32, 4)
-
-(gpus > 64) && (modesy = modesy * 2)
-(gpus > 128) && (modesy = modesy * 2)
-(gpus > 256) && (modesy = modesy * 2)
+modesx = 4
+modesy = 4
+modesz = 4
+modest = 4
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
 

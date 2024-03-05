@@ -15,19 +15,22 @@ function read_keys_from_jld2(file_path, keys)
     return data
 end
 
-directory = "examples/scaling/filtered_gradient/"
+folder = ARGS[1]
+directory = "examples/scaling/$folder/"
 
 # Get all JLD2 files in the current directory
 jld2_files = filter(x -> occursin(r"\.jld2$", x), readdir(directory))
 
 # Initialize arrays to hold the data
 data_points = []
+dimt = 0
 
 # Read the data from each file
 for file in jld2_files
     full_path = joinpath(directory, file)
-    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz", "grads_time"])
+    data = read_keys_from_jld2(full_path, ["y_time", "gpus", "nodes", "dimx", "dimy", "dimz", "grads_time", "dimt"])
     push!(data_points, (data["gpus"], data["y_time"], data["dimx"], data["dimy"], data["dimz"], data["nodes"], data["grads_time"]))
+    global dimt = data["dimt"]
 end
 
 # Sort the data by the 'gpus' value
@@ -45,6 +48,13 @@ fig, ax1 = subplots()
 ax1.plot(1:length(gpus), y_times, "s-b", label="Inference Time")  # Plot against evenly spaced x-axis
 ax1.plot(1:length(gpus), grads_times, "o-r", label="Gradient Time")  # Add this line for gradients time
 
+# # Set the y-axis to log scale with base 10
+# ax1.set_yscale("log")
+
+# # Custom y-ticks from 10^-1 to 10^1 at intervals of 0.5
+# y_ticks = [10^(-1 + 0.5*i) for i in 0:4]
+# ax1.set_yticks(y_ticks)
+
 # # Add a grey dotted line for comparison
 # # Assuming you want a line with a slope of 1 for comparison
 # max_val = max(maximum(y_times), length(gpus))  # Find the maximum value for x and y
@@ -56,7 +66,7 @@ ax1.set_ylim(minimum(y_times) - y_padding, maximum(grads_times) + y_padding)
 
 ax1.set_xlabel("# GPUs/Nodes", labelpad=10, fontsize=20)
 ax1.set_ylabel("Runtime [s]", fontsize=20)
-ax1.set_title("Weak Scaling", pad=10, fontsize=20)
+ax1.set_title("Weak Scaling for $dimt time steps", pad=10, fontsize=20)
 ax1.legend()
 ax1.grid(true)
 

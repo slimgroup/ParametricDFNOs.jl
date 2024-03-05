@@ -9,27 +9,21 @@ sbatch <<EOT
 #SBATCH --gpus-per-task=1
 #SBATCH --gpu-bind=none
 #SBATCH --qos=regular
-#SBATCH --job-name Test_Run_${10}_Epochs_${4}_cube 
+#SBATCH --job-name Old_Scaling_nodes=${1}_gpus=${2}_dimx=${3}_dimy=${4}_dimz=${5}_dimt=${6}_config=${8}
 #SBATCH --mail-user=richardr2926@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --time=15:00:00
+#SBATCH --time=00:15:00
 #SBATCH --account=m3863_g
-
-# # OpenMP settings: (TODO: Figure this out)
-# export OMP_NUM_THREADS=1
-# export OMP_PLACES=threads
-# export OMP_PROC_BIND=spread
 
 nvidia-smi
 export SLURM_CPU_BIND="cores"
 export PATH=$PATH:$HOME/.julia/bin
-export DFNO_3D_GPU=1
+export DFNO_3D_OLD_GPU=1
 # export LD_LIBRARY_PATH=
 export LD_PRELOAD=/opt/cray/pe/lib64/libmpi_gtl_cuda.so.0
 module load cudnn/8.9.3_cuda12 julia/1.9
 
-srun julia ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 ${10}
-# mpiexecjl --project=./ julia-1.8 ./examples/perlmutter/train.jl $3 $4 $5 $6 $7 $8 $9 ${10}
+srun julia ./examples/scaling/scaling_old.jl $1 $2 $3 $4 $5 $6 $7 $8
 
 exit 0
 EOT

@@ -16,7 +16,7 @@ end
 
 mutable struct Model
     config::ModelConfig
-    lifts::ParKron
+    lifts::Any
     convs::Vector
     sconvs::Vector
     biases::Vector
@@ -69,20 +69,22 @@ mutable struct Model
         end
     
         # Lift Channel dimension
-        lifts = ParKron(ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx), ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)"))
-    
-        lifts = distribute(lifts, config.partition)
+        lifts = ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
+        bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)")
+
+        lifts = distribute(lifts)
+        bias = distribute(bias)
     
         push!(biases, bias)
     
         for i in 1:config.nblocks
     
             sconv_layer = spectral_convolution(i)
-            conv_layer = ParKron(ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx), ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))"))
-            bias = ParBroadcasted(ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))"))
+            conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
+            bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
     
-            conv_layer = distribute(conv_layer, config.partition)
+            conv_layer = distribute(conv_layer)
+            bias = distribute(bias)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
@@ -90,19 +92,21 @@ mutable struct Model
         end
     
         # Uplift channel dimension once more
-        uc = ParKron(ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx), ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)"))
+        uc = ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)")
+        bias = ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)")
     
-        uc = distribute(uc, config.partition)
+        uc = distribute(uc)
+        bias = distribute(bias)
     
         push!(biases, bias)
         push!(projects, uc)
     
         # Project channel dimension
-        pc = ParKron(ParIdentity(T,config.ny) ⊗ ParIdentity(T,config.nx), ParIdentity(T,config.nt) ⊗ ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)"))
-        bias = ParBroadcasted(ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)"))
+        pc = ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)")
+        bias = ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)")
     
-        pc = distribute(pc, config.partition)
+        pc = distribute(pc)
+        bias = distribute(bias)
     
         push!(biases, bias)
         push!(projects, pc)
