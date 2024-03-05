@@ -16,6 +16,12 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     loss_train = Loss[1:ep*nbatches]
     loss_valid = Loss_valid[1:ep]
     fig = figure(figsize=(20, 12))
+
+    PyPlot.rc("figure", titlesize=8)
+    PyPlot.rc("font", family="serif"); PyPlot.rc("xtick", labelsize=8); PyPlot.rc("ytick", labelsize=8)
+    PyPlot.rc("axes", labelsize=8)     # Default fontsize for x and y labels
+    PyPlot.rc("axes", titlesize=8)     # Default fontsize for titles
+
     subplot(1,3,1)
     plot(loss_train)
     xlabel("batch iterations")
@@ -49,6 +55,13 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
     y_predict = reshape(y_predict, (modelConfig.nc_out, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))
 
     fig = figure(figsize=(20, 12))
+    
+    PyPlot.rc("figure", titlesize=8)
+    PyPlot.rc("font", family="serif"); PyPlot.rc("xtick", labelsize=8); PyPlot.rc("ytick", labelsize=8)
+    PyPlot.rc("axes", labelsize=8)     # Default fontsize for x and y labels
+    PyPlot.rc("axes", titlesize=8)     # Default fontsize for titles
+
+
     fixed_z = modelConfig.nz ÷ 2
     for i = 1:5
         subplot(4,5,i)
