@@ -14,6 +14,7 @@
     nblocks::Int = 1
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 8]
+    relu01::Bool = true
 end
 
 mutable struct Model
