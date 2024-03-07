@@ -47,11 +47,6 @@ function forward(model::Model, θ, x::Any)
 
    if model.config.relu01
         x = 1f0.-relu.(1f0.-relu.(x))
-   else
-        x_min, x_max = minimum(x), maximum(x)
-        x_new_min = -78246.36
-        x_new_max = 79225.375
-        x = ((x .- x_min) ./ (x_max - x_min)) .* (x_new_max - x_new_min) .+ x_new_min
    end
    return reshape(x, (model.config.nc_out * model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
 end
