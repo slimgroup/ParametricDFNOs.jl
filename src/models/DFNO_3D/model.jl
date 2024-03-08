@@ -54,8 +54,6 @@ mutable struct Model
     
             input_shape = (config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
             weight_shape = (config.nc_lift, config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
-
-            println(weight_shape)
     
             input_order = (1, 2, 3)
             weight_order = (1, 4, 2, 3)
