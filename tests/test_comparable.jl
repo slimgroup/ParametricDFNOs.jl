@@ -2,7 +2,7 @@ using Pkg
 Pkg.activate("./")
 
 using ParametricOperators
-
+using LinearAlgebra
 struct Config
     nx
     ny
@@ -24,15 +24,15 @@ fourier_y = ParDFT(Complex{T}, config.ny)
 fourier_z = ParDFT(Complex{T}, config.nz)
 fourier_t = ParDFT(T, config.nt)
 
-mx = config.mx÷2
-my = config.my÷2
-mz = config.mz÷2
-mt = config.mt
-
 function unique_range(ranges)
     unique_ranges = unique(vcat(ranges...))
     return isempty(unique_ranges) ? [1:1] : ranges
 end
+
+mx = config.mx÷2
+my = config.my÷2
+mz = config.mz÷2
+mt = config.mt
 
 # Usage with your ParRestriction instances remains the same
 unique_x = unique_range([1:mx, config.nx-mx+1:config.nx])
@@ -58,12 +58,28 @@ weight_order = (1, 4, 2, 3)
 target_order = (4, 2, 3)
 
 # Setup FFT-restrict pattern and weightage with Kroneckers
-weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape)
+weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "test")
 
 restrict_dft_1 = (restrict_z * fourier_z) ⊗ (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ (restrict_t * fourier_t) ⊗ ParIdentity(Complex{T}, config.nc_lift)
 restrict_dft_2 = (restrict_y * fourier_y) ⊗ (restrict_x * fourier_x) ⊗ (restrict_t * fourier_t) ⊗ ParIdentity(Complex{T}, config.nc_lift)
 
 println(Range(restrict_dft_1), ":", Range(restrict_dft_2))
+
+################# TEST 2 ######################################
+
+sconv_1 = restrict_dft_1' * restrict_dft_1
+sconv_2 = restrict_dft_2' * restrict_dft_2
+
+x = reshape(rand(T, config.nc_lift, config.nx, config.ny), :, 1)
+
+y_1 = sconv_1 * x
+y_2 = sconv_2 * x
+
+println(norm(y_1 - y_2))
+
+#############################################################
+
+################# TEST 2 ######################################
 
 sconv_1 = restrict_dft_1' * weight_mix * restrict_dft_1
 sconv_2 = restrict_dft_2' * weight_mix * restrict_dft_2
@@ -71,10 +87,11 @@ sconv_2 = restrict_dft_2' * weight_mix * restrict_dft_2
 θ_1 = init(sconv_1)
 θ_2 = init(sconv_2)
 
-x = vec(rand(T, config.nc_lift, config.nx, config.ny))
+x = reshape(rand(T, config.nc_lift, config.nx, config.ny), :, 1)
 
-y_1 = sconv_1(θ_1)(x)
-y_2 = sconv_2(θ_2)(x)
+y_1 = sconv_1(θ_1) * x
+y_2 = sconv_2(θ_1) * x
 
 println(norm(y_1 - y_2))
 
+#############################################################
