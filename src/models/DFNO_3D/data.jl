@@ -65,7 +65,7 @@ function loadDistData(config::DataConfig;
         y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, 1, :, 1))
         z_indices = target_zeros .+ reshape(z_coord:z_coord, (1, 1, 1, :, 1))
 
-        x_data[:, :, yz_coord-yz_start+1, :] = vec(cat(x_sample, t_indices, x_indices, y_indices, z_indices, dims=1))
+        x_data[:, :, yz_coord-yz_start+1, :] = vec(cat(x_sample, x_indices, y_indices, z_indices, t_indices, dims=1))
         y_data[:, :, yz_coord-yz_start+1, :] = vec(y_sample)
     end
 
