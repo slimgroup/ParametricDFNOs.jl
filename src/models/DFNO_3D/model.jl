@@ -26,8 +26,8 @@ mutable struct Model
     sconv_biases::Vector
     projects::Vector
     weight_mixes::Vector
-    # γs::Vector
-    # βs::Vector
+    γs::Vector
+    βs::Vector
 
     function Model(config::ModelConfig)
 
@@ -39,14 +39,8 @@ mutable struct Model
         sconv_biases = []
         biases = []
         weight_mixes = []
-        # γs = []
-        # βs = []
-
-        # Consider zeroing out some dims
-        function unique_range(ranges)
-            unique_ranges = unique(vcat(ranges...))
-            return isempty(unique_ranges) ? [1:1] : ranges
-        end
+        γs = []
+        βs = []
         
         mt = config.mt
         mx = config.mx÷2
@@ -89,8 +83,8 @@ mutable struct Model
         end
     
         # Lift Channel dimension
-        lifts = ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
-        bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)")
+        lifts = ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)", init=glorot_init)
+        bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)", init=zeros)
 
         lifts = distribute(lifts)
         bias = distribute(bias)
@@ -101,27 +95,27 @@ mutable struct Model
     
             sconv_layer = spectral_convolution(i)
 
-            conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
-            bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
+            conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))", init=glorot_init)
+            bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))", init=zeros)
         
-            # γ = ParMatrix(T, config.nc_lift, 1, "ParMatrix_γ_SCONV:($(i))")
-            # β = ParMatrix(T, config.nc_lift, 1, "ParMatrix_β_SCONV:($(i))")
+            γ = ParMatrix(T, config.nc_lift, 1, "ParMatrix_γ_SCONV:($(i))", init=ones)
+            β = ParMatrix(T, config.nc_lift, 1, "ParMatrix_β_SCONV:($(i))", init=zeros)
     
             conv_layer = distribute(conv_layer)
             bias = distribute(bias)
-            # γ = distribute(γ)
-            # β = distribute(β)
+            γ = distribute(γ)
+            β = distribute(β)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
             push!(convs, conv_layer)
-            # push!(γs, γ)
-            # push!(βs, β)
+            push!(γs, γ)
+            push!(βs, β)
         end
     
         # Uplift channel dimension once more
-        uc = ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)")
-        bias = ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)")
+        uc = ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)", init=glorot_init)
+        bias = ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)", init=zeros)
     
         uc = distribute(uc)
         bias = distribute(bias)
@@ -131,7 +125,7 @@ mutable struct Model
     
         # Project channel dimension
         pc = ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)")
-        bias = ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)")
+        bias = ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)", init=zeros)
     
         pc = distribute(pc)
         bias = distribute(bias)
@@ -139,13 +133,13 @@ mutable struct Model
         push!(biases, bias)
         push!(projects, pc)
     
-        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes) #, γs, βs)
+        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes, γs, βs)
     end
 end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects)) #, model.γs, model.βs))
+    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects, model.γs, model.βs))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))

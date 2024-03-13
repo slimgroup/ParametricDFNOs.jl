@@ -91,6 +91,17 @@ function get_dist_indices(total_size, total_workers, coord)
     return start_index, end_index
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum
+function unique_range(ranges)
+    unique_ranges = unique(vcat(ranges...))
+    return isempty(unique_ranges) ? [1:1] : ranges
+end
+
+function glorot_init(T::DataType, m::Int, n::Int)
+    scale = sqrt(24.0f0 / sum((m, n)))
+    params = (rand(T, (n, m)) .- 0.5f0) .* scale
+    return permutedims(params, [2, 1])
+end
+
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range, glorot_init
 
 end
