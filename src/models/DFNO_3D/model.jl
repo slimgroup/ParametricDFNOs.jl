@@ -26,6 +26,8 @@ mutable struct Model
     sconv_biases::Vector
     projects::Vector
     weight_mixes::Vector
+    γs::Vector
+    βs::Vector
 
     function Model(config::ModelConfig)
 
@@ -37,6 +39,19 @@ mutable struct Model
         sconv_biases = []
         biases = []
         weight_mixes = []
+        γs = []
+        βs = []
+
+        # Consider zeroing out some dims
+        function unique_range(ranges)
+            unique_ranges = unique(vcat(ranges...))
+            return isempty(unique_ranges) ? [1:1] : ranges
+        end
+        
+        mt = config.mt
+        mx = config.mx÷2
+        my = config.my÷2
+        mz = config.mz÷2
     
         function spectral_convolution(layer::Int)
     
@@ -45,17 +60,6 @@ mutable struct Model
             fourier_y = ParDFT(Complex{T}, config.ny)
             fourier_z = ParDFT(Complex{T}, config.nz)
             fourier_t = ParDFT(T, config.nt)
-
-            # Consider zeroing out some dims
-            function unique_range(ranges)
-                unique_ranges = unique(vcat(ranges...))
-                return isempty(unique_ranges) ? [1:1] : ranges
-            end
-
-            mt = config.mt
-            mx = config.mx÷2
-            my = config.my÷2
-            mz = config.mz÷2
     
             # Build restrictions to low-frequency modes
             restrict_x = ParRestriction(Complex{T}, Range(fourier_x), unique_range([1:mx, config.nx-mx+1:config.nx]))
@@ -96,15 +100,23 @@ mutable struct Model
         for i in 1:config.nblocks
     
             sconv_layer = spectral_convolution(i)
+
             conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
             bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
+        
+            γ = ParMatrix(T, config.nc_lift, 1, "ParMatrix_γ_SCONV:($(i))")
+            β = ParMatrix(T, config.nc_lift, 1, "ParMatrix_β_SCONV:($(i))")
     
             conv_layer = distribute(conv_layer)
             bias = distribute(bias)
+            γ = distribute(γ)
+            β = distribute(β)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
             push!(convs, conv_layer)
+            push!(γs, γ)
+            push!(βs, β)
         end
     
         # Uplift channel dimension once more
@@ -127,13 +139,13 @@ mutable struct Model
         push!(biases, bias)
         push!(projects, pc)
     
-        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes)
+        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes, γs, βs)
     end
 end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects))
+    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects, model.γs, model.βs))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))
