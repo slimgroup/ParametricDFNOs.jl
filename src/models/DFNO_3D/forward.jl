@@ -33,12 +33,12 @@ function forward(model::Model, θ, x::Any)
        reduce_var = ParReduce(eltype(s))
        σ² = reduce_var(s) ./ scale
 
-    #    x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
+       x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
-       # https://arxiv.org/pdf/1502.03167.pdf
-       scale = model.γs[i](θ) / sqrt.(σ² .+ ϵ)
-       bias = -scale .* μ + model.βs[i](θ)
-       x = scale .* x .+ bias
+    #    # https://arxiv.org/pdf/1502.03167.pdf
+    #    scale = model.γs[i](θ) / sqrt.(σ² .+ ϵ)
+    #    bias = -scale .* μ + model.βs[i](θ)
+    #    x = scale .* x .+ bias
 
        if i < model.config.nblocks
            x = relu.(x)
