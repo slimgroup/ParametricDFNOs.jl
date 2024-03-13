@@ -33,8 +33,7 @@ function forward(model::Model, θ, x::Any)
        # https://arxiv.org/pdf/1502.03167.pdf
        scale = model.γs[i](θ) / sqrt.(σ² .+ ϵ)
        bias = -scale .* μ + model.βs[i](θ)
-       println(size(scale), size(bias), size(x))
-    #    x = scale .* x .+ bias
+       x = scale .* x .+ bias
 
        if i < model.config.nblocks
            x = relu.(x)
