@@ -40,6 +40,8 @@ function forward(model::Model, θ, x::Any)
        end
    end
 
+   x = reshape(x, (model.config.nc_lift, :))
+
    x = (model.projects[1](θ) * x) + model.biases[2](θ)
    x = relu.(x)
 
