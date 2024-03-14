@@ -26,8 +26,6 @@ mutable struct Model
     sconv_biases::Vector
     projects::Vector
     weight_mixes::Vector
-    # γs::Vector
-    # βs::Vector
 
     function Model(config::ModelConfig)
 
@@ -39,8 +37,6 @@ mutable struct Model
         sconv_biases = []
         biases = []
         weight_mixes = []
-        # γs = []
-        # βs = []
 
         # Consider zeroing out some dims
         function unique_range(ranges)
@@ -103,20 +99,13 @@ mutable struct Model
 
             conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
             bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
-        
-            # γ = ParMatrix(T, config.nc_lift, 1, "ParMatrix_γ_SCONV:($(i))")
-            # β = ParMatrix(T, config.nc_lift, 1, "ParMatrix_β_SCONV:($(i))")
     
             conv_layer = distribute(conv_layer)
             bias = distribute(bias)
-            # γ = distribute(γ)
-            # β = distribute(β)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
             push!(convs, conv_layer)
-            # push!(γs, γ)
-            # push!(βs, β)
         end
     
         # Uplift channel dimension once more
@@ -139,13 +128,13 @@ mutable struct Model
         push!(biases, bias)
         push!(projects, pc)
     
-        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes) #, γs, βs)
+        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes)
     end
 end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects)) #, model.γs, model.βs))
+    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))
