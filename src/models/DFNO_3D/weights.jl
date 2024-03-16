@@ -16,14 +16,14 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD, isLocal
     file = isLocal ? projectdir("weights", model_name, filename) : filename
     saved = load(file)[key]
     for (k, v) in saved
-        haskey(θ, k) && (rank == 0) && (k in θ) && println("LOADING: ", k)
+        haskey(θ, k) && (rank == 0) && (k in keys(θ)) && println("LOADING: ", k)
         haskey(θ, k) && gpu_flag && (θ[k] = v |> gpu)
         haskey(θ, k) && !gpu_flag && (θ[k] = v)
         if !haskey(θ, k)
             id = _dist_key(k, [0, coords...])
             for (k1, v1) in θ
                 if k1.id == id
-                    rank == 0 && (k1 in θ) && println("LOADING: ", k1)
+                    rank == 0 && (k1 in keys(θ)) && println("LOADING: ", k1)
                     gpu_flag && (θ[k1] = _dist_value(v, partition) |> gpu)
                     !gpu_flag && (θ[k1] = _dist_value(v, partition))
                 end
