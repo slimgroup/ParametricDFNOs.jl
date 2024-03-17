@@ -68,6 +68,7 @@ x2 = x_sample[2:end, :]
 
 function loss_helper_3(params)
     input = cat(params, x2, dims=1)
+    println(typeof(input))
     global loss = UTILS.dist_loss(DFNO_3D.forward(model, θ, input), y_sample)
     return loss
 end
