@@ -54,4 +54,12 @@ end
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
 
+function loss_helper_2(params)
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, θ, params), y_sample)
+    return loss
+end
+
+@time grads_time = @elapsed gradient(params -> loss_helper_2(params), x_sample)[1]
+@time grads_time = @elapsed gradient(params -> loss_helper_2(params), x_sample)[1]
+
 MPI.Finalize()
