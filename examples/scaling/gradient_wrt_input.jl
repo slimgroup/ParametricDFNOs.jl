@@ -17,7 +17,6 @@ using ParametricOperators
 using CUDA
 using Flux
 
-# gpu = ParametricOperators.gpu
 MPI.Init()
 
 comm = MPI.COMM_WORLD
@@ -41,6 +40,7 @@ output_size = input_size * model.config.nc_out ÷ model.config.nc_in
 x_sample = rand(modelConfig.dtype, input_size, 1)
 y_sample = rand(modelConfig.dtype, output_size, 1)
 
+gpu_flag && (gpu = ParametricOperators.gpu)
 gpu_flag && (y_sample = y_sample |> gpu)
 
 # GC.enable_logging(true)
