@@ -13,7 +13,7 @@ function collect_dist_tensor(local_tensor, global_shape, partition, parent_comm)
     sparse = zeros(eltype(local_tensor), global_shape...)
     indexes = _get_local_indices(global_shape, partition, coords)
 
-    sparse[indexes...] = vec(local_tensor)
+    sparse[indexes...] = local_tensor
     return MPI.Reduce(sparse, MPI.SUM, 0, parent_comm)
 end
 
