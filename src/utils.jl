@@ -26,7 +26,7 @@ function dist_loss(local_pred_y, local_true_y)
     norm_diff = √(reduce_norm([s])[1])
     norm_y = √(reduce_y([sum(local_true_y .^ 2)])[1])
 
-    return norm_diff / norm_y
+    return norm_diff^2f0 #/ norm_y
 end
 
 function dist_sum(local_vec)
