@@ -7,9 +7,9 @@
     nc_mid::Int = 128
     nc_lift::Int = 20
     nc_out::Int = 1
-    mx::Int = 4
-    my::Int = 4
-    mz::Int = 4
+    mx::Int = 8
+    my::Int = 8
+    mz::Int = 8
     mt::Int = 4
     nblocks::Int = 1
     dtype::DataType = Float32
@@ -26,8 +26,6 @@ mutable struct Model
     sconv_biases::Vector
     projects::Vector
     weight_mixes::Vector
-    # γs::Vector
-    # βs::Vector
 
     function Model(config::ModelConfig)
 
@@ -39,15 +37,7 @@ mutable struct Model
         sconv_biases = []
         biases = []
         weight_mixes = []
-        # γs = []
-        # βs = []
 
-        # Consider zeroing out some dims
-        function unique_range(ranges)
-            unique_ranges = unique(vcat(ranges...))
-            return isempty(unique_ranges) ? [1:1] : ranges
-        end
-        
         mt = config.mt
         mx = config.mx÷2
         my = config.my÷2
@@ -103,20 +93,13 @@ mutable struct Model
 
             conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
             bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
-        
-            # γ = ParMatrix(T, config.nc_lift, 1, "ParMatrix_γ_SCONV:($(i))")
-            # β = ParMatrix(T, config.nc_lift, 1, "ParMatrix_β_SCONV:($(i))")
     
             conv_layer = distribute(conv_layer)
             bias = distribute(bias)
-            # γ = distribute(γ)
-            # β = distribute(β)
     
             push!(sconv_biases, bias)
             push!(sconvs, sconv_layer)
             push!(convs, conv_layer)
-            # push!(γs, γ)
-            # push!(βs, β)
         end
     
         # Uplift channel dimension once more
@@ -139,86 +122,15 @@ mutable struct Model
         push!(biases, bias)
         push!(projects, pc)
     
-        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes) #, γs, βs)
+        new(config, lifts, convs, sconvs, biases, sconv_biases, projects, weight_mixes)
     end
 end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects)) #, model.γs, model.βs))
+    for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end
     gpu_flag && (θ = gpu(θ))
     return θ
-end
-
-function print_storage_complexity(config::ModelConfig; batch=1)
-    
-    # Prints the approximate memory required for forward and backward pass
-
-    multiplier = Dict([(Float16, 16), (Float32, 32), (Float64, 64)])
-
-    x_shape = (config.nc_in, config.nx, config.ny, config.nz, config.nt)
-    y_shape = (config.nc_out, config.nx, config.ny, config.nz, config.nt)
-    weight_shape = (config.nc_lift, config.nc_lift, 2*config.mx, 2*config.my, 2*config.mz, config.mt)
-
-    weights_count = 0.0
-    data_count = 0.0
-
-    # Storage costs for x and y
-    data_count = (prod(x_shape) + prod(y_shape))
-
-    # Lift costs for 2 sums + 1 target
-    lift_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
-
-    # Sconv costs for 2 sums + 1 target
-    sconv_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
-    
-    # Projects costs for 2 sums + 1 target
-    projects_count1 = 3 * config.nc_mid * prod(x_shape) / config.nc_in 
-    projects_count2 = 3 * config.nc_out * prod(x_shape) / config.nc_in 
-
-    # Most # of Kronecker stores (2x Range) in PO * max(input)
-    data_count += max(lift_count, sconv_count, projects_count1, projects_count2)
-
-    # println(batch * lift_count * multiplier[config.dtype] / 8e+6)
-    # println(batch * sconv_count * multiplier[config.dtype] / 8e+6)
-    # println(batch * projects_count1 * multiplier[config.dtype] / 8e+6)
-    # println(batch * projects_count2 * multiplier[config.dtype] / 8e+6)
-
-    # Lifts weights and bias
-    weights_count += (config.nc_lift * config.nc_in) + config.nc_lift
-
-    # Sconv layers weights
-    for i in 1:config.nblocks
-
-        # Par Matrix N in restriction space,
-        weights_count += prod(weight_shape)
-        
-        # Convolution and bias
-        weights_count += (config.nc_lift * config.nc_lift) + config.nc_lift
-    end
-
-    # Projects 1 weights and bias
-    weights_count += (config.nc_lift * config.nc_mid) + config.nc_mid
-
-    # Projects 2 weights and bias
-    weights_count += (config.nc_mid * config.nc_out) + config.nc_out
-
-    # For Francis b=8 passes b=9 fails with F32, Richard b=5 passes b=6 fails after couple batches (forward and backward)
-    # For Francis & Richard b=25 passes b=26 fails with F32
-
-    w_scale = 1.88 # Empirically chosen (Due to Dict ?)
-    c_scale = batch * 0.97 # Empirically chosen
-    g_scale = 4.5 # Empirically chosen, for 3.0 for Francis, 4.5 for Richard. Gradient is only ~67% as memory efficient as Francis 
-
-    w_mb = w_scale * weights_count * multiplier[config.dtype] / 8e+6
-    c_gb = c_scale * data_count * multiplier[config.dtype] / 8e+9
-    g_gb = c_gb * g_scale
-
-    t_gb = (w_mb / 8e+3) + max(c_gb, g_gb)
-
-    output = @sprintf("DFNO_3D (batch=%d) | ~ %.2f MB for weights | ~ %.2f GB for forward pass | ~ %.2f GB for backward pass | Total ~ %.2f GB |", batch, w_mb, c_gb, g_gb, t_gb)
-
-    @info output
 end

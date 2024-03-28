@@ -6,6 +6,11 @@ using ParametricOperators
 
 cpu = ParametricOperators.cpu
 
+function unique_range(ranges)
+    unique_ranges = unique(vcat(ranges...))
+    return isempty(unique_ranges) ? [1:1] : ranges
+end
+
 function collect_dist_tensor(local_tensor, global_shape, partition, parent_comm)
     comm_cart = MPI.Cart_create(parent_comm, partition)
     coords = MPI.Cart_coords(comm_cart)
@@ -91,6 +96,6 @@ function get_dist_indices(total_size, total_workers, coord)
     return start_index, end_index
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range
 
 end

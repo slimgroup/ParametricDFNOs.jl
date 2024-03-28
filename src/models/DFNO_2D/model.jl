@@ -6,8 +6,8 @@
     nc_mid::Int = 128
     nc_lift::Int = 20
     nc_out::Int = 1
-    mx::Int = 4
-    my::Int = 4
+    mx::Int = 8
+    my::Int = 8
     mt::Int = 4
     nblocks::Int = 1
     dtype::DataType = Float32
@@ -34,6 +34,10 @@ mutable struct Model
         sconv_biases = []
         biases = []
         weight_mixes = []
+
+        mt = config.mt
+        mx = config.mx÷2
+        my = config.my÷2
     
         function spectral_convolution(layer::Int)
     
@@ -43,12 +47,12 @@ mutable struct Model
             fourier_t = ParDFT(T, config.nt)
     
             # Build restrictions to low-frequency modes
-            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:config.mx, config.nx-config.mx+1:config.nx])
-            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:config.my, config.ny-config.my+1:config.ny])
-            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:config.mt])
+            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), unique_range([1:mx, config.nx-mx+1:config.nx]))
+            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), unique_range([1:my, config.ny-my+1:config.ny]))
+            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), unique_range([1:mt]))
     
-            input_shape = (config.nc_lift, config.mt, 2*config.mx*2*config.my)
-            weight_shape = (config.nc_lift, config.nc_lift, config.mt, 2*config.mx*2*config.my)
+            input_shape = (config.nc_lift, config.mt, config.mx*config.my)
+            weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx*config.my)
 
             input_order = (1, 2, 3)
             weight_order = (1, 4, 2, 3)
@@ -122,75 +126,4 @@ function initModel(model::Model)
     end
     gpu_flag && (θ = gpu(θ))
     return θ
-end
-
-function print_storage_complexity(config::ModelConfig; batch=1)
-    
-    # Prints the approximate memory required for forward and backward pass
-
-    multiplier = Dict([(Float16, 16), (Float32, 32), (Float64, 64)])
-
-    x_shape = (config.nc_in, config.nx, config.ny, config.nt)
-    y_shape = (config.nc_out, config.nx, config.ny, config.nt)
-    weight_shape = (config.nc_lift, config.nc_lift, 2*config.mx, 2*config.my, config.mt)
-
-    weights_count = 0.0
-    data_count = 0.0
-
-    # Storage costs for x and y
-    data_count = (prod(x_shape) + prod(y_shape))
-
-    # Lift costs for 2 sums + 1 target
-    lift_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
-
-    # Sconv costs for 2 sums + 1 target
-    sconv_count = 3 * config.nc_lift * prod(x_shape) / config.nc_in 
-    
-    # Projects costs for 2 sums + 1 target
-    projects_count1 = 3 * config.nc_mid * prod(x_shape) / config.nc_in 
-    projects_count2 = 3 * config.nc_out * prod(x_shape) / config.nc_in 
-
-    # Most # of Kronecker stores (2x Range) in PO * max(input)
-    data_count += max(lift_count, sconv_count, projects_count1, projects_count2)
-
-    # println(batch * lift_count * multiplier[config.dtype] / 8e+6)
-    # println(batch * sconv_count * multiplier[config.dtype] / 8e+6)
-    # println(batch * projects_count1 * multiplier[config.dtype] / 8e+6)
-    # println(batch * projects_count2 * multiplier[config.dtype] / 8e+6)
-
-    # Lifts weights and bias
-    weights_count += (config.nc_lift * config.nc_in) + config.nc_lift
-
-    # Sconv layers weights
-    for i in 1:config.nblocks
-
-        # Par Matrix N in restriction space,
-        weights_count += prod(weight_shape)
-        
-        # Convolution and bias
-        weights_count += (config.nc_lift * config.nc_lift) + config.nc_lift
-    end
-
-    # Projects 1 weights and bias
-    weights_count += (config.nc_lift * config.nc_mid) + config.nc_mid
-
-    # Projects 2 weights and bias
-    weights_count += (config.nc_mid * config.nc_out) + config.nc_out
-
-    # For Francis b=8 passes b=9 fails with F32, Richard b=5 passes b=6 fails after couple batches (forward and backward)
-    # For Francis & Richard b=25 passes b=26 fails with F32
-
-    w_scale = 1.88 # Empirically chosen (Due to Dict ?)
-    c_scale = batch * 0.97 # Empirically chosen
-    g_scale = 4.5 # Empirically chosen, for 3.0 for Francis, 4.5 for Richard. Gradient is only ~67% as memory efficient as Francis 
-
-    w_mb = w_scale * weights_count * multiplier[config.dtype] / 8e+6
-    c_gb = c_scale * data_count * multiplier[config.dtype] / 8e+9
-    g_gb = c_gb * g_scale
-
-    t_gb = (w_mb / 8e+3) + max(c_gb, g_gb)
-
-    output = @sprintf("DFNO_2D (batch=%d) | ~ %.2f MB for weights | ~ %.2f GB for forward pass | ~ %.2f GB for backward pass | Total ~ %.2f GB |", batch, w_mb, c_gb, g_gb, t_gb)
-
-    @info output
 end
