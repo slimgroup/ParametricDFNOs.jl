@@ -42,8 +42,8 @@ trainConfig = DFNO_3D.TrainConfig(
     epochs=epochs,
     x_train=x_train,
     y_train=y_train,
-    x_valid=x_train,
-    y_valid=y_train, # TODO: only for testing overfit. Fix asap
+    x_valid=x_valid,
+    y_valid=y_valid,
     plot_every=5,
     nbatch=nbatch
 )

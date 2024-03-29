@@ -1,4 +1,6 @@
 function _getFigname(config::TrainConfig, additional::Dict)
+    isnothing(config) && return additional
+
     nbatch = config.nbatch
     epochs = config.epochs
     ntrain = size(config.x_train, 3)
@@ -47,7 +49,7 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     close(fig);
 end
 
-function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_plot, y_plot, y_predict; additional=Dict{String,Any}())
+function plotEvaluation(modelConfig::ModelConfig, x_plot, y_plot, y_predict; trainConfig::TrainConfig, additional=Dict{String,Any}())
     spacing = 10
 
     x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nt, modelConfig.nx, modelConfig.ny, modelConfig.nz))

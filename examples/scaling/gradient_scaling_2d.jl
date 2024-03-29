@@ -1,6 +1,5 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n <number_of_tasks> julia examples/scaling/scaling.jl
-# mpiexecjl --project=./ -n 1 julia examples/scaling/gradient_scaling.jl 1 1 1 10 10 10 5
+# mpiexecjl --project=./ -n 1 julia examples/scaling/gradient_scaling_2d.jl 10 10
 
 using Pkg
 Pkg.activate("./")

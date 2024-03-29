@@ -8,25 +8,24 @@ function _dist_value(value, partition)
     return UTILS.dist_tensor(value, size(value), new_partition)
 end
 
-function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD)
+function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD, isLocal=true)
     comm_cart = MPI.Cart_create(comm, partition)
     coords = MPI.Cart_coords(comm_cart)
     rank = MPI.Comm_rank(comm)
     
-    file = projectdir("weights", model_name, filename)
-
+    file = isLocal ? projectdir("weights", model_name, filename) : filename
     saved = load(file)[key]
     for (k, v) in saved
+        haskey(θ, k) && (rank == 0) && (k in keys(θ)) && println("LOADING: ", k)
         haskey(θ, k) && gpu_flag && (θ[k] = v |> gpu)
         haskey(θ, k) && !gpu_flag && (θ[k] = v)
-        haskey(θ, k) && rank == 0 && println("LOADING: ", k)
         if !haskey(θ, k)
             id = _dist_key(k, [0, coords...])
             for (k1, v1) in θ
                 if k1.id == id
+                    rank == 0 && (k1 in keys(θ)) && println("LOADING: ", k1)
                     gpu_flag && (θ[k1] = _dist_value(v, partition) |> gpu)
                     !gpu_flag && (θ[k1] = _dist_value(v, partition))
-                    rank == 0 && println("LOADING: ", k1)
                 end
             end
         end

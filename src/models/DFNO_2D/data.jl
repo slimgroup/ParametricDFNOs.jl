@@ -39,21 +39,25 @@ function loadDistData(config::DataConfig;
         y_indices = (x_coord:x_coord, y_coord:y_coord, nt_start:nt_end, 1:config.ntrain+config.nvalid)
 
         # x_sample is just ntrain + nvalid sized array
+        data_channels = config.modelConfig.nc_in - 3
         x_sample = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
+        x_sample = reshape(x_sample, (data_channels, 1, size(x_sample, 2), size(x_sample, 3) * size(x_sample, 4), size(x_sample, 5)))
 
         # y_sample is nt x ntrain + nvalid 
         y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
 
-        target_zeros = zeros(config.modelConfig.dtype, 1, nt_end-nt_start+1, 1, config.ntrain+config.nvalid)
-
-        # target is 1,t,xy,n and x_sample is 1,x,y,n since x=y=xy=1, you can do the below
+        # target is c,t,xy,n and x_sample is c,x,y,n since x=y=xy=1, you can broadcast for t below
+        target_zeros = zeros(config.modelConfig.dtype, data_channels, nt_end-nt_start+1, 1, config.ntrain+config.nvalid)
         x_sample = target_zeros .+ x_sample
+
+        # target is 1,t,xy,n and x_sample is 1,x,y,n since x=y=xy=1, you can broadcast for everything else here
+        target_zeros = zeros(config.modelConfig.dtype, 1, nt_end-nt_start+1, 1, config.ntrain+config.nvalid)
         t_indices = target_zeros .+ reshape(nt_start:nt_end, (1, :, 1, 1))
         x_indices = target_zeros .+ reshape(x_coord:x_coord, (1, 1, :, 1))
         y_indices = target_zeros .+ reshape(y_coord:y_coord, (1, 1, :, 1))
 
-        x_data[:, :, xy_coord-xy_start+1, :] = cat(x_sample, x_indices, y_indices, t_indices, dims=1)
-        y_data[:, :, xy_coord-xy_start+1, :] = y_sample
+        x_data[:, :, xy_coord-xy_start+1, :] = vec(cat(x_sample, x_indices, y_indices, t_indices, dims=1))
+        y_data[:, :, xy_coord-xy_start+1, :] = vec(y_sample)
     end
 
     # combine c and t dim

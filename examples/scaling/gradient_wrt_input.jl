@@ -1,5 +1,5 @@
 # source $HOME/.bash_profile
-# mpiexecjl --project=./ -n 1 julia examples/scaling/gradient_scaling_3d.jl 10 10 10 10 4
+# mpiexecjl --project=./ -n 1 julia examples/scaling/gradient_wrt_input.jl 10 10 10 10 4
 
 using Pkg
 Pkg.activate("./")
@@ -14,8 +14,8 @@ using Zygote
 using DrWatson
 using ParametricOperators
 using CUDA
+using Flux
 
-# gpu = ParametricOperators.gpu
 MPI.Init()
 
 comm = MPI.COMM_WORLD
@@ -39,6 +39,7 @@ output_size = input_size * model.config.nc_out ÷ model.config.nc_in
 x_sample = rand(modelConfig.dtype, input_size, 1)
 y_sample = rand(modelConfig.dtype, output_size, 1)
 
+gpu_flag && (gpu = ParametricOperators.gpu)
 gpu_flag && (y_sample = y_sample |> gpu)
 
 # GC.enable_logging(true)
@@ -50,7 +51,28 @@ function loss_helper(params)
     return loss
 end
 
-@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
-@time grads_time = @elapsed gradient(params -> loss_helper(params), θ)[1]
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper(params), θ)[1]
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper(params), θ)[1]
+
+function loss_helper_2(params)
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, θ, params), y_sample)
+    return loss
+end
+
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper_2(params), x_sample)[1]
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper_2(params), x_sample)[1]
+
+x1 = x_sample[1:1, :]
+x2 = x_sample[2:end, :]
+
+function loss_helper_3(params)
+    input = cat(params, x2, dims=1)
+    println(typeof(input))
+    global loss = UTILS.dist_loss(DFNO_3D.forward(model, θ, input), y_sample)
+    return loss
+end
+
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper_3(params), x1)[1]
+@time grads_time = @elapsed Flux.gradient(params -> loss_helper_3(params), x1)[1]
 
 MPI.Finalize()

@@ -28,13 +28,12 @@ partition = [1,size]
 nodes, gpus, dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:7])
 config = ARGS[8]
 
-# For scaling tests, use 4 modes, training use 25% modes
+modesx = 8
+modesy = 8
+modesz = 8
+modest = 4
 
-modesx = 4 # max(dimx÷32, 4)
-modesy = 4 # max(dimy÷32, 4)
-modesz = 4 # max(dimz÷32, 4)
-modest = 4 # max(dimt÷32, 4)
-
+# TODO: Fix and test
 (gpus > 64) && (modesy = modesy * 2)
 (gpus > 128) && (modesy = modesy * 2)
 (gpus > 256) && (modesy = modesy * 2)

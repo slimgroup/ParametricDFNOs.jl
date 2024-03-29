@@ -27,11 +27,9 @@ partition = [1,size]
 dimx, dimy, dimz, dimt, nblocks = parse.(Int, ARGS[1:5])
 config = ARGS[6]
 
-# For scaling tests, use 4 modes, training use 25% modes
-
-modesx = 4
-modesy = 4
-modesz = 4
+modesx = 8
+modesy = 8
+modesz = 8
 modest = 4
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
