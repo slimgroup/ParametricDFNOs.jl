@@ -9,7 +9,7 @@
     mx::Int = 8
     my::Int = 8
     mt::Int = 4
-    nblocks::Int = 1
+    nblocks::Int = 4
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 4]
 end
