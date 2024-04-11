@@ -5,8 +5,8 @@
 using Pkg
 Pkg.activate("./")
 
-include("../../src/models/DFNO_3D/DFNO_3D.jl")
-include("../../src/utils.jl")
+include("../src/models/DFNO_3D/DFNO_3D.jl")
+include("../src/utils.jl")
 
 using .DFNO_3D
 using .UTILS

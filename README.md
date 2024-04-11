@@ -4,7 +4,7 @@
 
 The Fourier Neural Operator (FNO) is a neural network designed to approximate solutions to partial differential equations (PDEs), specifically for two-phase flows such as CO2 plume evolution in carbon capture and storage (CCS) processes, atmospheric fields, etc. By transforming inputs to frequency space using spectral convolution operators and leveraging the efficiency of Fourier transforms, FNOs offer a significant speed-up in simulation times compared to traditional methods. This project involves extending FNOs to operate in a distributed fashion for handling large-scale, realistic three-dimensional two-phase flow problems.
 
-We offer support for 2D and 3D time varying problems.
+We offer support for distributed 2D and 3D time varying problems.
 ## Getting Started
 
 ### Dependencies

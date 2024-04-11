@@ -6,7 +6,7 @@ Pkg.activate("./")
 
 # include("../../src/models/DFNO_3D/DFNO_3D.jl")
 include("./grad_test.jl")
-include("../../src/utils.jl")
+include("../src/utils.jl")
 
 # using .DFNO_3D
 using .UTILS
