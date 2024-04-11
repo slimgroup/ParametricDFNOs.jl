@@ -69,3 +69,5 @@ function loadDistData(config::DataConfig;
 
     return x_data[train_indices...], y_data[train_indices...], x_data[valid_indices...], y_data[valid_indices...]
 end
+
+

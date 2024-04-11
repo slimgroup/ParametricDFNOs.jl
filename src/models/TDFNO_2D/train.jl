@@ -44,6 +44,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
     prog = rank == 0 ? Progress(round(Int, ntrain * config.epochs / config.nbatch)) : nothing
 
     for ep = 1:config.epochs
+        println(ep)
         rng2 = Random.seed!(config.seed + ep)
         Base.flush(Base.stdout)
         idx_e = reshape(randperm(rng2, ntrain), config.nbatch, nbatches)
@@ -86,7 +87,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         labels = @strdict p ep Loss_valid Loss
 
         # TODO: control frequency of storage
-        saveWeights(θ, model, additional=labels, comm=comm)
+        # saveWeights(θ, model, additional=labels, comm=comm)
 
         rank > 0 && continue
         
