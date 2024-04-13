@@ -1,3 +1,31 @@
+"""
+    forward(model::Model, θ, x::Any)
+
+Performs the forward pass using the model defined by [`Model`](@ref).
+
+The function applies a series of transformations to the input data `x` using the model parameters `θ` and the configurations within the `model`.
+
+# Arguments
+- `model`: The [Model](@ref) object that contains configurations and parameters for the forward pass.
+- `θ`: The parameters of the model, likely initialized by `initModel`.
+- `x`: Input data that will be passed through the model.
+
+# Returns
+The output of the model after the forward pass, reshaped to the dimensions appropriate for the number of output channels, time steps, and spatial dimensions.
+
+# Details
+The process includes:
+- Reshaping the input and applying lifting operations.
+- Processing through a series of blocks that includes spectral and standard convolutions, followed by batch normalization and non-linear activation functions (ReLU).
+- Final projection to the output channels and application of a double ReLU operation to finalize the forward pass.
+
+# Notes
+This function will move `x` to GPU and perform GPU-enabled computations if `gpu_flag` is set.
+
+# Caution
+The input `x` should have the correct number of elements but does not need to have any particular shape.
+However, incorrect permutation of the input dimensions will lead to incorrect solution operators.
+"""
 function forward(model::Model, θ, x::Any)
      
     input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)

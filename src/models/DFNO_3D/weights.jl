@@ -8,6 +8,23 @@ function _dist_value(value, partition)
     return UTILS.dist_tensor(value, size(value), new_partition)
 end
 
+"""
+    loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD, isLocal=true)
+
+Loads and distributes weights across processes for a parallelized model.
+
+# Arguments
+- `θ`: Dictionary of model parameters to be updated with loaded weights.
+- `filename`: Name or path of the file containing the saved weights.
+- `key`: Key under which the weights are saved in the file.
+- `partition`: The partitioning scheme used for distributed tensor weights.
+- `comm`: MPI communicator for the distributed system (defaults to `MPI.COMM_WORLD`).
+- `isLocal`: Flag indicating whether the file path should be under the generated 'weights' folder. (relative filepath or not)
+
+# Functionality
+- Loads weights from a JLD2 file and distributes them according to the partitioning across MPI ranks.
+- If `gpu_flag` is set, ensures weights are moved to GPU memory.
+"""
 function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD, isLocal=true)
     comm_cart = MPI.Cart_create(comm, partition)
     coords = MPI.Cart_coords(comm_cart)
@@ -32,7 +49,7 @@ function loadWeights!(θ, filename, key, partition; comm=MPI.COMM_WORLD, isLocal
     end
 end
 
-function collectWeights(θ, model; comm=MPI.COMM_WORLD)
+function _collectWeights(θ, model; comm=MPI.COMM_WORLD)
     w_partition = [1, model.config.partition...]
 
     comm_cart = MPI.Cart_create(comm, w_partition)
@@ -63,11 +80,29 @@ function collectWeights(θ, model; comm=MPI.COMM_WORLD)
     return θ_save
 end
 
+"""
+    saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.COMM_WORLD)
+
+Saves the current state of the model's weights to a file, only executed by the rank 0 process.
+
+# Arguments
+- `θ`: The current state of the model's parameters.
+- `model`: The [Model](@ref) instance containing the model configurations.
+- `additional`: Include a Dict of strings that you would like your filename to contain and objects your file should contain
+- `comm`: The MPI communicator to be used for determining the process rank, can usually be ignored.
+
+# Functionality
+- Collects distributed weights from all processes.
+- Saves the weights to a JLD2 file with additional metadata.
+
+# Notes
+- The file is saved with a unique name generated from model parameters and additional metadata.
+"""
 function saveWeights(θ, model::Model; additional=Dict{String,Any}(), comm=MPI.COMM_WORLD)
 
     # TODO: Make this simpler and add more info and remove dependence from model and move to utils
     rank = MPI.Comm_rank(comm)
-    θ_save = collectWeights(θ, model, comm=comm)
+    θ_save = _collectWeights(θ, model, comm=comm)
     rank > 0 && return
 
     lifts = model.lifts

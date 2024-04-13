@@ -1,3 +1,22 @@
+"""
+    TrainConfig
+
+A configuration struct for setting up the training environment.
+
+# Fields
+- `nbatch`: The number of samples per batch.
+- `epochs`: The number of full training cycles through the dataset.
+- `seed`: The random seed for reproducibility of shuffling and initialization.
+- `plot_every`: Frequency of plotting the evaluation metrics (every `n` epochs).
+- `learning_rate`: The step size for the optimizer.
+- `x_train`: Training input data.
+- `y_train`: Training target data.
+- `x_valid`: Validation input data.
+- `y_valid`: Validation target data.
+
+# Usage
+This struct is used to encapsulate all necessary training parameters, including data and hyperparameters, to configure the training loop.
+"""
 @with_kw struct TrainConfig
     nbatch::Int = 2
     epochs::Int = 1
@@ -10,7 +29,34 @@
     y_valid::Any
 end
 
-function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD)
+"""
+    train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD, plotEval::Function=plotEvaluation)
+
+Conducts the training process for a given model using distributed computing and tracks the training and validation loss.
+
+# Arguments
+- `config`: The training configuration settings as specified by the [TrainConfig](@ref) struct.
+- `model`: The neural network model to be trained as specified by the [Model](@ref) struct.
+- `θ`: A dictionary of model parameters to be optimized during training.
+- `comm`: The MPI communicator to be used for distributed training (defaults to `MPI.COMM_WORLD`).
+- `plotEval`: The plotting function called to evaluate training progress (defaults to [plotEvaluation](@ref)).
+
+# Training Procedure
+- The function sets up the optimizer and initializes training and validation data.
+- It goes through the specified number of training epochs, updating model parameters via gradient descent.
+- If the `gpu_flag` is set, computations are performed on a GPU.
+- At specified intervals, the training process is evaluated by plotting the training and validation losses and predicted vs. actual outputs.
+
+# Outputs
+- Updates the model's parameters in-place.
+- Produces plots every epoch to visually evaluate model performance.
+- Saves weights every `2` epochs
+
+# Notes
+- A progress meter will be displayed.
+- Make sure to set up [TrainConfig](@ref) properly
+"""
+function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD, plotEval=plotEvaluation)
 
     rank = MPI.Comm_rank(comm)
     p = MPI.Comm_size(comm)
@@ -111,7 +157,7 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         rank > 0 && continue
         
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
-        plotEvaluation(model.config, x_sample_global, y_sample_global, y_global, trainConfig=config, additional=labels)
+        plotEval(model.config, x_sample_global, y_sample_global, y_global, trainConfig=config, additional=labels)
     end
     labels = @strdict p Loss_valid Loss Time_train Time_overhead nblocks mx my mt nd ntrain nvalid nc_lift
     saveWeights(θ, model, additional=labels, comm=comm)

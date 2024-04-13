@@ -1,3 +1,0 @@
-### API usage for different DFNOs
-
-Coming soon...

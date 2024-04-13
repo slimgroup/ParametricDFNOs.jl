@@ -1,3 +1,23 @@
+"""
+    ModelConfig(;nx::Int=64, ny::Int=64, nt::Int=51, nc_in::Int=4, nc_mid::Int=128, nc_lift::Int=20, nc_out::Int=1, mx::Int=8, my::Int=8, mt::Int=4, nblocks::Int=4, dtype::DataType=Float32, partition::Vector{Int}=[1, 4])
+
+A configuration struct that holds parameters for the [Model](@ref) setup. 
+
+# Fields
+- `nx`: The discretization along the x-dimension.
+- `ny`: The discretization along the y-dimension.
+- `nt`: The discretization along time.
+- `nc_in`: The number of input channels.
+- `nc_mid`: The number of intermediate channels.
+- `nc_lift`: The number of lifted channels.
+- `nc_out`: The number of output channels.
+- `mx`: The size of the model in the x-dimension for Fourier transform.
+- `my`: The size of the model in the y-dimension for Fourier transform.
+- `mt`: The size of the model in time for Fourier transform.
+- `nblocks`: The number of blocks in the model.
+- `dtype`: The data type used for computations, default is `Float32`.
+- `partition`: The partitioning configuration for distributed computing, default is `[1, 4]`.
+"""
 @with_kw struct ModelConfig
     nx::Int = 64
     ny::Int = 64
@@ -14,6 +34,14 @@
     partition::Vector{Int} = [1, 4]
 end
 
+"""
+    Model(config::ModelConfig)
+
+A mutable structure representing the FNO, including configurations, weights, biases, and other parameters.
+
+# Constructor
+This constructor initializes the model's layers and distributes the weights and biases according to the provided [ModelConfig](@ref).
+"""
 mutable struct Model
     config::ModelConfig
     lifts::Any
@@ -119,6 +147,17 @@ mutable struct Model
     end
 end
 
+"""
+    initModel(model::Model)
+
+Initializes the [Model](@ref) by allocating and setting the initial values for the parameters. 
+
+# Arguments
+- `model`: An instance of [Model](@ref) to be initialized.
+
+# Returns
+Returns the initialized parameters `θ` which may be placed on GPU if the global `gpu_flag` is set to `true`.
+"""
 function initModel(model::Model)
     θ = init(model.lifts)
     for operator in Iterators.flatten((model.sconvs, model.convs, model.biases, model.sconv_biases, model.projects))
