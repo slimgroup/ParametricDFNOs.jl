@@ -11,5 +11,6 @@ rawdataset.py
 data/
 out.txt
 movies/
+utilites/
 notes.md
 Manifest.toml
