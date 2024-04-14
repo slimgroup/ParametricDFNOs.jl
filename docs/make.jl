@@ -11,10 +11,10 @@ makedocs(
         "Introduction" => "index.md",
         "Quick Start" => "quickstart.md",
         "Examples" => [
-            "2D Time varying" => "examples/2D.md",
-            "3D Time varying" => "examples/3D.md",
-            "Custom Dataset" => "examples/3D_dataset.md",
-            "Checkpoints" => "examples/checkpoints.md",
+            "2D Forward and Gradient" => "examples/simple_2D.md",
+            "2D Training" => "examples/training_2D.md",
+            "3D Forward and Gradient" => "examples/simple_3D.md",
+            "3D Custom Dataset" => "examples/custom_3D.md",
         ],
         "API" => [
             "2D Time varying" => "api/DFNO_2D.md",

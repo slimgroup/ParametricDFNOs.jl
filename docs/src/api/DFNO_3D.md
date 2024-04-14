@@ -3,7 +3,7 @@
 !!! tip "3D Time varying"
     The implementation allows for discretization along time dimension to be 1 (only 1 time step). But you can also treat time as any other dimension, so this could also be as a generic 4D FNO
 
-## Model Definition
+## 3D Model
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]
@@ -11,7 +11,7 @@ Order  = [:type, :function]
 Pages = ["model.jl"]
 ```
 
-## Forward Pass
+## 3D Forward Pass
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]
@@ -19,7 +19,7 @@ Order  = [:type, :function]
 Pages = ["forward.jl"]
 ```
 
-## Training
+## 3D Training
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]
@@ -27,10 +27,10 @@ Order  = [:type, :function]
 Pages = ["train.jl"]
 ```
 
-## Data Loading
+## 3D Data Loading
 
 !!! warning "Critical component"
-    See [this]() for instructions on how to set it up properly.
+    See [Data Partitioning](@ref) for instructions on how to set it up properly.
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]
@@ -39,7 +39,7 @@ Pages = ["data.jl"]
 ```
 
 !!! tip "Distributed read for complex storage scenarios"
-    View an example of how you can extend this distributed read to a complex storage scheme [here]().
+    View [Custom 3D Time varying FNO](@ref) for an example of how you can extend this distributed read to a complex storage scheme.
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D.UTILS]
@@ -47,7 +47,7 @@ Order  = [:type, :function]
 Pages = ["utils.jl"]
 ```
 
-## Plotting
+## 3D Plotting
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]
@@ -55,7 +55,7 @@ Order  = [:type, :function]
 Pages = ["plot.jl"]
 ```
 
-## Checkpoints
+## 3D Checkpoints
 
 ```@autodocs
 Modules = [ParametricDFNOs.DFNO_3D]

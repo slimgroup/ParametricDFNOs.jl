@@ -36,6 +36,10 @@ using ParametricDFNOs.DFNO_3D
 ```
 
 ### MPI setup
+
+!!! note "MPI Distribution"
+    Make sure you have a functional MPI Distribution set up
+    
 All code must be wrapped in:
 
 ```julia
@@ -46,10 +50,13 @@ MPI.Init()
 MPI.Finalize()
 ```
 
-!!! warning "Change to custom use case"
-    We show the usage for `ParametricDFNOs.DFNO_2D` but the extension to the other FNOs should be as simple as changing the number, any other changes will be documented.
+!!! tip "Change to custom use case"
+    We show the usage for `ParametricDFNOs.DFNO_2D` but the extension to the other FNOs should be as simple as changing the number. Please refer to the API for exact differences.
 
 ### GPU usage
+
+!!! note "Default behavior"
+    By default, the package will be set to use the GPU based the whether the `DFNO_2D_GPU` flag was set during compile time of the package
 
 You can set the GPU flag by using:
 
@@ -64,107 +71,85 @@ global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))
 DFNO_2D.set_gpu_flag(gpu_flag)
 ```
 
-!!! note "Default behavior"
-    By default, the package will be set to use the GPU based the whether the `DFNO_2D_GPU` flag was set during compile time of the package
+!!! warning "Binding GPUs"
+    If you wish to run on multiple GPUs, make sure the GPUs are binded to different tasks. The approach we choose in our examples is to unbind our GPUs on request and assign manually:
 
-## Gradient Computation
-
-!!! warning "Limited AD support"
-    Current support only provided for Zygote.jl
-
-Make sure to include an AD package in your environment
-
-```julia
-using Zygote
-```
-
-Using the example above, one can find the gradient of the weights or your input w.r.t to some objective using a standard AD package:
-
-```julia
-# Gradient w.r.t weights
-θ′ = gradient(θ -> sum(A(θ) * x), θ)
-
-# Gradient w.r.t input
-x′ = gradient(x -> sum(A(θ) * x), x)
-```
-
-## Chaining Operators
-
-We can chain several operators together through multiple ways 
-
-### Compose Operator
-
-Consider two matrices:
-
-```julia
-L = ParMatrix(10, 4)
-R = ParMatrix(10, 4)
-```
-
-We can now chain and parametrize them by:
-
-```julia
-C = L * R'
-θ = init(C)
-```
-
-This allows us to perform several operations such as
-
-```julia
-
-using Zygote
-using LinearAlgebra
-
-x = rand(10)
-C(θ) * x
-gradient(θ -> norm(C(θ) * x), θ)
-```
-
-without ever constructing the full matrix `LR'`, a method more popularly referred to as [LR-decomposition](https://link.springer.com/chapter/10.1007/978-3-662-65458-3_11).
-
-### Kronecker Operator
-
-[Kronecker Product](https://en.wikipedia.org/wiki/Kronecker_product) is a most commonly used to represent the outer product on 2 matrices.
-
-We can use this to describe linearly separable transforms that act along different dimensions on a given input tensor.
-
-For example, consider the following tensor:
-
-```julia
-T = Float32
-x = rand(T, 10, 20, 30)
-```
-
-We now define the transformation that would act along each dimension. In this case, a [Fourier Transform](https://en.wikipedia.org/wiki/Fourier_transform).
-
-#### Fourier Transform Example
-```julia
-Fx = ParDFT(T, 10)
-Fy = ParDFT(Complex{T}, 20)
-Fz = ParDFT(Complex{T}, 30)
-```
-
-We can now chain them together using a Kronecker Product:
-
-```julia
-F = Fz ⊗ Fy ⊗ Fx
-```
-
-Now, we can compute this action on our input by simply doing:
-
-```julia
-F * vec(x)
-```
-
-!!! tip "This can be extended to any parametrized operators"
-    For example, in order to apply a linear transform along the y, z dimension while performing no operation along x, one can do:
     ```julia
-        Sx = ParIdentity(T, 10)
-        Sy = ParMatrix(T, 20, 20)
-        Sz = ParMatrix(T, 30, 30)
+    using CUDA
 
-        S = Sz ⊗ Sy ⊗Sx
-        θ = init(S)
-
-        S(θ) * vec(x)
+    CUDA.device!(rank % 4)
     ```
+
+    which might be different if you have more or less than 4 GPUs per node.
+
+## Data Partitioning
+
+Data is considered to be combined along certain dimensions:
+
+
+## Model Setup
+
+Define a [2D Model](@ref) configuration:
+
+```julia
+modelConfig = DFNO_2D.ModelConfig(nx=20, ny=20, nt=50, mx=4, my=4, mt=4, nblocks=4, partition=partition, dtype=Float32)
+```
+
+Define some random inputs to operate on:
+
+```julia
+input_size = (modelConfig.nc_in * modelConfig.nx * modelConfig.ny * modelConfig.nt) ÷ prod(partition)
+output_size = input_size * modelConfig.nc_out ÷ modelConfig.nc_in
+
+x = rand(modelConfig.dtype, input_size, 1)
+y = rand(modelConfig.dtype, output_size, 1)
+```
+
+### Initializing model
+```julia
+model = DFNO_2D.Model(modelConfig)
+θ = DFNO_2D.initModel(model)
+```
+
+### Forward and backward pass
+
+See [Simple 2D forward and gradient pass](@ref) for a full example.
+
+```julia
+DFNO_2D.forward(model, θ, x)
+```
+
+!!! note "Distributed Loss Function"
+    We provide a distributed relative L2 loss but most distributed loss functions should be straight-forward to build with [`ParametricOperators.jl`](https://github.com/slimgroup/ParametricOperators.jl)
+
+To compute gradient:
+
+```julia
+using Zygote
+using ParametricDFNOs.UTILS
+
+gradient(params -> loss_helper(UTILS.dist_loss(DFNO_2D.forward(model, params, x), y)), θ)[1]
+```
+
+### Training wrapper
+
+We also provide a training wrapper to train out the box. See [Training 2D Time varying FNO](@ref) for a full example.
+
+Define a [2D Training](@ref) configuration:
+
+```julia
+trainConfig = DFNO_2D.TrainConfig(
+    epochs=10,
+    x_train=x_train,
+    y_train=y_train,
+    x_valid=x_valid,
+    y_valid=y_valid,
+    plot_every=1
+)
+```
+
+And train using:
+
+```julia
+DFNO_2D.train!(trainConfig, model, θ)
+```
