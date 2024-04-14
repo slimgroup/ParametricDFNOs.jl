@@ -35,6 +35,12 @@ using ParametricDFNOs.DFNO_2D
 using ParametricDFNOs.DFNO_3D
 ```
 
+We also use `PyPlot`, so you would need to do:
+
+```shell
+python3 -m pip install matplotlib
+```
+
 ### MPI setup
 
 !!! note "MPI Distribution"
