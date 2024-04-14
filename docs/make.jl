@@ -18,7 +18,8 @@ makedocs(
         ],
         "API" => [
             "2D Time varying" => "api/DFNO_2D.md",
-            "3D Time varying" => "api/DFNO_3D.md"],
+            "3D Time varying" => "api/DFNO_3D.md",
+            "Utilites" => "api/UTILS.md",],
         "Future Work" => "future.md",
         "Citation" => "citation.md"
     ]

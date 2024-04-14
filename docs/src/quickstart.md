@@ -82,10 +82,6 @@ DFNO_2D.set_gpu_flag(gpu_flag)
 
     which might be different if you have more or less than 4 GPUs per node.
 
-## Data Partitioning
-
-Data is considered to be combined along certain dimensions:
-
 
 ## Model Setup
 
@@ -131,7 +127,110 @@ using ParametricDFNOs.UTILS
 gradient(params -> loss_helper(UTILS.dist_loss(DFNO_2D.forward(model, params, x), y)), θ)[1]
 ```
 
-### Training wrapper
+## Data Partitioning
+
+We have a [2D Data Loading](@ref) `struct` to store information about our data, consider [Training 2D Time varying FNO](@ref)
+
+```julia
+dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig, 
+                                x_key = "perm",
+                                x_file = perm_store_path_jld2,
+                                y_key="conc",
+                                y_file = conc_store_path_jld2)
+```
+
+Consider the following dimensions:
+
+`c, t, x, y, z` where
+
+```
+x, y, z - Spatial Dimensions
+t - Time Dimension
+c - Channel Dimension
+```
+
+Data is considered to be combined along certain dimensions:
+
+`ct, xy` for `DFNO_2D`
+
+`ctx, yz` for `DFNO_3D`
+
+The partition array which is a two dimensional array specifies across how many workers is a given combined dimension split across.
+
+By default we do:
+
+```julia
+comm = MPI.COMM_WORLD
+pe_count = MPI.Comm_size(comm)
+
+partition = [1, pe_count]
+```
+
+The models are implemented to modify the operators according to the specified partition. We suggest you leave this as it is.
+
+!!! warning "Running into assertion errors"
+    If you run into any assertion errors that the number of workers do not divide the data evenly, please make a github issue
+
+We provide a distributed read wrapper which allows you to read data seamlessly.
+
+Simply implement:
+
+```julia
+
+# Returns tensor of size (in_channels, size(indices)...)
+function dist_read_x_tensor(file_name, key, indices)
+
+# Returns tensor of size (out_channels=1, size(indices)...)
+function dist_read_y_tensor(file_name, key, indices)
+```
+
+!!! note "in channels"
+    The number of `in_channels` you specify at [Model Setup](@ref) is `data_channels + 3` for `DFNO_2D` and  `data_channels + 4` for `DFNO_3D`. This is to account for the grid data we include for each of the dimensions in the FNO.
+
+!!! warning "out channels"
+    Currently, distributed wrapper only supports reading for the case where out channel is 1. You can implement your own read function or wait for a version update
+
+### `DFNO_2D`
+
+Here, `indicies` for the `dist_read_x_tensor` represents 
+```
+(x_start:x_end, y_start:y_end, sample_start:sample_end)
+```
+
+and the `indices` for the `dist_read_y_tensor` represents:
+```
+(x_start:x_end, y_start:y_end, t_start:t_end, sample_start:sample_end)
+```
+
+### `DFNO_3D`
+
+Here, `indicies` for the `dist_read_x_tensor` represents 
+```
+(x_start:x_end, y_start:y_end, z_start:z_end, sample_start:sample_end)
+```
+
+and the `indices` for the `dist_read_y_tensor` represents:
+```
+(x_start:x_end, y_start:y_end, z_start:z_end, t_start:t_end, sample_start:sample_end)
+```
+
+Now you can use `loadDistData` from [2D Data Loading](@ref) or [3D Data Loading](@ref)
+
+This can also be extended to complex storage regime. Consider the following case:
+
+```
+samples/
+├── sample1/
+│   ├── inputs.jld2
+│   └── outputs.jld2
+└── sample2/
+    ├── inputs.jld2
+    └── outputs.jld2
+```
+
+We can do [Custom 3D Time varying FNO](@ref)
+
+## Training wrapper
 
 We also provide a training wrapper to train out the box. See [Training 2D Time varying FNO](@ref) for a full example.
 
