@@ -28,6 +28,7 @@ makedocs(
 # Automatically deploy documentation to gh-pages.
 deploydocs(
     repo = "github.com/slimgroup/ParametricDFNOs.jl.git",
+    push_preview=true,
     devurl = "dev",
     devbranch = "master",
     versions = ["dev" => "dev", "stable" => "v^"],
