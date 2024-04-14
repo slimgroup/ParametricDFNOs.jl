@@ -38,6 +38,8 @@ DFNO_2D.gpu_flag && (y_sample = cu(y_sample))
 @time y = DFNO_2D.forward(model, θ, x_sample)
 @time y = DFNO_2D.forward(model, θ, x_sample)
 
+MPI.Barrier()
+
 function loss_helper(params)
     global loss = UTILS.dist_loss(DFNO_2D.forward(model, params, x_sample), y_sample)
     return loss
