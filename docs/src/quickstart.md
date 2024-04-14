@@ -1,12 +1,12 @@
 ## Installation
 
-Add `ParametricOperators.jl` as a dependency to your environment.
+Add `ParametricDFNOs.jl` as a dependency to your environment.
 
 To add, either do:
 
 ```julia
 julia> ]
-(v1.9) add ParametricOperators
+(v1.9) add ParametricDFNOs
 ```
 
 OR
@@ -14,39 +14,62 @@ OR
 ```julia
 julia> using Pkg
 julia> Pkg.activate("path/to/your/environment")
-julia> Pkg.add("ParametricOperators")
+julia> Pkg.add("ParametricDFNOs")
 ```
 
-## Simple Operator
+!!! note "Jump right in"
+    To get started, you can also try running some [examples](https://github.com/turquoisedragon2926/ParametricDFNOs.jl-Examples)
 
-Make sure to include the package in your environment
+## Setup
+
+Make sure to include the right dependency you plan on using in your environment
 
 ```julia
-using ParametricOperators
+using MPI
+using CUDA
+
+# If you plan on using the 2D Time varying FNO or 3D FNO.
+using ParametricDFNOs.DFNO_2D
+
+# If you plan on using the 3D Time varying FNO or 4D FNO.
+using ParametricDFNOs.DFNO_3D
 ```
 
-Lets start by defining a Matrix Operator of size `10x10`:
+### MPI setup
+All code must be wrapped in:
 
 ```julia
-A = ParMatrix(10, 10)
+MPI.Init()
+
+### Code here ###
+
+MPI.Finalize()
 ```
 
-Now, we parametrize our operator with some weights `θ`:
+!!! warning "Change to custom use case"
+    We show the usage for `ParametricDFNOs.DFNO_2D` but the extension to the other FNOs should be as simple as changing the number, any other changes will be documented.
+
+### GPU usage
+
+You can set the GPU flag by using:
+
+```shell
+export DFNO_2D_GPU=1
+```
+
+and 
 
 ```julia
-θ = init(A)
+global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))
+DFNO_2D.set_gpu_flag(gpu_flag)
 ```
 
-We can now apply our operator on some random input:
-
-```julia
-x = rand(10)
-A(θ) * x
-```
+!!! note "Default behavior"
+    By default, the package will be set to use the GPU based the whether the `DFNO_2D_GPU` flag was set during compile time of the package
 
 ## Gradient Computation
 
-!!! note "Limited AD support"
+!!! warning "Limited AD support"
     Current support only provided for Zygote.jl
 
 Make sure to include an AD package in your environment

@@ -6,23 +6,6 @@ using ParametricOperators
 
 cpu = ParametricOperators.cpu
 
-"""
-    set_gpu_flag(flag::Bool)
-
-Function to set the gpu_flag and update device accordingly. Should be set at the beginning of your script. All FNO computatation following this will use the device set.
-"""
-function set_gpu_flag(flag::Bool; comm=MPI.COMM_WORLD)
-    global gpu_flag = flag
-    rank = MPI.Comm_rank(comm)
-    if gpu_flag
-        global gpu = ParametricOperators.gpu
-        rank == 0 && @info "Switched to GPU"
-    else
-        global cpu = ParametricOperators.cpu
-        rank == 0 && @info "Switched to CPU"
-    end
-end
-
 function unique_range(ranges)
     unique_ranges = unique(vcat(ranges...))
     return isempty(unique_ranges) ? [1:1] : ranges
@@ -150,6 +133,6 @@ function get_dist_indices(total_size, total_workers, coord)
     return start_index, end_index
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range, set_gpu_flag
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range
 
 end

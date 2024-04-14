@@ -12,7 +12,7 @@ rank = MPI.Comm_rank(comm)
 pe_count = MPI.Comm_size(comm)
 
 global gpu_flag = parse(Bool, get(ENV, "DFNO_3D_GPU", "0"))
-UTILS.set_gpu_flag(gpu_flag)
+DFNO_3D.set_gpu_flag(gpu_flag)
 
 # Julia requires you to manually assign the gpus, modify to your case.
 DFNO_3D.gpu_flag && (CUDA.device!(rank % 4))

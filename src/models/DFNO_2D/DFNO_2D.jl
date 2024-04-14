@@ -32,6 +32,23 @@ include("../../utils.jl")
 
 using .UTILS
 
-export Model, ModelConfig, DataConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, print_storage_complexity, loadDistData, gpu_flag
+"""
+    set_gpu_flag(flag::Bool)
+
+Function to set the gpu_flag and update device accordingly. Should be set at the beginning of your script. All FNO computatation following this will use the device set.
+"""
+function set_gpu_flag(flag::Bool; comm=MPI.COMM_WORLD)
+    global gpu_flag = flag
+    rank = MPI.Comm_rank(comm)
+    if gpu_flag
+        global gpu = ParametricOperators.gpu
+        rank == 0 && @info "DFNO_2D Switched to GPU"
+    else
+        global cpu = ParametricOperators.cpu
+        rank == 0 && @info "DFNO_2D Switched to CPU"
+    end
+end
+
+export Model, ModelConfig, DataConfig, TrainConfig, initModel, loadData, train, plotLoss, plotEvaluation, loss, saveWeights, loadWeights!, print_storage_complexity, loadDistData, gpu_flag, set_gpu_flag
 
 end
