@@ -11,14 +11,15 @@ cpu = ParametricOperators.cpu
 
 Function to set the gpu_flag and update device accordingly. Should be set at the beginning of your script. All FNO computatation following this will use the device set.
 """
-function set_gpu_flag(flag::Bool)
+function set_gpu_flag(flag::Bool; comm=MPI.COMM_WORLD)
     global gpu_flag = flag
+    rank = MPI.Comm_rank(comm)
     if gpu_flag
         global gpu = ParametricOperators.gpu
-        @info "Switched to GPU"
+        rank == 0 && @info "Switched to GPU"
     else
         global cpu = ParametricOperators.cpu
-        @info "Switched to CPU"
+        rank == 0 && @info "Switched to CPU"
     end
 end
 
