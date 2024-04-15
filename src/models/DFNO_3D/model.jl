@@ -83,10 +83,10 @@ mutable struct Model
             fourier_t = ParDFT(T, config.nt)
 
             # Build restrictions to low-frequency modes
-            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:mx, config.nx-mx+1:config.nx])
-            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:my, config.ny-my+1:config.ny])
-            restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:mz, config.nz-mz+1:config.nz])
-            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:mt])
+            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), unique_range([1:mx, config.nx-mx+1:config.nx]))
+            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), unique_range([1:my, config.ny-my+1:config.ny]))
+            restrict_z = ParRestriction(Complex{T}, Range(fourier_z), unique_range([1:mz, config.nz-mz+1:config.nz]))
+            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), unique_range([1:mt]))
     
             input_shape = (config.nc_lift, config.mt*config.mx, config.my*config.mz)
             weight_shape = (config.nc_lift, config.nc_lift, config.mt*config.mx, config.my*config.mz)

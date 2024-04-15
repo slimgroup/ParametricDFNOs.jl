@@ -44,7 +44,7 @@ function forward(model::Model, θ, x::Any)
 
        x = vec(x1) + vec(x2)
        x = reshape(x, (model.config.nc_lift, model.config.nt * model.config.nx ÷ model.config.partition[1], model.config.ny * model.config.nz ÷ model.config.partition[2], :))
-    #    x = reshape(x, (model.config.nc_lift, :))
+       # TODO*: x = reshape(x, (model.config.nc_lift, :))
 
        N = ndims(x)
        ϵ = 1f-5
@@ -64,15 +64,13 @@ function forward(model::Model, θ, x::Any)
 
        x = (x .- μ) ./ sqrt.(σ² .+ ϵ)
 
-    #    # https://arxiv.org/pdf/1502.03167.pdf
-    #    scale = model.γs[i](θ) / sqrt.(σ² .+ ϵ)
-    #    bias = -scale .* μ + model.βs[i](θ)
-    #    x = scale .* x .+ bias
+       # TODO: https://arxiv.org/pdf/1502.03167.pdf
 
        if i < model.config.nblocks
            x = relu.(x)
        end
    end
+   # TODO*
    x = reshape(x, (model.config.nc_lift, :))
 
    x = (model.projects[1](θ) * x) + model.biases[2](θ)
