@@ -27,7 +27,7 @@ config = ARGS[8]
 modesx = 16
 modesy = 4
 modesz = 4
-modest = 2
+modest = 8
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
 
