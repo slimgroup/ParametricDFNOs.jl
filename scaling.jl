@@ -1,4 +1,4 @@
-include("src/models/DFNO_2D/DFNO_2D.jl")
+include("src/models/DFNO_3D/DFNO_3D.jl")
 include("src/utils.jl")
 
 using .DFNO_3D
