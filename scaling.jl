@@ -1,8 +1,8 @@
 # source $HOME/.bash_profile
 # mpiexecjl --project=./ -n <number_of_tasks> julia examples/scaling/scaling.jl
 
-include("src/models/DFNO_3D/DFNO_3D.jl")
-include("src/utils.jl")
+include("../dfno/src/models/DFNO_3D/DFNO_3D.jl")
+include("../dfno/src/utils.jl")
 
 using .DFNO_3D
 using .UTILS
