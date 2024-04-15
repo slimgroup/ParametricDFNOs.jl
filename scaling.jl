@@ -29,7 +29,6 @@ modesy = 2
 modesz = 4
 modest = 8
 
-(gpus > 128) && (modesx = modesx * 2)
 (gpus > 256) && (modesx = modesx * 2)
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
