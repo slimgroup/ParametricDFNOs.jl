@@ -30,10 +30,14 @@ config = ARGS[8]
 
 # For scaling tests, use 4 modes, training use 25% modes
 
-modesx = 4
-modesy = 4
-modesz = 4
-modest = 8
+modesx = 4 # max(dimx÷32, 4)
+modesy = 4 # max(dimy÷32, 4)
+modesz = 4 # max(dimz÷32, 4)
+modest = 4 # max(dimt÷32, 4)
+
+(gpus > 64) && (modesy = modesy * 2)
+(gpus > 128) && (modesy = modesy * 2)
+(gpus > 256) && (modesy = modesy * 2)
 
 modelConfig = DFNO_3D.ModelConfig(nx=dimx, ny=dimy, nz=dimz, nt=dimt, mx=modesx, my=modesy, mz=modesz, mt=modest, nblocks=nblocks, partition=partition)
 
@@ -65,5 +69,14 @@ if config !== "weak_forward"
 end
 
 final_dict = @strdict nodes gpus dimx dimy dimz dimt y_time grads_time config
+
+if rank == 0
+    mkpath(projectdir("examples", "scaling", "results"))
+    @tagsave(
+        projectdir("examples", "scaling", "results", savename(final_dict, "jld2"; digits=6)),
+        final_dict;
+        safe=true
+    )
+end
 
 MPI.Finalize()
