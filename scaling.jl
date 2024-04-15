@@ -30,9 +30,9 @@ config = ARGS[8]
 
 # For scaling tests, use 4 modes, training use 25% modes
 
-modesx = 4 # max(dimx÷32, 4)
-modesy = 4 # max(dimy÷32, 4)
-modesz = 4 # max(dimz÷32, 4)
+modesx = 8 # max(dimx÷32, 4)
+modesy = 8 # max(dimy÷32, 4)
+modesz = 8 # max(dimz÷32, 4)
 modest = 4 # max(dimt÷32, 4)
 
 (gpus > 64) && (modesy = modesy * 2)
