@@ -81,23 +81,15 @@ mutable struct Model
             fourier_y = ParDFT(Complex{T}, config.ny)
             fourier_z = ParDFT(Complex{T}, config.nz)
             fourier_t = ParDFT(T, config.nt)
+
+            # Build restrictions to low-frequency modes
+            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:mx, config.nx-mx+1:config.nx])
+            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:my, config.ny-my+1:config.ny])
+            restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:mz, config.nz-mz+1:config.nz])
+            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:mt])
     
-            restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:config.mx, config.nx-config.mx+1:config.nx])
-            restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:config.my, config.ny-config.my+1:config.ny])
-            restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:config.mz, config.nz-config.mz+1:config.nz])
-            restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:config.mt])
-    
-            input_shape = (config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
-            weight_shape = (config.nc_lift, config.nc_lift, config.mt*(2*config.mx), (2*config.my)*(2*config.mz))
-    
-            # # Build restrictions to low-frequency modes
-            # restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:mx, config.nx-mx+1:config.nx])
-            # restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:my, config.ny-my+1:config.ny])
-            # restrict_z = ParRestriction(Complex{T}, Range(fourier_z), [1:mz, config.nz-mz+1:config.nz])
-            # restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:mt])
-    
-            # input_shape = (config.nc_lift, config.mt*config.mx, config.my*config.mz)
-            # weight_shape = (config.nc_lift, config.nc_lift, config.mt*config.mx, config.my*config.mz)
+            input_shape = (config.nc_lift, config.mt*config.mx, config.my*config.mz)
+            weight_shape = (config.nc_lift, config.nc_lift, config.mt*config.mx, config.my*config.mz)
     
             input_order = (1, 2, 3)
             weight_order = (1, 4, 2, 3)
