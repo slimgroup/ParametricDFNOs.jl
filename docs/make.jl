@@ -3,19 +3,23 @@ using ParametricDFNOs
 
 makedocs(
     sitename = "ParametricDFNOs.jl",
+    doctest=false, clean=true,
+    authors="Richard Rex",
     format = Documenter.HTML(),
-    # modules = [ParametricOperators],
+    modules = [ParametricDFNOs],
     pages=[
         "Introduction" => "index.md",
         "Quick Start" => "quickstart.md",
-        "Distribution" => "distribution.md",
         "Examples" => [
-            "3D FFT" => "examples/3D_FFT.md",
-            "Distributed 3D FFT" => "examples/3D_DFFT.md",
-            "3D Conv" => "examples/3D_Conv.md",
-            "Distributed 3D Conv" => "examples/3D_DConv.md",
+            "2D Forward and Gradient" => "examples/simple_2D.md",
+            "2D Training" => "examples/training_2D.md",
+            "3D Forward and Gradient" => "examples/simple_3D.md",
+            "3D Custom Dataset" => "examples/custom_3D.md",
         ],
-        "API" => "api.md",
+        "API" => [
+            "2D Time varying" => "api/DFNO_2D.md",
+            "3D Time varying" => "api/DFNO_3D.md",
+            "Utilites" => "api/UTILS.md",],
         "Future Work" => "future.md",
         "Citation" => "citation.md"
     ]
@@ -24,6 +28,8 @@ makedocs(
 # Automatically deploy documentation to gh-pages.
 deploydocs(
     repo = "github.com/slimgroup/ParametricDFNOs.jl.git",
+    push_preview=true,
     devurl = "dev",
-    devbranch = "release",
+    devbranch = "master",
+    versions = ["dev" => "dev", "stable" => "v^"],
 )

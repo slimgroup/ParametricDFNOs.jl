@@ -1,11 +1,11 @@
 ### ParametricDFNOs.jl
 
-`ParametricDFNOs.jl` is an library designed for training large scale Fourier Neural Operators. It is network that is primarily used to learn solution operators to PDE systems (Zongyi Li, et al., [2020](https://arxiv.org/abs/2010.08895)). We adopt a model parallel architecture (Grady et al., [2022](https://arxiv.org/pdf/2204.01205.pdf)) to offer a clean and easy to use implementation of Distributed Fourier Neural Operators in Julia.
+`ParametricDFNOs.jl` is an library designed for training large scale Fourier Neural Operators on multiple nodes. It is network that is primarily used to learn solution operators to PDE systems (Zongyi Li, et al., [2020](https://arxiv.org/abs/2010.08895)). We adopt a model parallel architecture (Grady et al., [2022](https://arxiv.org/pdf/2204.01205.pdf)) to offer a clean and easy to use implementation of Distributed Fourier Neural Operators in Julia.
 
 !!! note "Acknowledgement"
-    [`ParametricDFNOs.jl`](https://github.com/slimgroup/ParametericDFNOs.jl) is a library built on top of [`ParametricOperators.jl`](https://github.com/slimgroup/ParametricOperators.jl), a kronecker based framework that allows for machine learning on large scale data
+    [`ParametricDFNOs.jl`](https://github.com/slimgroup/ParametericDFNOs.jl) is a library built on top of [`ParametricOperators.jl`](https://github.com/slimgroup/ParametricOperators.jl), a kronecker based framework that allows for efficient machine learning on large scale data
 
-Read our paper [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ).
+Read our paper [here](https://www.youtube.com/watch?v=xvFZjo5PgG0).
 
 ### Authors
 

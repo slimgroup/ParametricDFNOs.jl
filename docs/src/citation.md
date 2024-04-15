@@ -1,6 +1,6 @@
 ### Citation
 
-If you use `ParametricOperators.jl`, please cite the following:
+If you use `ParametricDFNOs.jl`, please cite the following:
 ```
 @presentation {rex2023ML4SEISMIClsp,
 	title = {Large-scale parametric PDE approximations with model-parallel Fourier neural operators},

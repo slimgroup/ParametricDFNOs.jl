@@ -49,6 +49,21 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     close(fig);
 end
 
+"""
+    plotEvaluation(modelConfig::ModelConfig, x_plot, y_plot, y_predict; trainConfig::TrainConfig, additional::Dict{String,Any} = Dict{String,Any}())
+
+Generates a plots comparing the true and predicted values along with the input data and the absolute difference magnified by a factor of 5 along the time dimension.
+
+# Arguments
+- `modelConfig`: A [ModelConfig](@ref) struct specifying the dimensions and parameters of the model.
+- `x_plot`: Input data to the model.
+- `y_plot`: True output data from the model.
+- `y_predict`: Predicted output data from the model.
+- `trainConfig`: An optional [TrainConfig](@ref) struct containing training configurations, used for constructing the filename for the plot.
+- `additional`: An optional dictionary of additional objects that are added to the save file name.
+
+This is a specific plotting function used for a 2 phase fluid flow problem, you can override this by passing your own plotting code that follows this method signature to [`train!`](@ref)
+"""
 function plotEvaluation(modelConfig::ModelConfig, x_plot, y_plot, y_predict; trainConfig::TrainConfig, additional=Dict{String,Any}())
 
     x_plot = reshape(x_plot, (modelConfig.nc_in, modelConfig.nt, modelConfig.nx, modelConfig.ny))

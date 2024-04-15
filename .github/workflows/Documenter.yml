@@ -13,6 +13,12 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: '1.9.4'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Ensures that Python 3.x is used
+      - name: Install Python dependencies
+        run: python3 -m pip install matplotlib
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy
