@@ -101,8 +101,9 @@ mutable struct Model
             
             push!(weight_mixes, weight_mix)
             
-            weight_mix = distribute(weight_mix, [1, config.partition...])
-            restrict_dft = distribute(restrict_dft, config.partition)
+            # Reverse partition to skip the all-to-all operation that would happend otherwise
+            restrict_dft = distribute(restrict_dft, config.partition, reverse(config.partition))
+            weight_mix = distribute(weight_mix, [1, reverse(config.partition)...])
     
             sconv = restrict_dft' * weight_mix * restrict_dft
     
