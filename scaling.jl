@@ -1,9 +1,6 @@
 # source $HOME/.bash_profile
 # mpiexecjl --project=./ -n <number_of_tasks> julia examples/scaling/scaling.jl
 
-using Pkg
-Pkg.activate("./")
-
 include("src/models/DFNO_3D/DFNO_3D.jl")
 include("src/utils.jl")
 
