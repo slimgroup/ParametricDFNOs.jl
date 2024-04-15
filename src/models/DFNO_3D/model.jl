@@ -105,6 +105,8 @@ mutable struct Model
             restrict_dft = distribute(restrict_dft, config.partition, reverse(config.partition))
             weight_mix = distribute(weight_mix, [1, reverse(config.partition)...])
 
+            println(weight_mix)
+            
             # restrict_dft = distribute(restrict_dft, config.partition)
             # weight_mix = distribute(weight_mix, [1, config.partition...])
     
