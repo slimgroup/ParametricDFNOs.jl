@@ -1,5 +1,8 @@
-using ParametricDFNOs.DFNO_3D
-using ParametricDFNOs.UTILS
+include("src/models/DFNO_2D/DFNO_2D.jl")
+include("src/utils.jl")
+
+using .DFNO_3D
+using .UTILS
 using MPI
 using Zygote
 using DrWatson
