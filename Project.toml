@@ -28,10 +28,10 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-CUDA = "5.2.0"
+CUDA = "3.0.0, 5.2.0"
 DrWatson = "2.14.1"
 FileIO = "1.16.2"
-Flux = "0.14.13"
+Flux = "0.12.10, 0.14.13"
 HDF5 = "0.17.1"
 IJulia = "1.24.2"
 JLD2 = "0.4.46"
