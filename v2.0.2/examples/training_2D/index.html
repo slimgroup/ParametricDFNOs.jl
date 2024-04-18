@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>2D Training · ParametricDFNOs.jl</title><meta name="title" content="2D Training · ParametricDFNOs.jl"/><meta property="og:title" content="2D Training · ParametricDFNOs.jl"/><meta property="twitter:title" content="2D Training · ParametricDFNOs.jl"/><meta name="description" content="Documentation for ParametricDFNOs.jl."/><meta property="og:description" content="Documentation for ParametricDFNOs.jl."/><meta property="twitter:description" content="Documentation for ParametricDFNOs.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="ParametricDFNOs.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">ParametricDFNOs.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../quickstart/">Quick Start</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../simple_2D/">2D Forward and Gradient</a></li><li class="is-active"><a class="tocitem" href>2D Training</a></li><li><a class="tocitem" href="../simple_3D/">3D Forward and Gradient</a></li><li><a class="tocitem" href="../custom_3D/">3D Custom Dataset</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api/DFNO_2D/">2D Time varying</a></li><li><a class="tocitem" href="../../api/DFNO_3D/">3D Time varying</a></li><li><a class="tocitem" href="../../api/UTILS/">Utilites</a></li></ul></li><li><a class="tocitem" href="../../future/">Future Work</a></li><li><a class="tocitem" href="../../citation/">Citation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>2D Training</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>2D Training</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/slimgroup/ParametricDFNOs.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/slimgroup/ParametricDFNOs.jl/blob/master/docs/src/examples/training_2D.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h3 id="Training-2D-Time-varying-FNO"><a class="docs-heading-anchor" href="#Training-2D-Time-varying-FNO">Training 2D Time varying FNO</a><a id="Training-2D-Time-varying-FNO-1"></a><a class="docs-heading-anchor-permalink" href="#Training-2D-Time-varying-FNO" title="Permalink"></a></h3><div class="admonition is-info"><header class="admonition-header">Jump right in</header><div class="admonition-body"><p>To get started, you can run some <a href="https://github.com/turquoisedragon2926/ParametricDFNOs.jl-Examples">examples</a></p></div></div><p>Make sure to add necessary dependencies. You might also need to load a proper MPI implementation based on your hardware.</p><pre><code class="language-julia hljs">julia&gt; ]
+(v1.9) activate /path/to/your/environment 
+(venv) add JLD2 FileIO MAT MPI CUDA ParametricDFNOs</code></pre><div class="admonition is-warning"><header class="admonition-header">To run on multiple GPUs</header><div class="admonition-body"><p>If you wish to run on multiple GPUs, make sure the GPUs are binded to different tasks. The approach we use is to unbind our GPUs on request and assign manually:</p><pre><code class="language-julia hljs">CUDA.device!(rank % 4)</code></pre><p>which might be different if you have more or less than 4 GPUs per node. Also, make sure your MPI distribution is functional.</p></div></div><pre><code class="language-julia hljs">using MPI
+using CUDA
+using ParametricDFNOs.DFNO_2D
+using ParametricDFNOs.UTILS
+using JLD2, FileIO, MAT
+
+MPI.Init()
+
+comm = MPI.COMM_WORLD
+rank = MPI.Comm_rank(comm)
+pe_count = MPI.Comm_size(comm)
+
+global gpu_flag = parse(Bool, get(ENV, &quot;DFNO_2D_GPU&quot;, &quot;0&quot;))
+DFNO_2D.set_gpu_flag(gpu_flag)
+
+# Julia requires you to manually assign the gpus, modify to your case.
+DFNO_2D.gpu_flag &amp;&amp; (CUDA.device!(rank % 4))
+partition = [1, pe_count]
+
+modelConfig = DFNO_2D.ModelConfig(nblocks=4, partition=partition)
+
+### Setup example dataset ###
+
+perm_path_mat = &quot;data/DFNO_2D/perm_gridspacing15.0.mat&quot;
+conc_path_mat = &quot;data/DFNO_2D/conc_gridspacing15.0.mat&quot;
+perm_store_path_jld2 = &quot;data/DFNO_2D/perm_gridspacing15.0.jld2&quot;
+conc_store_path_jld2 = &quot;data/DFNO_2D/conc_gridspacing15.0.jld2&quot;
+
+# TODO: Host a .jld2 file with correct dimensions
+# Check if .jld2 files already exist and skip processing if they do
+if isfile(perm_store_path_jld2) &amp;&amp; isfile(conc_store_path_jld2)
+    rank == 0 &amp;&amp; println(&quot;JLD2 files already exist, skipping processing.&quot;)
+elseif rank == 0
+    ensure_directory = path -&gt; isdir(path) || mkpath(path)
+    ensure_downloaded = (url, path) -&gt; isfile(path) || run(`wget $url -q -O $path`)
+
+    # Ensure necessary directories exist
+    ensure_directory(dirname(perm_path_mat))
+    ensure_directory(dirname(perm_store_path_jld2))
+    
+    # Ensure .mat files are downloaded
+    ensure_downloaded(&quot;https://www.dropbox.com/s/o35wvnlnkca9r8k/perm_gridspacing15.0.mat&quot;, perm_path_mat)
+    ensure_downloaded(&quot;https://www.dropbox.com/s/mzi0xgr0z3l553a/conc_gridspacing15.0.mat&quot;, conc_path_mat)
+
+    # Load .mat files
+    perm = matread(perm_path_mat)[&quot;perm&quot;];
+    conc = matread(conc_path_mat)[&quot;conc&quot;];
+
+    conc = permutedims(conc, [2, 3, 1, 4])
+
+    # Save data to .jld2 format
+    @save perm_store_path_jld2 perm
+    @save conc_store_path_jld2 conc
+end
+
+MPI.Barrier(comm)
+
+#############################
+
+dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig, 
+                                x_key = &quot;perm&quot;,
+                                x_file = perm_store_path_jld2,
+                                y_key=&quot;conc&quot;,
+                                y_file=conc_store_path_jld2)
+
+x_train, y_train, x_valid, y_valid = DFNO_2D.loadDistData(dataConfig)
+
+trainConfig = DFNO_2D.TrainConfig(
+    epochs=10,
+    x_train=x_train,
+    y_train=y_train,
+    x_valid=x_valid,
+    y_valid=y_valid,
+    plot_every=1
+)
+
+model = DFNO_2D.Model(modelConfig)
+θ = DFNO_2D.initModel(model)
+
+DFNO_2D.train!(trainConfig, model, θ)
+
+MPI.Finalize()</code></pre><p>If you have <a href="https://juliaparallel.org/MPI.jl/stable/usage/#Installation"><code>mpiexecjl</code></a> set up, you can run the above by doing:</p><pre><code class="language-shell hljs">mpiexecjl --project=/path/to/your/environment -n NTASKS julia code_above.jl</code></pre><p>OR if you have a HPC cluster with <a href="https://slurm.schedmd.com/documentation.html"><code>slurm</code></a> set up, you can do:</p><pre><code class="language-shell hljs">salloc --gpus=NTASKS --time=01:00:00 --ntasks=NTASKS --gpus-per-task=1 --gpu-bind=none
+srun julia --project=/path/to/your/environment code_above.jl</code></pre><div class="admonition is-warning"><header class="admonition-header">Allocation</header><div class="admonition-body"><p>Your <code>salloc</code> might look different based on your HPC cluster</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_2D/">« 2D Forward and Gradient</a><a class="docs-footer-nextpage" href="../simple_3D/">3D Forward and Gradient »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.0 on <span class="colophon-date" title="Thursday 18 April 2024 15:20">Thursday 18 April 2024</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
