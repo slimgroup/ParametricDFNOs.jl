@@ -1,13 +1,54 @@
+"""
+    DataConfig
+
+A struct for configuring the data loading process for model training and validation.
+
+# Fields
+- `ntrain`: Number of training samples.
+- `nvalid`: Number of validation samples.
+- `x_key`: Key under which input (X) data is stored in the JLD2 file.
+- `x_file`: Path to the file containing input (X) data.
+- `y_key`: Key under which output (Y) data is stored in the JLD2 file.
+- `y_file`: Path to the file containing output (Y) data.
+- `modelConfig`: An instance of [ModelConfig](@ref) that contains model-specific configurations.
+
+# Description
+This struct stores paths and keys for data files, along with the counts of training and validation samples,
+to facilitate data preparation and loading in a distributed computing environment. It is tightly coupled with the model's configuration,
+especially for partitioning the data across different processing nodes.
+"""
 @with_kw struct DataConfig
     ntrain::Int = 1000
     nvalid::Int = 100
-    perm_key::Any = "perm"
-    perm_file::String = datadir(model_name, "perm_gridspacing15.0.jld2")
-    conc_key::Any = "conc"
-    conc_file::String = datadir(model_name, "conc_gridspacing15.0.jld2")
+    x_key::Any = "perm"
+    x_file::String = datadir(model_name, "perm_gridspacing15.0.jld2")
+    y_key::Any = "conc"
+    y_file::String = datadir(model_name, "conc_gridspacing15.0.jld2")
     modelConfig::ModelConfig
 end
 
+"""
+    loadDistData(config::DataConfig; dist_read_x_tensor=UTILS.dist_read_tensor, dist_read_y_tensor=UTILS.dist_read_tensor, comm=MPI.COMM_WORLD)
+
+Loads and distributes training and validation data across processes for distributed training.
+
+# Arguments
+- `config`: An instance of [DataConfig](@ref) which holds configuration for data loading.
+- `dist_read_x_tensor`: Function to read the distributed x tensors (defaults to [`dist_read_tensor`](@ref)).
+- `dist_read_y_tensor`: Function to read the distributed y tensors (defaults to [`dist_read_tensor`](@ref)).
+- `comm`: MPI communicator used for distributed data loading (defaults to `MPI.COMM_WORLD`).
+
+# Functionality
+- Initializes MPI communication to distribute data according to the model's partitioning scheme.
+- Loads input and output data from specified files and keys, and distributes them according to the data partitioning logic defined in the model configuration.
+- Prepares and separates the data into training and validation sets.
+
+# Returns
+- Four arrays: Training inputs, training outputs, validation inputs, and validation outputs, each formatted for the distributed training process.
+- `x_train, y_train, x_valid, y_valid`
+
+This function manages the distribution and partitioning of large datasets across multiple nodes in a parallel computing environment, using MPI for communication. It is essential for ensuring that data is appropriately sliced and distributed to match the computational architecture and memory constraints.
+"""
 function loadDistData(config::DataConfig;
     dist_read_x_tensor=UTILS.dist_read_tensor,
     dist_read_y_tensor=UTILS.dist_read_tensor,
@@ -46,11 +87,11 @@ function loadDistData(config::DataConfig;
         data_channels = config.modelConfig.nc_in - 4
 
         # 1,x,y,z,n -> 1,1,x,yz,n
-        x_sample = dist_read_x_tensor(config.perm_file, config.perm_key, x_indices)
+        x_sample = dist_read_x_tensor(config.x_file, config.x_key, x_indices)
         x_sample = reshape(x_sample, (data_channels, 1, size(x_sample, 2), size(x_sample, 3) * size(x_sample, 4), size(x_sample, 5)))
 
         # 1,x,y,z,t,n -> 1,t,x,y,z,n -> 1,tx,yz,n
-        y_sample = dist_read_y_tensor(config.conc_file, config.conc_key, y_indices)
+        y_sample = dist_read_y_tensor(config.y_file, config.y_key, y_indices)
         y_sample = permutedims(y_sample, [1,5,2,3,4,6])
         y_sample = reshape(y_sample, (config.modelConfig.nc_out, size(y_sample, 2) * size(y_sample, 3), size(y_sample, 4) * size(y_sample, 5), size(y_sample, 6)))
 

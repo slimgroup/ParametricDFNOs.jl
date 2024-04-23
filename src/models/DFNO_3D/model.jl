@@ -1,3 +1,26 @@
+"""
+    ModelConfig(;nx::Int=64, ny::Int=64, nz::Int=64, nt::Int=51, nc_in::Int=5, nc_mid::Int=128, nc_lift::Int=20, nc_out::Int=1, mx::Int=8, my::Int=8, mz::Int=8, mt::Int=4, nblocks::Int=4, dtype::DataType=Float32, partition::Vector{Int}=[1, 8], relu01::Bool=true)
+
+A configuration struct that holds parameters for the [Model](@ref) setup. 
+
+# Fields
+- `nx`: The discretization along the x-dimension.
+- `ny`: The discretization along the y-dimension.
+- `nz`: The discretization along the z-dimension.
+- `nt`: The discretization along time.
+- `nc_in`: The number of input channels.
+- `nc_mid`: The number of intermediate channels.
+- `nc_lift`: The number of lifted channels.
+- `nc_out`: The number of output channels.
+- `mx`: The size of the model in the x-dimension for Fourier transform.
+- `my`: The size of the model in the y-dimension for Fourier transform.
+- `mz`: The size of the model in the z-dimension for Fourier transform.
+- `mt`: The size of the model in time for Fourier transform.
+- `nblocks`: The number of blocks in the model.
+- `dtype`: The data type used for computations, default is `Float32`.
+- `partition`: The partitioning configuration for distributed computing, default is `[1, 8]`.
+- `relu01`: Boolean that determines whether the final relu layer is applied
+"""
 @with_kw struct ModelConfig
     nx::Int = 64
     ny::Int = 64
@@ -11,12 +34,20 @@
     my::Int = 8
     mz::Int = 8
     mt::Int = 4
-    nblocks::Int = 1
+    nblocks::Int = 4
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 8]
     relu01::Bool = true
 end
 
+"""
+    Model(config::ModelConfig)
+
+A mutable structure representing the FNO, including configurations, weights, biases, and other parameters.
+
+# Constructor
+This constructor initializes the model's layers and distributes the weights and biases according to the provided [ModelConfig](@ref).
+"""
 mutable struct Model
     config::ModelConfig
     lifts::Any
@@ -50,7 +81,7 @@ mutable struct Model
             fourier_y = ParDFT(Complex{T}, config.ny)
             fourier_z = ParDFT(Complex{T}, config.nz)
             fourier_t = ParDFT(T, config.nt)
-    
+
             # Build restrictions to low-frequency modes
             restrict_x = ParRestriction(Complex{T}, Range(fourier_x), unique_range([1:mx, config.nx-mx+1:config.nx]))
             restrict_y = ParRestriction(Complex{T}, Range(fourier_y), unique_range([1:my, config.ny-my+1:config.ny]))
@@ -126,6 +157,17 @@ mutable struct Model
     end
 end
 
+"""
+    initModel(model::Model)
+
+Initializes the [Model](@ref) by allocating and setting the initial values for the parameters. 
+
+# Arguments
+- `model`: An instance of [Model](@ref) to be initialized.
+
+# Returns
+Returns the initialized parameters `θ` which may be placed on GPU if the global `gpu_flag` is set to `true`.
+"""
 function initModel(model::Model)
     θ = init(model.lifts)
     for operator in Iterators.flatten((model.convs, model.sconvs, model.biases, model.sconv_biases, model.projects))

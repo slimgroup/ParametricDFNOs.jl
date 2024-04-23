@@ -22,6 +22,18 @@ function collect_dist_tensor(local_tensor, global_shape, partition, parent_comm)
     return MPI.Reduce(sparse, MPI.SUM, 0, parent_comm)
 end
 
+"""
+    dist_loss(local_pred_y, local_true_y)
+
+Calculates the distributed normalized root mean squared error (NRMSE) between predicted and actual values.
+
+# Arguments
+- `local_pred_y`: Local tensor of predicted values, typically a subset of the whole prediction corresponding to the data handled by a specific node.
+- `local_true_y`: Local tensor of actual values corresponding to a subset of the data
+
+# Returns
+- A scalar value representing the relative L2 error of the predictions to the true values, which quantifies the prediction error normalized by the magnitude of the actual values.
+"""
 function dist_loss(local_pred_y, local_true_y)
     s = sum((vec(local_pred_y) - vec(local_true_y)) .^ 2)
 
@@ -68,6 +80,31 @@ function dist_tensor(tensor, global_shape, partition; parent_comm=MPI.COMM_WORLD
     return tensor[indexes...]
 end
 
+"""
+    dist_read_tensor(file_name, key, indices)
+
+Reads a tensor slice from an HDF5 file based on provided indices and reshapes the result.
+
+# Arguments
+- `file_name`: The name or path of the HDF5 file from which data is to be read.
+- `key`: The key within the HDF5 file that corresponds to the dataset of interest.
+- `indices`: The indices specifying the slice of the dataset to be extracted.
+
+# Returns
+- A reshaped array where the first dimension is singleton, extending the dimensions of the original data slice by one.
+
+# Functionality
+- Opens an HDF5 file in read-only mode.
+- Accesses the dataset associated with the provided `key`.
+- Extracts the slice of the dataset specified by `indices`.
+- Reshapes the extracted data, adding a singleton dimension at the beginning.
+
+# Example Usage
+```julia
+# To read a specific slice from a dataset within an HDF5 file
+tensor_data = dist_read_tensor("data.h5", "dataset_key", (1:10, 5:15, 2:2))
+```
+"""
 function dist_read_tensor(file_name, key, indices)
     data = nothing
     h5open(file_name, "r") do file
