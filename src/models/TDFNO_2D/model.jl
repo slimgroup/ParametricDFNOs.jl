@@ -132,7 +132,7 @@ end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    init!(model.weight_mix,θ)
+    # init!(model.weight_mix,θ)
     for operator in Iterators.flatten((model.convs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end

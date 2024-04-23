@@ -49,9 +49,9 @@ x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
 y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) |> gpu
 
 # GC.enable_logging(true)
-y = TDFNO_2D.forward(model, θ, x_sample)
-y = TDFNO_2D.forward(model, θ, x_sample)
-y = TDFNO_2D.forward(model, θ, x_sample)
+@time y = TDFNO_2D.forward(model, θ, x_sample)
+@time y = TDFNO_2D.forward(model, θ, x_sample)
+@time y = TDFNO_2D.forward(model, θ, x_sample)
 
 function loss_helper(params)
     global loss = UTILS.dist_loss(TDFNO_2D.forward(model, params, x_sample), y_sample)

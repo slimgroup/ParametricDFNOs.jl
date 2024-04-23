@@ -36,8 +36,9 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     tight_layout();
 
     figname = _getFigname(trainConfig, additional)
+    safesave(joinpath(plot_path,"K=4",savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
 
-    safesave(joinpath(plot_path, savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
+    # safesave(joinpath(plot_path, savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
     close(fig);
 end
 

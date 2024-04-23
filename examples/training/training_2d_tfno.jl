@@ -21,8 +21,8 @@ partition = [1,pe_count]
 
 modelConfig = TDFNO_2D.ModelConfig(nblocks=4,
  partition=partition,
-  nt=51,
- nc_mid = 128,
+  nt=11,
+ nc_mid = 50,
   nc_lift = 20, 
 mx = 4, 
 my = 4,
@@ -34,7 +34,7 @@ x_train, y_train, x_valid, y_valid = TDFNO_2D.loadDistData(dataConfig)
 
 
 trainConfig = TDFNO_2D.TrainConfig(
-    epochs=200,
+    epochs=100,
     x_train=x_train,
     y_train=y_train,
     x_valid=x_valid,
