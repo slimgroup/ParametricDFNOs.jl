@@ -5,10 +5,10 @@
 using Pkg
 Pkg.activate("./")
 
-include("../../src/models/TDFNO_2D/TDFNO_2D.jl")
+include("../../src/models/DFNO_2D/DFNO_2D.jl")
 include("../../src/utils.jl")
 
-using .TDFNO_2D
+using .DFNO_2D
 using .UTILS
 using MPI
 using Zygote
@@ -30,35 +30,40 @@ partition = [1,size]
 @assert MPI.Comm_size(comm) == prod(partition)
 
 modes = max(dim÷8, 4)
-# modelConfig = TDFNO_2D.ModelConfig(nx=dim, ny=dim, nt=dimt, mx=modes, my=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
+# modelConfig = DFNO_2D.ModelConfig(nx=dim, ny=dim, nt=dimt, mx=modes, my=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
 
 for modes = [3,5,7,9]
-modelConfig = TDFNO_2D.ModelConfig(nblocks=1,
+modelConfig = DFNO_2D.ModelConfig(nblocks=1,
  partition=partition,
   nt=20,
  nc_mid = 70,
   nc_lift = 20, 
 mx = modes, 
 my = modes,
- mt = modes,
- TuckerRank = [5,5,3,3,3,1])
+ mt = modes)
 
 
-model = TDFNO_2D.Model(modelConfig)
-θ = TDFNO_2D.initModel(model)
+model = DFNO_2D.Model(modelConfig)
+θ = DFNO_2D.initModel(model)
 
-x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
-y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) |> gpu
+input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nt) ÷ prod(partition)
+output_size = input_size * model.config.nc_out ÷ model.config.nc_in
+
+x_sample = rand(modelConfig.dtype, input_size, 1)
+y_sample = rand(modelConfig.dtype, output_size, 1)
+
+# x_sample = rand(modelConfig.dtype, Domain(model.lifts), 1)
+# y_sample = rand(modelConfig.dtype, Range(model.projects[2]), 1) |> gpu
 
 println("#######MODES=",modes)
 # GC.enable_logging(true)
 println("###FORWARD")
-@time y = TDFNO_2D.forward(model, θ, x_sample)
-@time y = TDFNO_2D.forward(model, θ, x_sample)
-@time y = TDFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
+@time y = DFNO_2D.forward(model, θ, x_sample)
 
 function loss_helper(params)
-    global loss = UTILS.dist_loss(TDFNO_2D.forward(model, params, x_sample), y_sample)
+    global loss = UTILS.dist_loss(DFNO_2D.forward(model, params, x_sample), y_sample)
     return loss
 end
 println("###GRADIENT SCALING")

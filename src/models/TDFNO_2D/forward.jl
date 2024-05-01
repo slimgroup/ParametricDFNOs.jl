@@ -11,8 +11,8 @@ function forward(model::Model, θ, x::Any)
     x = reshape(x + model.biases[1](θ), (:, batch))
 
     for i in 1:model.config.nblocks
-        # x = reshape(model.sconv(θ,x,i) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
-        x = reshape((model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
+         x = reshape(model.sconv(θ,x,i) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
+        # x = reshape((model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
        
         # x = reshape((model.sconvs[i](θ) * x) + (model.convs[i](θ) * x), (model.config.nc_lift, :)) + model.sconv_biases[i](θ)
         x = reshape(x, (model.config.nc_lift, model.config.nt ÷ model.config.partition[1], model.config.nx * model.config.ny ÷ model.config.partition[2], :))

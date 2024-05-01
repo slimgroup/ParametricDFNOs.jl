@@ -78,7 +78,7 @@ mutable struct Model
             x = restrict_dft(x)
             x = reshape(x,(i,b,2*mx,2*my,mt))
             z = x
-        
+   # y = ein""theta[G]....theta[U] x     
             y = vcat([(Id ⊗ (w.factors[1](θ)*w.core(θ)*(w.factors[6](θ)[:,layer]⊗w.factors[5](θ)[:,k]⊗w.factors[4](θ)[:,j] ⊗
               w.factors[3](θ)[:,i]⊗w.factors[2](θ))))*
                 vec(z[:,:,i,j,k]) for i = 1:Domain(w.factors[3]), j = 1:Domain(w.factors[4]), k = 1:Domain(w.factors[5])]...)
@@ -132,7 +132,7 @@ end
 
 function initModel(model::Model)
     θ = init(model.lifts)
-    # init!(model.weight_mix,θ)
+    init!(model.weight_mix,θ)
     for operator in Iterators.flatten((model.convs, model.biases, model.sconv_biases, model.projects))
         init!(operator, θ)
     end

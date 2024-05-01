@@ -1,3 +1,5 @@
+include("../../src/ParametricDFNOs.jl")
+
 using MPI
 using CUDA
 using Zygote
@@ -17,8 +19,8 @@ DFNO_2D.set_gpu_flag(gpu_flag)
 DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
 partition = [1, pe_count]
 
-nx, ny, nt = 20, 20, 30
-modes, nblocks = 8, 4
+nx, ny, nt = 64,64,20
+modes, nblocks = 5, 1
 
 @assert MPI.Comm_size(comm) == prod(partition)
 modelConfig = DFNO_2D.ModelConfig(nx=nx, ny=ny, nt=nt, mx=modes, my=modes, mt=modes, nblocks=nblocks, partition=partition, dtype=Float32)
@@ -38,7 +40,7 @@ DFNO_2D.gpu_flag && (y_sample = cu(y_sample))
 @time y = DFNO_2D.forward(model, θ, x_sample)
 @time y = DFNO_2D.forward(model, θ, x_sample)
 
-MPI.Barrier()
+MPI.Barrier(comm)
 
 function loss_helper(params)
     global loss = UTILS.dist_loss(DFNO_2D.forward(model, params, x_sample), y_sample)

@@ -8,7 +8,7 @@ function _getFigname(config::TrainConfig, additional::Dict)
     return merge(additional,figname)
 end
 
-function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dict())
+function plotLoss(ep, Loss, Loss_valid, modelConfig::ModelConfig, trainConfig::TrainConfig ;additional=Dict())
 
     ntrain = size(trainConfig.x_train, 3)
     nbatches = Int(ntrain/trainConfig.nbatch)
@@ -36,7 +36,7 @@ function plotLoss(ep, Loss, Loss_valid, trainConfig::TrainConfig ;additional=Dic
     tight_layout();
 
     figname = _getFigname(trainConfig, additional)
-    safesave(joinpath(plot_path,"K=4",savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
+    safesave(joinpath(plot_path,"K=$(modelConfig.mx)",savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
 
     # safesave(joinpath(plot_path, savename(figname; digits=6)*"_$(model_name)_loss.png"), fig);
     close(fig);
@@ -72,6 +72,6 @@ function plotEvaluation(modelConfig::ModelConfig, trainConfig::TrainConfig, x_pl
     tight_layout()
     figname = _getFigname(trainConfig, additional)
 
-    safesave(joinpath(plot_path, savename(figname; digits=6)*"_$(model_name)_fitting.png"), fig);
+    safesave(joinpath(plot_path,"K=$(modelConfig.mx)", savename(figname; digits=6)*"_$(model_name)_fitting.png"), fig);
     close(fig)
 end

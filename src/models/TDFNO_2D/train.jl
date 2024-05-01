@@ -92,8 +92,14 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         rank > 0 && continue
         
         plotEvaluation(model.config, config, x_sample_global, y_sample_global, y_global, additional=labels)
-        plotLoss(ep, Loss, Loss_valid, config, additional=labels)
+        plotLoss(ep, Loss, Loss_valid, model.config, config, additional=labels)
     end
     labels = @strdict p Loss_valid Loss
-    saveWeights(θ, model, additional=labels, comm=comm)
+    mkpath(projectdir("weights", model_name))
+    @tagsave(
+        projectdir("weights", model_name, savename(labels, "jld2"; digits=6)),
+        labels;
+        safe=true
+    )
+    # saveWeights(θ, model, additional=labels, comm=comm)
 end
