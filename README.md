@@ -1,8 +1,6 @@
 # ParametricDFNOs.jl
 
-[![][license-img]][license-status]
-[![Documenter](https://github.com/slimgroup/ParametericDFNOs.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/slimgroup/ParametericDFNOs.jl/actions/workflows/Documenter.yml)
-[![TagBot](https://github.com/slimgroup/ParametericDFNOs.jl/actions/workflows/TagBot.yml/badge.svg)](https://github.com/slimgroup/ParametericDFNOs.jl/actions/workflows/TagBot.yml)
+This is a branch of the ParametricDFNOs.jl used to work with Tucker decomposed DFNOs.
 
 <!-- [![][zenodo-img]][zenodo-status] -->
 
@@ -18,17 +16,22 @@
 
 This will add `ParametricDFNOs.jl` as dependency to your project
 
-## Documentation
+## Running Tuker-FNO gradient scaling tests and training
+If you have mpiexecjl set up, you can run the following to train a 2D-TFNO
 
-Check out the [Documentation](https://slimgroup.github.io/ParametricDFNOs.jl) for more or get started by running some [examples](https://github.com/turquoisedragon2926/ParametricDFNOs.jl-Examples)!
+   ```julia
+   julia> mpiexecjl --project=./ -n NTASKS julia examples/training/training_2d_tfno.jl
+   ```  
 
-## Issues
+   To run the gradient scaling test for 2D-TFNO, run the following  
 
-This section will contain common issues and corresponding fixes. Currently, we only provide support for Julia-1.9
+     ```julia
+   julia> mpiexecjl --project=./ -n NTASKS julia examples/scaling/gradient_scaling_2dt.jl
+   ```  
 
-## Authors
+## Contact
 
-Richard Rex, [richardr2926@gatech.edu](mailto:richardr2926@gatech.edu) <br/>
+Srikanth Avasarala, [savasarala9@gatech.edu](mailto:savasarala9@gatech.edu) <br/>
 
 [license-status]:LICENSE
 <!-- [zenodo-status]:https://doi.org/10.5281/zenodo.6799258 -->

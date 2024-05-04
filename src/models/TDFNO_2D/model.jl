@@ -77,11 +77,14 @@ mutable struct Model
             Id = ParIdentity(Complex{T},b)
             x = restrict_dft(x)
             x = reshape(x,(i,b,2*mx,2*my,mt))
-            z = x
-   # y = ein""theta[G]....theta[U] x     
-            y = vcat([(Id ⊗ (w.factors[1](θ)*w.core(θ)*(w.factors[6](θ)[:,layer]⊗w.factors[5](θ)[:,k]⊗w.factors[4](θ)[:,j] ⊗
-              w.factors[3](θ)[:,i]⊗w.factors[2](θ))))*
-                vec(z[:,:,i,j,k]) for i = 1:Domain(w.factors[3]), j = 1:Domain(w.factors[4]), k = 1:Domain(w.factors[5])]...)
+            z = x 
+             P = vcat([(Id ⊗ (w.factors[1](θ)*w.core(θ)*(w.factors[6](θ)[:,layer]⊗w.factors[5](θ)[:,k]⊗w.factors[4](θ)[:,j] ⊗
+             w.factors[3](θ)[:,i]⊗w.factors[2](θ)))) for i = 1:Domain(w.factors[3]), j = 1:Domain(w.factors[4]), k = 1:Domain(w.factors[5])]...)
+             z1 = reshape(z,(i*b,:))
+             X = vcat([[z1[:,i] for i = 1:2*mx*2*my*mt]]...)
+    
+             y = P.*X
+             y = stack(y)
               
             y = reshape(y,(o,b,2*mx,2*my,mt))  
             y = reshape(y,(:,b))

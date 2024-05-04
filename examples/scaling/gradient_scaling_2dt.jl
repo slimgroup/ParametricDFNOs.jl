@@ -32,7 +32,7 @@ partition = [1,size]
 modes = max(dim÷8, 4)
 # modelConfig = TDFNO_2D.ModelConfig(nx=dim, ny=dim, nt=dimt, mx=modes, my=modes, mt=modes, nblocks=4, partition=partition, dtype=Float32)
 
-for modes = [3,5,7,9]
+modes = 6
 modelConfig = TDFNO_2D.ModelConfig(nblocks=1,
  partition=partition,
   nt=20,
@@ -66,6 +66,5 @@ println("###GRADIENT SCALING")
 @time grads_time = gradient(params -> loss_helper(params), θ)[1]
 @time grads_time = gradient(params -> loss_helper(params), θ)[1]
 
-end
 
 MPI.Finalize()

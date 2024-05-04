@@ -20,7 +20,7 @@ DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
 partition = [1, pe_count]
 
 nx, ny, nt = 64,64,20
-modes, nblocks = 5, 1
+modes, nblocks = 8,1
 
 @assert MPI.Comm_size(comm) == prod(partition)
 modelConfig = DFNO_2D.ModelConfig(nx=nx, ny=ny, nt=nt, mx=modes, my=modes, mt=modes, nblocks=nblocks, partition=partition, dtype=Float32)
