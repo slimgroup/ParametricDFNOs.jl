@@ -41,7 +41,12 @@ mutable struct Model
             for i  = 2:length(size)
                 push!(factors,ParMatrix(Complex{T},rank[i],size[i]))
             end
-            return ParTucker(core,factors,spatiotemp,restriction)
+            
+            block_diagonals = []
+            for i = 3:5
+                push!(block_diagonals, ParBlockDiagonal([factors[i][:, j] for j in 1:size[i]]...))
+            end
+            return ParTucker(core,factors,spatiotemp,restriction,block_diagonals)
         end
 
         T = config.dtype
@@ -57,38 +62,38 @@ mutable struct Model
         [config.mx, config.my, config.mt]);
 
         function sconv(θ, x::AbstractArray, layer::Int; w::ParTucker = weight_mix)
-     
-               
-        
             b = size(x,2)
+
             o = Range(w.factors[1]) # U1 is o \times k_1
             i = Domain(w.factors[2]) # U2 is k_2 \times i
+
             nx = w.input_dimension[1]; ny = w.input_dimension[2]; nt = w.input_dimension[3]
-        
             mx = w.restriction[1]; my = w.restriction[2]; mt = w.restriction[3]
+
             fourier_x = ParDFT(Complex{T}, nx)
             fourier_y = ParDFT(Complex{T}, ny)
             fourier_t = ParDFT(T, nt)
+
             # Build restrictions to low-frequency modes
             restrict_x = ParRestriction(Complex{T}, Range(fourier_x), [1:mx,nx-mx+1:nx])
             restrict_y = ParRestriction(Complex{T}, Range(fourier_y), [1:my,ny-my+1:ny])
             restrict_t = ParRestriction(Complex{T}, Range(fourier_t), [1:mt])
+
             restrict_dft = ParKron((restrict_y * fourier_y) ⊗ (restrict_x * fourier_x), (restrict_t * fourier_t) ⊗ ParIdentity(T, i))
-            Id = ParIdentity(Complex{T},b)
+
+            Id = ParIdentity(Complex{T}, b)
             x = restrict_dft(x)
+
+            ### WRONG RESHAPE: SHOULD RESHAPE like : x = reshape(x,(i,mt,2*mx,2*my,b)). 
+            ### In fact you should only reshape like (:, b) and only fix factors accordingly
             x = reshape(x,(i,b,2*mx,2*my,mt))
-            z = x 
-             P = vcat([(Id ⊗ (w.factors[1](θ)*w.core(θ)*(w.factors[6](θ)[:,layer]⊗w.factors[5](θ)[:,k]⊗w.factors[4](θ)[:,j] ⊗
-             w.factors[3](θ)[:,i]⊗w.factors[2](θ)))) for i = 1:Domain(w.factors[3]), j = 1:Domain(w.factors[4]), k = 1:Domain(w.factors[5])]...)
-             z1 = reshape(z,(i*b,:))
-             X = vcat([[z1[:,i] for i = 1:2*mx*2*my*mt]]...)
-    
-             y = P.*X
-             y = stack(y)
-              
-            y = reshape(y,(o,b,2*mx,2*my,mt))  
+
+            P = w.factors[6](θ)[:,layer] ⊗ w.block_diagonals[3](θ) ⊗ w.block_diagonals[2](θ) ⊗ w.block_diagonals[1](θ) ⊗ w.factors[2](θ)
+            y = P * vec(x)
+
+            y = w.factors[1](θ) * w.core(θ) * reshape(y, Domain(w.core(θ)), :)
             y = reshape(y,(:,b))
-            y = restrict_dft'(y)   
+            y = restrict_dft'(y)
         end      
         
     
