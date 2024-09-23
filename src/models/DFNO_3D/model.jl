@@ -100,6 +100,8 @@ mutable struct Model
             restrict_dft = ParKron((restrict_z * fourier_z) ⊗ (restrict_y * fourier_y), (restrict_x * fourier_x) ⊗ (restrict_t * fourier_t) ⊗ ParIdentity(Complex{T}, config.nc_lift))
             
             push!(weight_mixes, weight_mix)
+
+            println("CALLING distribute using: ", reverse(config.partition))
             
             # Reverse partition to skip the all-to-all operation that would happend otherwise
             restrict_dft = distribute(restrict_dft, config.partition, reverse(config.partition))
