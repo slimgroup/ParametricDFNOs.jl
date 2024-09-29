@@ -14,14 +14,14 @@ global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))
 DFNO_2D.set_gpu_flag(gpu_flag)
 
 # Julia requires you to manually assign the gpus, modify to your case.
-DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
+# DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
 partition = [1, pe_count]
 
 nx, ny, nt = 20, 20, 30
 modes, nblocks = 8, 4
 
 @assert MPI.Comm_size(comm) == prod(partition)
-modelConfig = DFNO_2D.ModelConfig(nx=nx, ny=ny, nt=nt, mx=modes, my=modes, mt=modes, nblocks=nblocks, partition=partition, dtype=Float32)
+modelConfig = DFNO_2D.ModelConfig(nx=nx, ny=ny, nt=nt, mx=modes, my=modes, mt=modes, nblocks=nblocks, partition=partition, dtype=Float32, factorization="Tucker")
 
 model = DFNO_2D.Model(modelConfig)
 θ = DFNO_2D.initModel(model)

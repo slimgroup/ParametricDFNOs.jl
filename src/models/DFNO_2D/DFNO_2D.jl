@@ -13,6 +13,7 @@ using DrWatson
 using Parameters
 using ProgressMeter
 using ParametricOperators
+using ParametricOperators: ⊠
 
 global model_name = "DFNO_2D"
 global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))

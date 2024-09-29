@@ -30,8 +30,8 @@ function forward(model::Model, θ, x::Any)
      
     input_size = (model.config.nc_in * model.config.nx * model.config.ny * model.config.nz * model.config.nt) ÷ prod(model.config.partition)
     gpu_flag && (x = x |> gpu)
-    batch = length(x) ÷ input_size
 
+    batch = length(x) ÷ input_size
     x = reshape(x, (model.config.nc_in, :))
     x = (model.lifts(θ) * x) + model.biases[1](θ)
 

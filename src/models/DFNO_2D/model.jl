@@ -17,6 +17,7 @@ A configuration struct that holds parameters for the [Model](@ref) setup.
 - `nblocks`: The number of blocks in the model.
 - `dtype`: The data type used for computations, default is `Float32`.
 - `partition`: The partitioning configuration for distributed computing, default is `[1, 4]`.
+- `factorization`: Factorization to apply on the weight tensor, default is `nothing`
 """
 @with_kw struct ModelConfig
     nx::Int = 64
@@ -32,6 +33,8 @@ A configuration struct that holds parameters for the [Model](@ref) setup.
     nblocks::Int = 4
     dtype::DataType = Float32
     partition::Vector{Int} = [1, 4]
+    factorization::Union{String, Nothing} = nothing
+    factorization_ranks::Union{Int, Vector, Nothing} = nothing
 end
 
 """
@@ -66,6 +69,16 @@ mutable struct Model
         mt = config.mt
         mx = config.mx÷2
         my = config.my÷2
+
+        factorization_ranks = config.factorization_ranks
+
+        if isnothing(factorization_ranks)
+            factorization_ranks = min(config.nc_lift, mt, mx*my)
+        end
+
+        if typeof(factorization_ranks) == Int
+            factorization_ranks = [factorization_ranks for i in 1:4]
+        end
     
         function spectral_convolution(layer::Int)
     
@@ -83,17 +96,37 @@ mutable struct Model
             weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx*config.my)
 
             input_order = (1, 2, 3)
-            weight_order = (1, 4, 2, 3)
+            weight_order = (4, 1, 2, 3)
             target_order = (4, 2, 3)
 
             # Setup FFT-restrict pattern and weightage with Kroneckers
-            weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParTensor_SCONV:($(layer))")
             restrict_dft = ParKron((restrict_y * fourier_y) ⊗ (restrict_x * fourier_x), (restrict_t * fourier_t) ⊗ ParIdentity(T, config.nc_lift))
-            
-            push!(weight_mixes, weight_mix)
-
-            weight_mix = distribute(weight_mix, [1, config.partition...])
             restrict_dft = distribute(restrict_dft, config.partition)
+            
+            if isnothing(config.factorization)
+                weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParTensor_SCONV:($(layer))")
+                push!(weight_mixes, weight_mix)
+                weight_mix = distribute(weight_mix, [1, config.partition...])
+            else
+                G = ParMatrix(Complex{T}, factorization_ranks[1], prod(factorization_ranks[2:end]))
+
+                Uo = ParMatrix(Complex{T}, weight_shape[1], factorization_ranks[1])
+                UiT = ParMatrix(Complex{T}, factorization_ranks[2], weight_shape[2])
+                UtT = ParMatrix(Complex{T}, factorization_ranks[3], weight_shape[3])
+                UmT = ParMatrix(Complex{T}, factorization_ranks[4], weight_shape[4])
+
+                Ut = reduce(⊠, [UtT[:, j] for j in 1:weight_shape[3]])
+                Um = reduce(⊠, [UmT[:, j] for j in 1:weight_shape[4]])
+
+                I = ParIdentity(Complex{T}, prod(input_shape[2:end]))
+
+                weight_mix = (I ⊗ Uo) * (I ⊗ G) * (Um ⊗ Ut ⊗ UiT)
+            end
+
+            # # TODO: For some reason this consumes more memory OOM and is slower. Also need to change the load and save weights function properly
+            # # Reverse partition to skip the all-to-all operation that would happend otherwise. 
+            # restrict_dft = distribute(restrict_dft, config.partition, reverse(config.partition))
+            # weight_mix = distribute(weight_mix, [1, reverse(config.partition)...])
     
             sconv = restrict_dft' * weight_mix * restrict_dft
     
