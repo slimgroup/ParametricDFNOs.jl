@@ -96,7 +96,7 @@ mutable struct Model
             weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx*config.my)
 
             input_order = (1, 2, 3)
-            weight_order = (4, 1, 2, 3)
+            weight_order = (1, 4, 2, 3) # TODO: Hack in ParTensor is using first dimension as input
             target_order = (4, 2, 3)
 
             # Setup FFT-restrict pattern and weightage with Kroneckers
@@ -108,10 +108,10 @@ mutable struct Model
                 push!(weight_mixes, weight_mix)
                 weight_mix = distribute(weight_mix, [1, config.partition...])
             else
-                G = ParMatrix(Complex{T}, factorization_ranks[1], prod(factorization_ranks[2:end]))
+                G = ParMatrix(Complex{T}, factorization_ranks[1], prod(factorization_ranks[2:end])) # TODO: Change to product excluding el 2 if in / out channel change
 
-                Uo = ParMatrix(Complex{T}, weight_shape[1], factorization_ranks[1])
-                UiT = ParMatrix(Complex{T}, factorization_ranks[2], weight_shape[2])
+                Uo = ParMatrix(Complex{T}, weight_shape[2], factorization_ranks[2])
+                UiT = ParMatrix(Complex{T}, factorization_ranks[1], weight_shape[1])
                 UtT = ParMatrix(Complex{T}, factorization_ranks[3], weight_shape[3])
                 UmT = ParMatrix(Complex{T}, factorization_ranks[4], weight_shape[4])
 
