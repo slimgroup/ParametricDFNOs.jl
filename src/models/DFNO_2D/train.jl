@@ -153,12 +153,12 @@ function train!(config::TrainConfig, model::Model, θ::Dict; comm=MPI.COMM_WORLD
         labels = @strdict p ep Loss_valid Loss Time_train Time_overhead nblocks mx my mt nd ntrain nvalid nc_lift
 
         # TODO: control frequency of storage
-        (ep % 2 == 0) && saveWeights(θ, model, additional=labels, comm=comm)
+        # (ep % 2 == 0) && saveWeights(θ, model, additional=labels, comm=comm)
         rank > 0 && continue
         
         plotLoss(ep, Loss, Loss_valid, config, additional=labels)
         plotEval(model.config, x_sample_global, y_sample_global, y_global, trainConfig=config, additional=labels)
     end
-    labels = @strdict p Loss_valid Loss Time_train Time_overhead nblocks mx my mt nd ntrain nvalid nc_lift
-    saveWeights(θ, model, additional=labels, comm=comm)
+    # labels = @strdict p Loss_valid Loss Time_train Time_overhead nblocks mx my mt nd ntrain nvalid nc_lift
+    # saveWeights(θ, model, additional=labels, comm=comm)
 end

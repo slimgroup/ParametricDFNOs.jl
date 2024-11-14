@@ -15,3 +15,5 @@ utilites/
 notes.md
 Manifest.toml
 !logo.png
+python/
+*.pth

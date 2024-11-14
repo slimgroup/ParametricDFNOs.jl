@@ -14,10 +14,10 @@ global gpu_flag = parse(Bool, get(ENV, "DFNO_2D_GPU", "0"))
 DFNO_2D.set_gpu_flag(gpu_flag)
 
 # Julia requires you to manually assign the gpus, modify to your case.
-DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
+# DFNO_2D.gpu_flag && (CUDA.device!(rank % 4))
 partition = [1, pe_count]
 
-modelConfig = DFNO_2D.ModelConfig(nblocks=4, partition=partition)
+modelConfig = DFNO_2D.ModelConfig(nblocks=1, partition=partition, mx=24, my=24, mt=12, nc_lift=32)#, factorization="Tucker", factorization_ranks=[24, 24, 6, 6, 4])
 
 ### Setup example dataset ###
 
@@ -61,17 +61,20 @@ dataConfig = DFNO_2D.DataConfig(modelConfig=modelConfig,
                                 x_key = "perm",
                                 x_file = perm_store_path_jld2,
                                 y_key="conc",
-                                y_file=conc_store_path_jld2)
+                                y_file=conc_store_path_jld2,
+                                ntrain=1,
+                                nvalid=0)
 
 x_train, y_train, x_valid, y_valid = DFNO_2D.loadDistData(dataConfig)
 
 trainConfig = DFNO_2D.TrainConfig(
-    epochs=10,
+    epochs=1,
     x_train=x_train,
     y_train=y_train,
-    x_valid=x_valid,
-    y_valid=y_valid,
-    plot_every=1
+    x_valid=x_train,
+    y_valid=y_train,
+    plot_every=1,
+    nbatch=1
 )
 
 model = DFNO_2D.Model(modelConfig)

@@ -78,17 +78,19 @@ function plotEvaluation(modelConfig::ModelConfig, x_plot, y_plot, y_predict; tra
         title("x")
 
         subplot(4,5,i+5)
-        imshow(y_plot[1,10*i+1,:,:]', vmin=0, vmax=1)
+        img = imshow(y_plot[1,10*i+1,:,:]', vmin=0, vmax=1)
         title("true y")
+        colorbar(img)
 
         subplot(4,5,i+10)
-        imshow(y_predict[1,10*i+1,:,:]', vmin=0, vmax=1)
+        img = imshow(y_predict[1,10*i+1,:,:]', vmin=0, vmax=1)
         title("predict y")
+        colorbar(img)
 
         subplot(4,5,i+15)
-        imshow(5f0 .* abs.(y_plot[1,10*i+1,:,:]'-y_predict[1,10*i+1,:,:]'), vmin=0, vmax=1)
+        img = imshow(5f0 .* abs.(y_plot[1,10*i+1,:,:]'-y_predict[1,10*i+1,:,:]'), vmin=0, vmax=1)
         title("5X abs difference")
-
+        colorbar(img)
     end
 
     tight_layout()

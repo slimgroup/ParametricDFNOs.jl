@@ -71,6 +71,8 @@ mutable struct Model
         my = config.my÷2
 
         factorization_ranks = config.factorization_ranks
+        init_std = (1 / config.nc_lift)^0.5
+        rand_init(T::Type, m::Int, n::Int) = T(init_std) * rand(T, m, n)
 
         if isnothing(factorization_ranks)
             factorization_ranks = min(config.nc_lift, mt, mx*my)
@@ -92,35 +94,46 @@ mutable struct Model
             restrict_y = ParRestriction(Complex{T}, Range(fourier_y), unique_range([1:my, config.ny-my+1:config.ny]))
             restrict_t = ParRestriction(Complex{T}, Range(fourier_t), unique_range([1:mt]))
     
-            input_shape = (config.nc_lift, config.mt, config.mx*config.my)
-            weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx*config.my)
-
-            input_order = (1, 2, 3)
-            weight_order = (1, 4, 2, 3) # TODO: Hack in ParTensor is using first dimension as input
-            target_order = (4, 2, 3)
 
             # Setup FFT-restrict pattern and weightage with Kroneckers
             restrict_dft = ParKron((restrict_y * fourier_y) ⊗ (restrict_x * fourier_x), (restrict_t * fourier_t) ⊗ ParIdentity(T, config.nc_lift))
             restrict_dft = distribute(restrict_dft, config.partition)
             
             if isnothing(config.factorization)
+                println("DENSE INIT")
+                # Second weight dimension is output channel dimension
+                input_shape = (config.nc_lift, config.mt, config.mx*config.my)
+                weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx*config.my)
+
+                input_order = (1, 2, 3)
+                weight_order = (1, 4, 2, 3)
+                target_order = (4, 2, 3)
+
+                # TODO: Hack in ParTensor is using first dimension as input. abstract to make it changeable
                 weight_mix = ParTensor(Complex{T}, weight_order, weight_shape, input_order, input_shape, target_order, input_shape, "ParTensor_SCONV:($(layer))")
                 push!(weight_mixes, weight_mix)
                 weight_mix = distribute(weight_mix, [1, config.partition...])
             else
-                G = ParMatrix(Complex{T}, factorization_ranks[1], prod(factorization_ranks[2:end])) # TODO: Change to product excluding el 2 if in / out channel change
+                println("TUCKER INIT")
+                # First weight dimension is output channel dimension
+                input_shape = (config.nc_lift, config.mt, config.mx, config.my)
+                weight_shape = (config.nc_lift, config.nc_lift, config.mt, config.mx, config.my)
 
-                Uo = ParMatrix(Complex{T}, weight_shape[2], factorization_ranks[2])
-                UiT = ParMatrix(Complex{T}, factorization_ranks[1], weight_shape[1])
-                UtT = ParMatrix(Complex{T}, factorization_ranks[3], weight_shape[3])
-                UmT = ParMatrix(Complex{T}, factorization_ranks[4], weight_shape[4])
+                G = ParMatrix(Complex{T}, factorization_ranks[1], prod(factorization_ranks[2:end]), rand_init)
+
+                Uo = ParMatrix(Complex{T}, weight_shape[1], factorization_ranks[1], rand_init)
+                UiT = ParMatrix(Complex{T}, factorization_ranks[2], weight_shape[2], rand_init)
+                UtT = ParMatrix(Complex{T}, factorization_ranks[3], weight_shape[3], rand_init)
+                UxT = ParMatrix(Complex{T}, factorization_ranks[4], weight_shape[4], rand_init)
+                UyT = ParMatrix(Complex{T}, factorization_ranks[5], weight_shape[5], rand_init)
 
                 Ut = reduce(⊠, [UtT[:, j] for j in 1:weight_shape[3]])
-                Um = reduce(⊠, [UmT[:, j] for j in 1:weight_shape[4]])
+                Ux = reduce(⊠, [UxT[:, j] for j in 1:weight_shape[4]])
+                Uy = reduce(⊠, [UyT[:, j] for j in 1:weight_shape[4]])
 
                 I = ParIdentity(Complex{T}, prod(input_shape[2:end]))
 
-                weight_mix = (I ⊗ Uo) * (I ⊗ G) * (Um ⊗ Ut ⊗ UiT)
+                weight_mix = (I ⊗ Uo) * (I ⊗ G) * (Uy ⊗ Ux ⊗ Ut ⊗ UiT)
             end
 
             # # TODO: For some reason this consumes more memory OOM and is slower. Also need to change the load and save weights function properly
@@ -134,8 +147,8 @@ mutable struct Model
         end
     
         # Lift Channel dimension
-        lifts = ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)")
-        bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)")
+        lifts = ParMatrix(T, config.nc_lift, config.nc_in, "ParMatrix_LIFTS:(1)", real_glorot_init)
+        bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_BIAS:(1)", zeros)
 
         lifts = distribute(lifts)
         bias = distribute(bias)
@@ -145,8 +158,8 @@ mutable struct Model
         for i in 1:config.nblocks
     
             sconv_layer = spectral_convolution(i)
-            conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))")
-            bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))")
+            conv_layer = ParMatrix(T, config.nc_lift, config.nc_lift, "ParMatrix_SCONV:($(i))", real_glorot_init)
+            bias = ParMatrix(T, config.nc_lift, 1, "ParMatrix_SCONV:($(i))", zeros)
     
             conv_layer = distribute(conv_layer)
             bias = distribute(bias)
@@ -157,8 +170,8 @@ mutable struct Model
         end
     
         # Uplift channel dimension once more
-        uc = ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)")
-        bias = ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)")
+        uc = ParMatrix(T, config.nc_mid, config.nc_lift, "ParMatrix_LIFTS:(2)", real_glorot_init)
+        bias = ParMatrix(T, config.nc_mid, 1, "ParMatrix_BIAS:(2)", zeros)
     
         uc = distribute(uc)
         bias = distribute(bias)
@@ -167,8 +180,8 @@ mutable struct Model
         push!(projects, uc)
     
         # Project channel dimension
-        pc = ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)")
-        bias = ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)")
+        pc = ParMatrix(T, config.nc_out, config.nc_mid, "ParMatrix_LIFTS:(3)", real_glorot_init)
+        bias = ParMatrix(T, config.nc_out, 1, "ParMatrix_BIAS:(3)", zeros)
     
         pc = distribute(pc)
         bias = distribute(bias)

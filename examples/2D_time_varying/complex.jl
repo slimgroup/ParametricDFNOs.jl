@@ -1,5 +1,7 @@
 using ParametricOperators
+using ParametricOperators: ⊠
 using Zygote
+using Flux
 using LinearAlgebra
 
 T = Complex{Float32}
@@ -31,4 +33,9 @@ O = (I ⊗ Uo) * (I ⊗ G) * (Um ⊗ Ut ⊗ UiT)
 x = rand(T, input_shape...)
 θ = init(O)
 
-Zygote.gradient(θ -> norm(O(θ) * vec(x)), θ)
+grads = Zygote.gradient(θ -> norm(O(θ) * vec(x)), θ)[1]
+opt = Flux.Optimise.ADAMW(0.01, (0.9f0, 0.999f0), 1f-4)
+
+for (k, v) in θ
+    Flux.Optimise.update!(opt, v, grads[k])
+end

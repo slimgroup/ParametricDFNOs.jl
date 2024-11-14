@@ -133,6 +133,17 @@ function get_dist_indices(total_size, total_workers, coord)
     return start_index, end_index
 end
 
-export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range
+function real_glorot_init(T::Type{<:Real}, m::Int, n::Int)
+    scale = sqrt(24.0f0 / sum((m, n)))
+    out = (rand(T, (n, m)) .- 0.5f0) .* scale
+    return permutedims(out, [2, 1])
+end
+
+function complex_glorot_init(T::Type{<:Complex}, m::Int, n::Int)
+    out = rand(T, n, m)/convert(real(T), sqrt(m*n))
+    return permutedims(out, [2, 1])
+end
+
+export dist_loss, collect_dist_tensor, dist_tensor, dist_read_tensor, get_dist_indices, dist_sum, unique_range, real_glorot_init, complex_glorot_init
 
 end
